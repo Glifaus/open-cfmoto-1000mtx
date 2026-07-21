@@ -78,6 +78,11 @@ class AaMicrophone(
             return
         }
         try {
+            dev.zanderp.opencfmoto.AndroidAutoService.updateForegroundType()
+        } catch (e: Exception) {
+            log("[MIC] failed to update service foreground type: $e")
+        }
+        try {
             preferBluetoothMic()
             val minBuf = AudioRecord.getMinBufferSize(
                 SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT

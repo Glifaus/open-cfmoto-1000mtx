@@ -330,26 +330,37 @@ class AndroidAutoService : Service() {
         updateNotification("Bike reconnected", hint, resume = true)
     }
 
-    private fun startAsForeground() {
-        ensureChannel()
+    fun updateForegroundType() {
         val notification = buildNotification(
             "OpenCfMoto — Android Auto",
             "Receiving Android Auto for the bike dash — tap to open",
             resume = false,
         )
-
-        // Include the location FGS type only when fine location is granted (auto-logging rides while
-        // backgrounded needs it) — declaring it without the permission would crash on Android 14+.
         val hasLocation = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
-        var fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-        if (hasLocation) fgType = fgType or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+        val hasMicrophone = checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIF_ID, notification, fgType)
+            var fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+            if (hasLocation) fgType = fgType or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+            if (hasMicrophone && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                fgType = fgType or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+            }
+            try {
+                startForeground(NOTIF_ID, notification, fgType)
+                LogBus.log("[AA] foreground service type updated (fgType=$fgType, mic=$hasMicrophone)")
+            } catch (e: Exception) {
+                LogBus.log("[AA] failed to update foreground service type: $e")
+            }
         } else {
             startForeground(NOTIF_ID, notification)
         }
+    }
 
+    private fun startAsForeground() {
+        ensureChannel()
+        updateForegroundType()
         reacquireLocks()
         LogBus.log("[AA] foreground service up (wake + Wi-Fi locks held)")
     }
@@ -485,6 +496,10 @@ class AndroidAutoService : Service() {
          */
         fun notifyForegroundResuming() {
             active?.let { it.aaParked = false; it.wifiDownSince = 0L; it.reacquireLocks() }
+        }
+
+        fun updateForegroundType() {
+            active?.updateForegroundType()
         }
 
         const val ACTION_STOP = "dev.zanderp.opencfmoto.ACTION_STOP_AA"
