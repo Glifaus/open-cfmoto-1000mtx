@@ -41,4 +41,13 @@ object LogBus {
     @Synchronized fun snapshot(): String = sb.toString()
 
     @Synchronized fun clear() { sb.setLength(0) }
+
+    /** Prepend a restored session/crash block (no extra timestamps). */
+    @Synchronized
+    fun restore(block: String) {
+        if (block.isBlank()) return
+        val text = if (block.endsWith("\n")) block else "$block\n"
+        sb.insert(0, text)
+        if (sb.length > 512 * 1024) sb.delete(0, sb.length - 256 * 1024)
+    }
 }

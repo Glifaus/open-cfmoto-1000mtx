@@ -17,9 +17,14 @@ import androidx.core.content.ContextCompat
  */
 object SetupHelper {
     const val GEARHEAD_PACKAGE = "com.google.android.projection.gearhead"
+    const val PLAY_SERVICES_PACKAGE = "com.google.android.gms"
 
-    fun isAndroidAutoInstalled(ctx: Context): Boolean = try {
-        ctx.packageManager.getPackageInfo(GEARHEAD_PACKAGE, 0)
+    fun isAndroidAutoInstalled(ctx: Context): Boolean = packageInstalled(ctx, GEARHEAD_PACKAGE)
+
+    fun isPlayServicesPresent(ctx: Context): Boolean = packageInstalled(ctx, PLAY_SERVICES_PACKAGE)
+
+    private fun packageInstalled(ctx: Context, pkg: String): Boolean = try {
+        ctx.packageManager.getPackageInfo(pkg, 0)
         true
     } catch (_: PackageManager.NameNotFoundException) {
         false
@@ -54,5 +59,5 @@ object SetupHelper {
 
     /** Everything we can verify is in place. Head-unit mode can't be verified, so it isn't gated. */
     fun coreReady(ctx: Context): Boolean =
-        isAndroidAutoInstalled(ctx) && permissionsGranted(ctx)
+        isAndroidAutoInstalled(ctx) && isPlayServicesPresent(ctx) && permissionsGranted(ctx)
 }

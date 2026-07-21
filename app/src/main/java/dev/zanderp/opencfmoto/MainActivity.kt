@@ -125,32 +125,61 @@ class MainActivity : AppCompatActivity() {
     /** Start the Android Auto → bike projection for [qr]. Shared by the one-tap Connect reconnect
      *  and a fresh scan, so both paths behave identically. */
     private fun startAaFlow(qr: QrData) {
-        if (!WifiGate.ensureEnabledOrPrompt(this)) return
-        applyProfile(qr)
-        val bikeName = BikeMemory.lastBikeName(this) ?: qr.ssid
-        ConnectionState.set(Phase.STARTING_AA, bikeName)
-        log("→ starting Android Auto receiver (loopback self-mode). Ensure Android Auto is installed & set up.")
+        try {
+            if (!WifiGate.ensureEnabledOrPrompt(this)) return
+            applyProfile(qr)
+            val bikeName = BikeMemory.lastBikeName(this) ?: qr.ssid
+            ConnectionState.set(Phase.STARTING_AA, bikeName)
+            log("→ starting Android Auto receiver (loopback self-mode). Ensure Android Auto is installed & set up.")
 
-        // Parallel startup: the two slow steps (AA reaching steady video, and the user accepting the
-        // bike Wi-Fi dialog) now overlap. [BikeLink] gates the actual bike probe until BOTH complete,
-        // so the bike is never contacted before AA has frames to serve. These callbacks fire against
-        // process-global state (applicationContext + BikeLink.prober), NOT this activity: launching
-        // Google AA can destroy/recreate MainActivity mid-startup and the hand-off must still finish.
-        BikeLink.beginHandoff()
-        AaVideoBridge.onSteadyVideo = {
-            AaVideoBridge.onSteadyVideo = null
-            ConnectionState.set(Phase.AA_VIDEO_LIVE)
-            LogBus.log("→ Android Auto video is live")
-            BikeLink.markAaVideoSteady()
+            // Parallel startup: the two slow steps (AA reaching steady video, and the user accepting the
+            // bike Wi-Fi dialog) now overlap. [BikeLink] gates the actual bike probe until BOTH complete,
+            // so the bike is never contacted before AA has frames to serve. These callbacks fire against
+            // process-global state (applicationContext + BikeLink.prober), NOT this activity: launching
+            // Google AA can destroy/recreate MainActivity mid-startup and the hand-off must still finish.
+            BikeLink.beginHandoff()
+            AaVideoBridge.onSteadyVideo = {
+                AaVideoBridge.onSteadyVideo = null
+                ConnectionState.set(Phase.AA_VIDEO_LIVE)
+                LogBus.log("→ Android Auto video is live")
+                BikeLink.markAaVideoSteady()
+            }
+            AndroidAutoService.start(this)
+            // Trigger Google AA to project from the FOREGROUND activity (background-activity-launch
+            // safe on Android 12+/15), after giving the service's :5288 server time to bind.
+            logView.postDelayed({
+                try {
+                    dev.zanderp.opencfmoto.aa.AaSelfMode.trigger(this, log = ::log)
+                } catch (e: Exception) {
+                    log("AA self-mode trigger failed: $e")
+                }
+            }, 900)
+            // Kick off the Wi-Fi join right away, in parallel with AA boot.
+            joinWifi(qr, gateOnAaSteady = true)
+        } catch (e: Exception) {
+            log("Connect failed (app stays open): $e")
+            CrashGuard.persistSession(this)
+            ConnectionState.set(Phase.ERROR, "Connect failed — see Logs / Share Logs")
         }
-        AndroidAutoService.start(this)
-        // Trigger Google AA to project from the FOREGROUND activity (background-activity-launch
-        // safe on Android 12+/15), after giving the service's :5288 server time to bind.
-        logView.postDelayed({
-            dev.zanderp.opencfmoto.aa.AaSelfMode.trigger(this, log = ::log)
-        }, 900)
-        // Kick off the Wi-Fi join right away, in parallel with AA boot.
-        joinWifi(qr, gateOnAaSteady = true)
+    }
+
+    /** After a fatal crash, tell the rider logs survived and keep Share Logs useful. */
+    private fun maybeShowCrashRecovery() {
+        if (CrashGuard.pendingCrashText(this) == null) return
+        try {
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Recovered after a crash")
+                .setMessage(
+                    "OpenCfMoto closed unexpectedly last time. The log and crash report were saved — " +
+                        "open Logs and tap Share Logs so we can see what happened.",
+                )
+                .setPositiveButton("Share Logs") { _, _ -> shareLog() }
+                .setNegativeButton("Keep logs") { _, _ -> }
+                .setNeutralButton("Dismiss") { _, _ -> CrashGuard.clearCrash(this) }
+                .show()
+        } catch (e: Exception) {
+            log("crash recovery UI failed: $e")
+        }
     }
 
     private val projectionLauncher = registerForActivityResult(
@@ -255,6 +284,15 @@ class MainActivity : AppCompatActivity() {
                 logScroll.post { logScroll.fullScroll(ScrollView.FOCUS_DOWN) }
             }
         }
+        // Application already hydrated a prior session/crash into LogBus — show it in the view.
+        val prior = LogBus.snapshot()
+        if (prior.isNotBlank()) {
+            logView.text = prior
+            logScroll.post { logScroll.fullScroll(ScrollView.FOCUS_DOWN) }
+        }
+        maybeShowCrashRecovery()
+        // After crash UI (if any), point at missing Android Auto / permissions / Wi‑Fi / etc.
+        logView.post { DependencyPrompt.showOnLaunchIfNeeded(this) }
 
         // Reflect the coarse connection state in the big status header (so users don't read the log).
         ConnectionState.listener = { phase, detail ->
@@ -282,9 +320,8 @@ class MainActivity : AppCompatActivity() {
 
         // One-tap Connect: reconnect to the last bike without re-scanning; if none saved, scan.
         connectBtn.setOnClickListener {
-            if (!SetupHelper.isAndroidAutoInstalled(this)) {
-                log("→ Android Auto isn't installed — opening setup.")
-                SetupActivity.start(this)
+            if (DependencyPrompt.showForConnect(this)) {
+                log("→ Connect blocked — missing dependencies (see dialog)")
                 return@setOnClickListener
             }
             val saved = BikeMemory.lastQr(this)
@@ -372,10 +409,19 @@ class MainActivity : AppCompatActivity() {
         log("Ready. Tap Connect to project Android Auto to your dash.")
 
         // First launch: walk the user through the one-time prerequisites.
-        if (!SetupActivity.hasSeen(this)) SetupActivity.start(this)
-        else maybeAutoConnect()
+        try {
+            if (!SetupActivity.hasSeen(this)) SetupActivity.start(this)
+            else maybeAutoConnect()
+            maybeResumeFromParked(intent)
+        } catch (e: Exception) {
+            log("startup failed (UI still up): $e")
+            CrashGuard.persistSession(this)
+        }
+    }
 
-        maybeResumeFromParked(intent)
+    override fun onPause() {
+        CrashGuard.persistSession(this)
+        super.onPause()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -464,7 +510,13 @@ class MainActivity : AppCompatActivity() {
         ensureLocationPermission()
         // Small delay so the UI is drawn and permission prompts (if any) settle before we start.
         logView.postDelayed({
-            if (!AndroidAutoService.isRunning && !ConnectionState.phase.busy) startAaFlow(saved)
+            try {
+                if (!AndroidAutoService.isRunning && !ConnectionState.phase.busy) startAaFlow(saved)
+            } catch (e: Exception) {
+                log("auto-connect failed (app stays open): $e")
+                CrashGuard.persistSession(this)
+                ConnectionState.set(Phase.ERROR, "Auto-connect failed — see Logs")
+            }
         }, 1200)
     }
 
@@ -502,6 +554,10 @@ class MainActivity : AppCompatActivity() {
 
     /** Launch the QR scanner for the Android Auto path (profile is chosen from the scan result). */
     private fun startAaScan() {
+        if (DependencyPrompt.showForConnect(this)) {
+            log("→ Scan blocked — missing dependencies (see dialog)")
+            return
+        }
         log("→ Android Auto: scan the bike QR first so we pick the right screen profile.")
         pendingAaStart = true
         ProjectionHolder.projection = null   // bike uses the AA pipeline, not mirror
@@ -820,12 +876,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun shareLog() {
         try {
+            CrashGuard.persistSession(this)
             val dir = File(cacheDir, "logs").apply { mkdirs() }
             val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
             val file = File(dir, "opencfmoto-$stamp.log")
             file.writeText(LogBus.snapshot())
             val uris = ArrayList<Uri>()
             uris.add(FileProvider.getUriForFile(this, "$packageName.fileprovider", file))
+
+            val crash = CrashGuard.crashFile(this)
+            if (crash.exists() && crash.length() > 0L) {
+                uris.add(FileProvider.getUriForFile(this, "$packageName.fileprovider", crash))
+                log("attaching crash report: ${crash.name} (${crash.length()} bytes)")
+            }
 
             // Attach any diagnostic H.264 dumps (VideoPipeline writes these to <externalFiles>/video).
             val videoDir = File(getExternalFilesDir(null), "video")

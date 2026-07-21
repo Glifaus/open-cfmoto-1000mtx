@@ -2,5 +2,6 @@
 <paths>
     <cache-path name="logs" path="logs/" />
     <cache-path name="settings" path="settings/" />
+    <files-path name="crash" path="." />
     <external-files-path name="video" path="video/" />
 </paths>
