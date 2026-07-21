@@ -32,18 +32,29 @@ object SetupHelper {
         false
     }
 
-    /** Runtime permissions the projection flow needs. Camera + location are required; notifications
-     *  gate the foreground-service notification on Android 13+. Bluetooth is intentionally omitted
-     *  (the BLE wake-up path is dormant). */
-    fun requiredPermissions(): List<String> = buildList {
-        add(Manifest.permission.CAMERA)
+    /** Permissions needed to join the bike and run the AA service (reconnect / auto-connect). */
+    fun connectPermissions(): List<String> = buildList {
         add(Manifest.permission.ACCESS_FINE_LOCATION)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             add(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
+    /** Camera is only required when scanning a new QR — not for Connect to a saved bike. */
+    fun scanPermissions(): List<String> = listOf(Manifest.permission.CAMERA)
+
+    /** Full first-run checklist (Setup screen). */
+    fun requiredPermissions(): List<String> = (connectPermissions() + scanPermissions()).distinct()
+
     fun missingPermissions(ctx: Context): List<String> = requiredPermissions().filter {
+        ContextCompat.checkSelfPermission(ctx, it) != PackageManager.PERMISSION_GRANTED
+    }
+
+    fun missingConnectPermissions(ctx: Context): List<String> = connectPermissions().filter {
+        ContextCompat.checkSelfPermission(ctx, it) != PackageManager.PERMISSION_GRANTED
+    }
+
+    fun missingScanPermissions(ctx: Context): List<String> = scanPermissions().filter {
         ContextCompat.checkSelfPermission(ctx, it) != PackageManager.PERMISSION_GRANTED
     }
 

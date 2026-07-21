@@ -15,8 +15,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
 /**
- * One place that lists what OpenCfMoto needs and pops a dialog with Install / Grant / Settings
- * actions when something is missing — so a rider isn't stuck with a silent failure after install.
+ * Lists what OpenCfMoto needs and offers Install / Grant / Settings actions.
+ *
+ * Kept deliberately light on launch: we must not block auto-connect or reconnect just because
+ * Camera isn't granted (only needed to scan a new QR). Wi‑Fi-off is handled by [WifiGate], not here.
  */
 object DependencyPrompt {
 
@@ -40,7 +42,7 @@ object DependencyPrompt {
         OPEN_SETUP,
     }
 
-    fun audit(ctx: android.content.Context): List<Issue> = buildList {
+    fun audit(ctx: android.content.Context, forScan: Boolean = false): List<Issue> = buildList {
         if (!SetupHelper.isAndroidAutoInstalled(ctx)) {
             add(
                 Issue(
@@ -63,25 +65,30 @@ object DependencyPrompt {
                 ),
             )
         }
-        val missingPerms = SetupHelper.missingPermissions(ctx)
-        if (missingPerms.isNotEmpty()) {
+        val missingPerms = SetupHelper.missingConnectPermissions(ctx).toMutableList()
+        if (forScan || !BikeMemory.hasSaved(ctx)) {
+            missingPerms += SetupHelper.missingScanPermissions(ctx)
+        }
+        val missing = missingPerms.distinct()
+        if (missing.isNotEmpty()) {
             add(
                 Issue(
                     id = "perms",
                     title = "App permissions",
-                    detail = "Still needed: ${missingPerms.joinToString(", ") { permLabel(it) }}.",
+                    detail = "Still needed: ${missing.joinToString(", ") { permLabel(it) }}.",
                     required = true,
                     action = Action.GRANT_PERMISSIONS,
                 ),
             )
         }
+        // Wi‑Fi is advisory here only — [WifiGate] already prompts when Connect actually runs.
         if (!WifiGate.isWifiEnabled(ctx)) {
             add(
                 Issue(
                     id = "wifi",
                     title = "Phone Wi‑Fi is off",
                     detail = "The bike link uses Wi‑Fi. Turn Wi‑Fi on before Connect.",
-                    required = true,
+                    required = false,
                     action = Action.ENABLE_WIFI,
                 ),
             )
@@ -112,25 +119,28 @@ object DependencyPrompt {
         }
     }
 
-    fun requiredMissing(ctx: android.content.Context): List<Issue> =
-        audit(ctx).filter { it.required }
+    fun requiredMissing(ctx: android.content.Context, forScan: Boolean = false): List<Issue> =
+        audit(ctx, forScan).filter { it.required }
 
     /**
-     * Show once per process on home launch when required deps are missing.
-     * @return true if a dialog was shown.
+     * Soft launch hint — only for hard blockers (AA / Play services), and never while a connect
+     * is already starting. Permissions are handled on Connect / Scan so we don't race auto-connect.
      */
     fun showOnLaunchIfNeeded(activity: Activity): Boolean {
         if (shownThisProcess) return false
-        val missing = requiredMissing(activity)
+        if (ConnectionState.phase.busy) return false
+        val missing = requiredMissing(activity, forScan = false).filter {
+            it.action == Action.INSTALL_ANDROID_AUTO || it.action == Action.INSTALL_PLAY_SERVICES
+        }
         if (missing.isEmpty()) return false
         shownThisProcess = true
-        show(activity, missing, alsoOptional = true)
+        show(activity, missing, alsoOptional = false)
         return true
     }
 
-    /** Always show when Connect is blocked by missing required deps. */
-    fun showForConnect(activity: Activity): Boolean {
-        val missing = requiredMissing(activity)
+    /** Block Connect / Scan when something truly required is missing. */
+    fun showForConnect(activity: Activity, forScan: Boolean = false): Boolean {
+        val missing = requiredMissing(activity, forScan)
         if (missing.isEmpty()) return false
         show(activity, missing, alsoOptional = false)
         return true
@@ -187,16 +197,18 @@ object DependencyPrompt {
             Action.INSTALL_ANDROID_AUTO -> openPlay(activity, SetupHelper.GEARHEAD_PACKAGE)
             Action.INSTALL_PLAY_SERVICES -> openPlay(activity, SetupHelper.PLAY_SERVICES_PACKAGE)
             Action.GRANT_PERMISSIONS -> {
-                val missing = SetupHelper.missingPermissions(activity).toMutableList()
-                if (ContextCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO)
-                    != PackageManager.PERMISSION_GRANTED
-                ) {
-                    missing.add(Manifest.permission.RECORD_AUDIO)
-                }
+                val mic = Manifest.permission.RECORD_AUDIO
+                val needMic = ContextCompat.checkSelfPermission(activity, mic) !=
+                    PackageManager.PERMISSION_GRANTED
+                val missing = (
+                    SetupHelper.missingConnectPermissions(activity) +
+                        SetupHelper.missingScanPermissions(activity) +
+                        if (needMic) listOf(mic) else emptyList()
+                    ).distinct()
                 if (missing.isEmpty()) {
                     openAppSettings(activity)
                 } else {
-                    ActivityCompat.requestPermissions(activity, missing.distinct().toTypedArray(), REQ_PERMS)
+                    ActivityCompat.requestPermissions(activity, missing.toTypedArray(), REQ_PERMS)
                 }
             }
             Action.ENABLE_WIFI -> WifiGate.openWifiSettings(activity)

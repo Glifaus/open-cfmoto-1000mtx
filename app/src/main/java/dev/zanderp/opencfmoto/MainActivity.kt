@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
         val autoGeo = if (userOverride == null) DashMemory.specFor(this, qr.ssid, BikeProfileHolder.active) else null
         BikeProfileHolder.aaVideoOverride = userOverride ?: autoGeo
         val spec = BikeProfileHolder.aaVideo
-        BikeProfileHolder.aaContentMargins = VideoPrefs.aaMarginsFor(this, spec)
+        BikeProfileHolder.aaContentMargins = VideoPrefs.aaMarginsFor(this, spec, qr.ssid)
         val aspectMode = VideoPrefs.matchAspectMode(this)
         val aspectNote = BikeProfileHolder.aaContentMargins.let { m ->
             when {
@@ -291,8 +291,8 @@ class MainActivity : AppCompatActivity() {
             logScroll.post { logScroll.fullScroll(ScrollView.FOCUS_DOWN) }
         }
         maybeShowCrashRecovery()
-        // After crash UI (if any), point at missing Android Auto / permissions / Wi‑Fi / etc.
-        logView.post { DependencyPrompt.showOnLaunchIfNeeded(this) }
+        // Soft dep check after auto-connect has had time to start — never race Connect.
+        logView.postDelayed({ DependencyPrompt.showOnLaunchIfNeeded(this) }, 2500)
 
         // Reflect the coarse connection state in the big status header (so users don't read the log).
         ConnectionState.listener = { phase, detail ->
@@ -320,7 +320,7 @@ class MainActivity : AppCompatActivity() {
 
         // One-tap Connect: reconnect to the last bike without re-scanning; if none saved, scan.
         connectBtn.setOnClickListener {
-            if (DependencyPrompt.showForConnect(this)) {
+            if (DependencyPrompt.showForConnect(this, forScan = false)) {
                 log("→ Connect blocked — missing dependencies (see dialog)")
                 return@setOnClickListener
             }
@@ -502,19 +502,27 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Committed to connecting — latch so an activity recreation (Google AA foregrounding) or a
-        // later onResume doesn't fire a second attempt.
+        // later onResume doesn't fire a second attempt. Use the main looper (not the view) so a
+        // dependency dialog can't cancel the delayed start with the view.
         autoConnectStarted = true
         val why = if (inRange == true) "Wi-Fi in range" else "range unknown — trying anyway"
         log("→ Auto-connect: '${BikeMemory.lastBikeName(this)}' ($why). Disable in Setup ▸ Startup.")
         ProjectionHolder.projection = null   // bike uses the AA pipeline, not mirror
         ensureLocationPermission()
-        // Small delay so the UI is drawn and permission prompts (if any) settle before we start.
-        logView.postDelayed({
+        val activity = this
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             try {
-                if (!AndroidAutoService.isRunning && !ConnectionState.phase.busy) startAaFlow(saved)
+                if (activity.isFinishing || activity.isDestroyed) {
+                    // Recreated before we fired — let the new instance retry.
+                    autoConnectStarted = false
+                    return@postDelayed
+                }
+                if (!AndroidAutoService.isRunning && !ConnectionState.phase.busy) {
+                    activity.startAaFlow(saved)
+                }
             } catch (e: Exception) {
-                log("auto-connect failed (app stays open): $e")
-                CrashGuard.persistSession(this)
+                LogBus.log("auto-connect failed (app stays open): $e")
+                CrashGuard.persistSession(activity)
                 ConnectionState.set(Phase.ERROR, "Auto-connect failed — see Logs")
             }
         }, 1200)
@@ -554,7 +562,7 @@ class MainActivity : AppCompatActivity() {
 
     /** Launch the QR scanner for the Android Auto path (profile is chosen from the scan result). */
     private fun startAaScan() {
-        if (DependencyPrompt.showForConnect(this)) {
+        if (DependencyPrompt.showForConnect(this, forScan = true)) {
             log("→ Scan blocked — missing dependencies (see dialog)")
             return
         }

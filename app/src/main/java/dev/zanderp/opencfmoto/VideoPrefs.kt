@@ -165,19 +165,23 @@ object VideoPrefs {
     /** Manual target W×H when mode is [MatchAspectMode.MANUAL]. */
     fun aspectTarget(ctx: Context): Pair<Int, Int> {
         val detected = detectedPanelSize(ctx)
+        // Prefer a known panel; else keep the common MT-X-sized default (not landscape 800×480).
+        val fallbackW = detected?.first ?: 800
+        val fallbackH = detected?.second ?: 951
         return Pair(
-            BikeScope.getInt(prefs(ctx), ctx, KEY_ASPECT_W, detected?.first ?: 800),
-            BikeScope.getInt(prefs(ctx), ctx, KEY_ASPECT_H, detected?.second ?: 480),
+            BikeScope.getInt(prefs(ctx), ctx, KEY_ASPECT_W, fallbackW),
+            BikeScope.getInt(prefs(ctx), ctx, KEY_ASPECT_H, fallbackH),
         )
     }
 
     /**
-     * Panel size for Auto match-aspect: last measured canvas for this bike's SSID, else the
-     * profile's known [BikeProfile.panelSize]. Null when we have not seen the dash yet.
+     * Panel size for Auto match-aspect: last measured canvas for [ssid], else the active /
+     * QR-selected profile's [BikeProfile.panelSize]. Null only when we truly don't know the panel.
      */
-    fun detectedPanelSize(ctx: Context): Pair<Int, Int>? {
+    fun detectedPanelSize(ctx: Context, ssid: String? = null): Pair<Int, Int>? {
         val qr = BikeMemory.lastQr(ctx)
-        DashMemory.get(ctx, qr?.ssid)?.let { return it }
+        val id = ssid ?: qr?.ssid
+        DashMemory.get(ctx, id)?.let { return it }
         BikeProfileHolder.active.panelSize?.let { return it }
         return BikeProfiles.selectByQr(qr, ctx).panelSize
     }
@@ -189,13 +193,29 @@ object VideoPrefs {
     }
 
     /** Margins to advertise for the current AA [spec], or [AaMargins.NONE]. */
-    fun aaMarginsFor(ctx: Context, spec: AaVideoSpec): AaMargins {
-        val panel = when (matchAspectMode(ctx)) {
-            MatchAspectMode.OFF -> return AaMargins.NONE
+    fun aaMarginsFor(ctx: Context, spec: AaVideoSpec, ssid: String? = null): AaMargins {
+        val mode = matchAspectMode(ctx)
+        val panel = when (mode) {
+            MatchAspectMode.OFF -> {
+                LogBus.log("[match-aspect] OFF — margins 0")
+                return AaMargins.NONE
+            }
             MatchAspectMode.MANUAL -> aspectTarget(ctx)
-            MatchAspectMode.AUTO -> detectedPanelSize(ctx) ?: return AaMargins.NONE
+            MatchAspectMode.AUTO -> {
+                val detected = detectedPanelSize(ctx, ssid)
+                if (detected == null) {
+                    LogBus.log("[match-aspect] AUTO — no panel size yet (no DashMemory / profile.panelSize); margins 0 until learned")
+                    return AaMargins.NONE
+                }
+                detected
+            }
         }
-        return AaMargins.forAspect(spec, panel.first, panel.second)
+        val margins = AaMargins.forAspect(spec, panel.first, panel.second)
+        LogBus.log(
+            "[match-aspect] $mode panel ${panel.first}x${panel.second} → " +
+                "AA ${spec.width}x${spec.height} margins ${margins.marginW}x${margins.marginH}",
+        )
+        return margins
     }
 
     /**

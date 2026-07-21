@@ -391,7 +391,8 @@ object Cfdl26PortraitProfile : BikeProfile {
     override val advertisedSupportFunction = 128
 
     /** The 1000 MT-X's 8" panel is a tall PORTRAIT screen (requests ~800x951). Ask AA for portrait
-     *  720x1280 at the panel's advertised 240 dpi; the compositor letterboxes it into the canvas. */
+     *  720x1280 at the panel's advertised 240 dpi; match-aspect margins reflow AA into this panel. */
+    override val panelSize = 800 to 951
     override val aaVideo = AaVideoSpec(AaResolution.PORTRAIT_720x1280, dpi = 240)
 
     /** Known CFDL26 / 1000 MT-X QR modelId (from the bike's pairing QR). */

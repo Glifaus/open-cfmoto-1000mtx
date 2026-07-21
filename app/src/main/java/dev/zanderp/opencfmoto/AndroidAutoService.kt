@@ -351,7 +351,16 @@ class AndroidAutoService : Service() {
                 startForeground(NOTIF_ID, notification, fgType)
                 LogBus.log("[AA] foreground service type updated (fgType=$fgType, mic=$hasMicrophone)")
             } catch (e: Exception) {
-                LogBus.log("[AA] failed to update foreground service type: $e")
+                // Mic type can fail on some OEMs — retry without it so AA still comes up.
+                LogBus.log("[AA] startForeground($fgType) failed: $e — retrying without microphone")
+                try {
+                    var fallback = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+                    if (hasLocation) fallback = fallback or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+                    startForeground(NOTIF_ID, notification, fallback)
+                } catch (e2: Exception) {
+                    LogBus.log("[AA] startForeground fallback failed: $e2")
+                    startForeground(NOTIF_ID, notification)
+                }
             }
         } else {
             startForeground(NOTIF_ID, notification)
