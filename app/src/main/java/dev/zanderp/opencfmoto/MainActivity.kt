@@ -11,6 +11,7 @@ import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Bundle
+import android.text.method.LinkMovementMethod
 import android.text.method.ScrollingMovementMethod
 import android.view.View
 import android.widget.Button
@@ -874,9 +875,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showUpdateDialog(release: UpdateChecker.Release) {
-        androidx.appcompat.app.AlertDialog.Builder(this)
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("Update ${release.version}")
-            .setMessage(release.notes.ifBlank { "A newer OpenCfMoto release is available." }.take(1500))
+            .setMessage(ReleaseNotes.toSpanned(release.notes))
             .setPositiveButton("Download") { _, _ ->
                 try {
                     startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(release.downloadUrl)))
@@ -887,6 +888,9 @@ class MainActivity : AppCompatActivity() {
             .setNegativeButton("Skip") { _, _ -> UpdateChecker.skip(this, release.version) }
             .setNeutralButton("Later", null)
             .show()
+        // Headings/bullets/bold come from [ReleaseNotes]; make markdown links tappable too.
+        dialog.findViewById<TextView>(android.R.id.message)?.movementMethod =
+            LinkMovementMethod.getInstance()
     }
 
     private fun reportProblem() {
