@@ -5,6 +5,7 @@
 package dev.zanderp.opencfmoto.aa
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.media.AudioDeviceInfo
@@ -19,6 +20,8 @@ import dev.zanderp.opencfmoto.aa.proto.Media
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.concurrent.thread
+import kotlin.math.abs
+import kotlin.math.sqrt
 
 /**
  * The head unit's microphone, as far as Android Auto is concerned.
@@ -42,6 +45,29 @@ class AaMicrophone(
         const val SAMPLE_RATE = 16000
         /** ~20 ms of audio per message — small enough for snappy voice, big enough to avoid spam. */
         private const val CHUNK_SAMPLES = SAMPLE_RATE / 50
+
+        /**
+         * AAP microphone media packets use the raw-media layout from Headunit Revived:
+         * `[channel][flags][timestamp ms BE][PCM16 LE…]`.
+         *
+         * Bytes 2–3 are replaced with the encrypted payload length by [AapTransport], which is why
+         * the raw message starts its timestamp at offset 2 and does not include a message type.
+         */
+        internal fun buildMediaData(
+            samples: ShortArray,
+            count: Int,
+            timestampMs: Long,
+        ): AapMessage {
+            require(count in 0..samples.size)
+            val total = 10 + count * 2
+            val data = ByteArray(total)
+            data[0] = Channel.ID_MIC.toByte()
+            data[1] = 0x0b
+            Utils.put_time(2, data, timestampMs)
+            val pcm = ByteBuffer.wrap(data, 10, count * 2).order(ByteOrder.LITTLE_ENDIAN)
+            for (i in 0 until count) pcm.putShort(samples[i])
+            return AapMessage(Channel.ID_MIC, 0x0b, -1, 2, total, data)
+        }
     }
 
     @Volatile private var recording = false
@@ -71,6 +97,7 @@ class AaMicrophone(
 
     fun setSessionId(id: Int) { sessionId = id }
 
+    @SuppressLint("MissingPermission") // Guarded by hasPermission() immediately below.
     private fun start() {
         if (recording) return
         if (!hasPermission()) {
@@ -117,8 +144,10 @@ class AaMicrophone(
                     it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO
                 }
                 if (bt != null) {
-                    am.setCommunicationDevice(bt)
-                    log("[MIC] using Bluetooth headset mic (${bt.productName})")
+                    val accepted = am.setCommunicationDevice(bt)
+                    log(
+                        "[MIC] Bluetooth route requested: type=${bt.type} accepted=$accepted",
+                    )
                 } else {
                     log("[MIC] no Bluetooth mic available — using the phone's mic")
                 }
@@ -143,41 +172,37 @@ class AaMicrophone(
     private fun pump(r: AudioRecord) {
         val buf = ShortArray(CHUNK_SAMPLES)
         var sent = 0L
+        var levelSamples = 0L
+        var sumSquares = 0.0
+        var peak = 0
+        val route = r.routedDevice
+        log(
+            "[MIC] active input: type=${route?.type ?: 0} state=${r.recordingState}",
+        )
         while (recording) {
             val n = try { r.read(buf, 0, buf.size) } catch (e: Exception) { break }
             if (n <= 0) continue
             try {
-                transport.send(micData(buf, n))
-                if (++sent <= 2L || sent % 250L == 0L) log("[MIC] chunks sent=$sent")
+                for (i in 0 until n) {
+                    val sample = buf[i].toInt()
+                    sumSquares += sample.toDouble() * sample
+                    peak = maxOf(peak, abs(sample))
+                }
+                levelSamples += n
+                transport.send(buildMediaData(buf, n, SystemClock.elapsedRealtime()))
+                sent++
+                if (sent <= 2L) log("[MIC] chunks sent=$sent")
+                if (sent % 50L == 0L) {
+                    val rms = if (levelSamples == 0L) 0 else sqrt(sumSquares / levelSamples).toInt()
+                    log("[MIC] signal: chunks=$sent rms=$rms peak=$peak")
+                    levelSamples = 0
+                    sumSquares = 0.0
+                    peak = 0
+                }
             } catch (e: Exception) {
                 log("[MIC] send failed: $e"); break
             }
         }
-    }
-
-    /**
-     * One media-data message: `[channel][flags][len][msgType=DATA][timestamp µs BE][PCM…]`.
-     * Built by hand because [AapMessage]'s convenience constructor only takes a protobuf body.
-     */
-    private fun micData(samples: ShortArray, count: Int): AapMessage {
-        val pcmBytes = count * 2
-        val payload = 8 + pcmBytes
-        val total = AapMessage.HEADER_SIZE + MsgType.SIZE + payload
-        val data = ByteArray(total)
-        data[0] = Channel.ID_MIC.toByte()
-        data[1] = 0x0b                                   // media data (not a control message)
-        Utils.intToBytes(MsgType.SIZE + payload, 2, data)
-        data[4] = 0                                       // msgType hi — MEDIA_MESSAGE_DATA (0)
-        data[5] = 0                                       // msgType lo
-        val bb = ByteBuffer.wrap(data, AapMessage.HEADER_SIZE + MsgType.SIZE, payload)
-            .order(ByteOrder.BIG_ENDIAN)
-        bb.putLong(SystemClock.elapsedRealtimeNanos() / 1000)
-        bb.order(ByteOrder.LITTLE_ENDIAN)                 // PCM16 is little-endian
-        for (i in 0 until count) bb.putShort(samples[i])
-        return AapMessage(
-            Channel.ID_MIC, 0x0b, Media.MsgType.MEDIA_MESSAGE_DATA_VALUE,
-            AapMessage.HEADER_SIZE + MsgType.SIZE, total, data,
-        )
     }
 
     fun stop(reason: String) {
