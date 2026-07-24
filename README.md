@@ -17,15 +17,15 @@ every ride — all from an Android phone in your pocket.
 
 <br/>
 
-![Home screen](docs/screenshots/01_main.png)
-![Map hub](docs/screenshots/14_map_hub.png)
-![Saved trips by day](docs/screenshots/08_trips.png)
+<img src="docs/screenshots/01_main.png" width="220" alt="Home screen"/>&nbsp;
+<img src="docs/screenshots/14_map_hub.png" width="220" alt="Map hub"/>&nbsp;
+<img src="docs/screenshots/08_trips.png" width="220" alt="Saved trips by day"/>
 
 <br/><br/>
 
 ### 🎥 Live demo — Android Auto on a CFMoto dash
 
-![Android Auto on the CFMoto MotoPlay dashboard](docs/media/hud-demo.gif)
+<img src="docs/media/hud-demo.gif" width="560" alt="Android Auto on the CFMoto MotoPlay dashboard"/>
 
 **▶ [Watch the full demo](docs/media/hud-demo.mp4)** — Google Maps navigation + media, driven from the
 dash touchscreen.
@@ -196,9 +196,9 @@ mirroring link).
   **Export GPX**; tap a card for the full OpenStreetMap route, or long-press to delete.
 - Manual **Start / Pause / Reset** controls are there too.
 
-![Trip computer](docs/screenshots/04_trip.png)
-![Saved trips by day](docs/screenshots/08_trips.png)
-![Ride route on the map](docs/screenshots/09_trip_map.png)
+<img src="docs/screenshots/04_trip.png" width="220" alt="Trip computer"/>&nbsp;
+<img src="docs/screenshots/08_trips.png" width="220" alt="Saved trips by day"/>&nbsp;
+<img src="docs/screenshots/09_trip_map.png" width="220" alt="Ride route on the map"/>
 
 <br clear="all"/>
 
@@ -353,7 +353,7 @@ That’s **9 remappable gestures** on three physical buttons (tap / hold / ×2 e
 key-up from the bike (track-key ◀/▶ / ★) — the ▲/▼ *volume* path on some non-touch dashes has no
 release, so hold is unavailable there (×2 via a big volume jump still works).
 
-![Handlebar buttons driving Android Auto on the dash](docs/media/buttons-demo.gif)
+<img src="docs/media/buttons-demo.gif" width="560" alt="Handlebar buttons driving Android Auto on the dash"/>
 
 **▶ [Watch the full silent demo](docs/media/buttons-demo.mp4)** — ◀ / ▶ / ★ taps, holds, and double-taps.
 
@@ -501,9 +501,9 @@ Android Auto (Maps / Waze) does **not** replace adventure tracks. **OpenCfMoto M
 bike-sized map to the dash (own-content path — MapLibre on phone, osmdroid on the bike stream) using
 OpenStreetMap data:
 
-![OpenCfMoto Map on the CFMoto dash — free ride / search](docs/media/map-demo-1.gif)
+<img src="docs/media/map-demo-1.gif" width="560" alt="OpenCfMoto Map on the CFMoto dash — free ride / search"/>
 
-![OpenCfMoto Map on the CFMoto dash — route preview & Go](docs/media/map-demo-2.gif)
+<img src="docs/media/map-demo-2.gif" width="560" alt="OpenCfMoto Map on the CFMoto dash — route preview & Go"/>
 
 
 | Mode | What it does |
@@ -521,7 +521,7 @@ OpenStreetMap data:
 | **Region packs** | Offline PMTiles + routing graphs (download on home Wi‑Fi) |
 | **Map backup** | Export / import favorites, markers, history, parked, map prefs |
 
-![Map hub — start ride, search, history](docs/screenshots/14_map_hub.png)
+<img src="docs/screenshots/14_map_hub.png" width="240" alt="Map hub — start ride, search, history"/>
 
 **Your own API keys (optional).** Map tiles, search/POI, and basic routing work out of the box via
 public OpenStreetMap / OSRM / Valhalla endpoints — **no key required**. For stricter
