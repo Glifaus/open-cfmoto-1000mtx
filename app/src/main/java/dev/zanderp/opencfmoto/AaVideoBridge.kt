@@ -1,5 +1,7 @@
 package dev.zanderp.opencfmoto
 
+import android.os.SystemClock
+
 /**
  * Shared hand-off between the Android Auto receiver (which owns the H.264 encoder/[VideoPipeline]
  * fed by AA's decoded video) and [EasyConnProber] (the bike PXC pipeline that pulls encoded
@@ -8,6 +10,22 @@ package dev.zanderp.opencfmoto
  */
 object AaVideoBridge {
     @Volatile var pipeline: VideoPipeline? = null
+
+    /**
+     * Until this elapsedRealtime, AA is starting guidance / media sink audio. The button bridge
+     * still holds AVRCP (no yield to music apps); this flag is informational for logs / timing.
+     */
+    @Volatile private var aaAudioHoldUntilElapsed = 0L
+
+    /** Call when AA requests / starts phone audio (guidance, media sink). */
+    fun noteAaAudioActive(holdMs: Long = 5_000L) {
+        val until = SystemClock.elapsedRealtime() + holdMs
+        if (until > aaAudioHoldUntilElapsed) aaAudioHoldUntilElapsed = until
+        MediaButtonBridge.instance?.yieldForAaAudio(holdMs)
+    }
+
+    fun isAaAudioHoldActive(): Boolean =
+        SystemClock.elapsedRealtime() < aaAudioHoldUntilElapsed
 
     /**
      * Fired once (by the AA receiver) when decoded Android Auto video reaches a steady frame

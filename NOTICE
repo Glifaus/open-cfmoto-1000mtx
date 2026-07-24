@@ -76,15 +76,19 @@ Third-party dependencies (fetched at build time, not vendored)
   * AndroidX libraries (core-ktx, appcompat, activity-ktx, constraintlayout,
     camera-x, test) ....................................... Apache License 2.0
   * Material Components for Android ....................... Apache License 2.0
-  * osmdroid (OpenStreetMap map view) .................... Apache License 2.0
+  * osmdroid (trip history map) ......................... Apache License 2.0
+  * MapLibre Native Android (Map / GPX dash) ............ BSD-2-Clause
   * jmDNS (mDNS/NSD) ..................................... Apache License 2.0
   * Conscrypt (TLS provider) ............................. Apache License 2.0
   * Google ML Kit — Barcode Scanning .................... Google APIs Terms of Service
   * Protocol Buffers (protobuf-java) .................... BSD-3-Clause
   * JUnit / Espresso (tests only) ....................... EPL-1.0 / Apache 2.0
 
-Map tiles displayed via osmdroid are © OpenStreetMap contributors, available
-under the Open Database License (ODbL).
+OpenStreetMap data used for Map / GPX (and via OpenFreeMap / OSRM / Overpass /
+Nominatim / Valhalla when online) is © OpenStreetMap contributors, available under the
+Open Database License (ODbL). OpenFreeMap styles/tiles: see openfreemap.org terms.
+Valhalla routing (avoid highways/tolls fallback): public instance at
+valhalla1.openstreetmap.de — please be polite with request volume.
 
 --------------------------------------------------------------------------------
 Trademarks

@@ -47,6 +47,7 @@ object SettingsBackup {
         s.put("profileOverride", ProfilePrefs.get(context).id)
         s.put("controlAa", ButtonMode.isControlAa(context))
         s.put("forceNonTouch", AppSettings.forceNonTouch(context))
+        s.put("forceTouch", AppSettings.forceTouch(context))
         s.put("wifiTransport", AppSettings.transport(context).id)
 
         ScreenMargins.load(context)
@@ -130,6 +131,7 @@ object SettingsBackup {
         }
         if (s.has("controlAa")) ButtonMode.set(context, s.optBoolean("controlAa"))
         if (s.has("forceNonTouch")) AppSettings.setForceNonTouch(context, s.optBoolean("forceNonTouch"))
+        if (s.has("forceTouch")) AppSettings.setForceTouch(context, s.optBoolean("forceTouch"))
         if (s.has("wifiTransport")) {
             AppSettings.setTransport(context, WifiTransport.byId(s.optString("wifiTransport")))
         }

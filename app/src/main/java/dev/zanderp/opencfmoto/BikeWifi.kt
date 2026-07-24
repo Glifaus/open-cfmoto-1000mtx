@@ -113,6 +113,8 @@ object BikeWifi {
             override fun onAvailable(network: Network) {
                 currentNetwork = network
                 cm.bindProcessToNetwork(network)
+                // Keep cellular requested so map/routing can pin off the bike AP (no uplink).
+                AppHttp.ensureCellularUplink()
                 rejoinAttempts = 0
                 logLinkOnce(network)
                 if (!firstDelivered) {
@@ -260,17 +262,38 @@ object BikeWifi {
     }
 
     /**
-     * True if any network has [NetworkCapabilities.TRANSPORT_VPN]. Bike projection needs a direct
-     * L3 path on the bike Wi-Fi; VPN kill-switches ("Block connections without VPN") drop that path.
+     * True if a **live internet-capable** VPN network is present. Idle/leftover `TRANSPORT_VPN`
+     * interfaces (OEM Secure Wi‑Fi stubs, parked clients) used to trip false "VPN blocking" errors
+     * whenever a bike probe timed out for any reason — including while Maps was starting.
+     *
+     * Kill-switches still surface via [isVpnBindBlocked] / [testBikeSocketBind] (EPERM).
      */
     fun isVpnActive(context: Context): Boolean {
         val cm = context.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         return try {
             cm.allNetworks.any { n ->
-                cm.getNetworkCapabilities(n)?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
+                val caps = cm.getNetworkCapabilities(n) ?: return@any false
+                caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN) &&
+                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             }
         } catch (_: Exception) {
             false
+        }
+    }
+
+    /** Short description of VPN networks for Logs (empty when none). */
+    fun vpnNetworksSummary(context: Context): String {
+        val cm = context.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return try {
+            cm.allNetworks.mapNotNull { n ->
+                val caps = cm.getNetworkCapabilities(n) ?: return@mapNotNull null
+                if (!caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) return@mapNotNull null
+                val inet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                val vali = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                "vpn(internet=$inet,validated=$vali)"
+            }.joinToString(", ")
+        } catch (_: Exception) {
+            ""
         }
     }
 

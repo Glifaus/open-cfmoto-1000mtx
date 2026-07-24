@@ -117,25 +117,37 @@ class AaCompositor(private val log: (String) -> Unit) {
             position(0)
         }
 
-    fun start() {
+    /**
+     * @param bufferW/bufferH when >0, size the SurfaceTexture for that capture buffer (mirror /
+     *   single-app MediaProjection). When both are 0, use the active AA video spec + match-aspect
+     *   crop (Android Auto path).
+     */
+    fun start(bufferW: Int = 0, bufferH: Int = 0) {
         val latch = java.util.concurrent.CountDownLatch(1)
         handler.post {
             try {
                 initEgl()
                 initGl()
-                val spec = BikeProfileHolder.aaVideo
-                bufW = spec.width; bufH = spec.height
-                // Match-aspect margins are known before AA starts, so the in-app Dash view preview is
-                // aspect-correct immediately (even before the bike connects / sets the bike canvas).
-                val m = BikeProfileHolder.aaContentMargins
-                cropU = ((spec.width - m.marginW).toFloat() / spec.width).coerceIn(0.05f, 1f)
-                cropV = ((spec.height - m.marginH).toFloat() / spec.height).coerceIn(0.05f, 1f)
+                val mirrorBuf = bufferW > 0 && bufferH > 0
+                if (mirrorBuf) {
+                    bufW = bufferW; bufH = bufferH
+                    cropU = 1f; cropV = 1f
+                } else {
+                    val spec = BikeProfileHolder.aaVideo
+                    bufW = spec.width; bufH = spec.height
+                    // Match-aspect margins are known before AA starts, so the in-app Dash view preview is
+                    // aspect-correct immediately (even before the bike connects / sets the bike canvas).
+                    val m = BikeProfileHolder.aaContentMargins
+                    cropU = ((spec.width - m.marginW).toFloat() / spec.width).coerceIn(0.05f, 1f)
+                    cropV = ((spec.height - m.marginH).toFloat() / spec.height).coerceIn(0.05f, 1f)
+                }
                 surfaceTexture = SurfaceTexture(textureId)
-                surfaceTexture.setDefaultBufferSize(spec.width, spec.height)
+                surfaceTexture.setDefaultBufferSize(bufW, bufH)
                 surfaceTexture.setOnFrameAvailableListener({ handler.post { onFrame() } }, handler)
                 inputSurface = Surface(surfaceTexture)
                 handler.postDelayed(keepAlive, KEEPALIVE_TICK_MS)
-                log("[COMPOSITOR] ready (buffer size ${spec.width}x${spec.height}) — AA decoder input surface up (no output canvas yet)")
+                val kind = if (mirrorBuf) "mirror capture" else "AA decoder"
+                log("[COMPOSITOR] ready (buffer size ${bufW}x${bufH}) — $kind input surface up (no output canvas yet)")
             } catch (e: Exception) {
                 log("[COMPOSITOR] init failed: $e")
             } finally {
@@ -143,6 +155,26 @@ class AaCompositor(private val log: (String) -> Unit) {
             }
         }
         latch.await()
+    }
+
+    /** Mirror / single-app capture: captured content resized — update the SurfaceTexture + fit math. */
+    fun updateCaptureSize(w: Int, h: Int) {
+        val cw = w.coerceAtLeast(2)
+        val ch = h.coerceAtLeast(2)
+        handler.post {
+            try {
+                bufW = cw; bufH = ch
+                if (::surfaceTexture.isInitialized) surfaceTexture.setDefaultBufferSize(cw, ch)
+                if (canvasW > 0 && canvasH > 0) {
+                    srcW = cw; srcH = ch
+                    computeViewport()
+                    log("[COMPOSITOR] capture size → ${cw}x$ch → draw rect=${vpW}x$vpH @($vpX,$vpY)")
+                    if (hasContent) drawFrame()
+                }
+            } catch (e: Exception) {
+                log("[COMPOSITOR] updateCaptureSize failed: $e")
+            }
+        }
     }
 
     /** Point the compositor at the encoder's input surface, sized to the bike canvas. */
@@ -384,6 +416,15 @@ class AaCompositor(private val log: (String) -> Unit) {
         GLES20.glClearColor(0f, 0f, 0f, 1f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
+        // FILL may compute a viewport taller/wider than the canvas (center-crop). Scissor so we
+        // never paint outside the bike encoder surface.
+        val clipW = if (target === windowSurface) canvasW else previewW
+        val clipH = if (target === windowSurface) canvasH else previewH
+        if (clipW > 0 && clipH > 0) {
+            GLES20.glEnable(GLES20.GL_SCISSOR_TEST)
+            GLES20.glScissor(0, 0, clipW, clipH)
+        }
+
         GLES20.glViewport(vx, vy, vw, vh)
         GLES20.glUseProgram(program)
 
@@ -404,6 +445,7 @@ class AaCompositor(private val log: (String) -> Unit) {
 
         GLES20.glDisableVertexAttribArray(aPosition)
         GLES20.glDisableVertexAttribArray(aTexCoord)
+        GLES20.glDisable(GLES20.GL_SCISSOR_TEST)
 
         // Monotonic presentation time so repeated (keep-alive) frames aren't dropped as duplicate PTS.
         EGLExt.eglPresentationTimeANDROID(eglDisplay, target, System.nanoTime())

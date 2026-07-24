@@ -71,9 +71,9 @@ for Android Auto anymore.
 - Standard Gradle Android build. Owner installs to a Samsung SM-G991B (Android 15) for real use.
 - **On-screen log + Share button** is the primary debugging channel — the owner pastes the exported log.
   Anything you add MUST log its key steps with a stage tag.
-- The `MediaProjection` "Entire screen" vs "Single app" choice matters: single-app (partial) capture is
-  NOT handled and yields no frames; always test with "Entire screen" until/unless partial-capture is
-  implemented (not needed for the AA plan).
+- The `MediaProjection` dialog offers **Entire screen** or **a single app** (Android 14+). Single-app
+  capture is handled via `onCapturedContentResize` + an [AaCompositor] letterbox into the bike
+  encoder (`VideoPipeline.setupProjectionDisplay`). Whole-screen still works.
 - Bike media timeout is ~9s — a source that doesn't produce a frame quickly will make the bike drop.
 
 ## Android Auto + multi-bike profiles (IMPLEMENTED)

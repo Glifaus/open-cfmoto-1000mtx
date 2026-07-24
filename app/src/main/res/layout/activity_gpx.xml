@@ -1,0 +1,1089 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg"
+    android:fillViewport="true"
+    tools:context=".GpxActivity">
+
+    <LinearLayout
+        android:id="@+id/gpx_activity_root"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="24dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Map"
+            android:textColor="@color/text_primary"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="12dp"
+            android:lineSpacingExtra="2dp"
+            android:text="Free ride, GPX, search &amp; POI on the dash. Search stays in this app (not Google Maps)."
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
+
+        <!-- ===== Ride ===== -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Card.OpenCfMoto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.08"
+                    android:text="Ride"
+                    android:textAllCaps="true"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_free_ride"
+                    style="@style/Widget.OpenCfMoto.Button.Connect"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="12dp"
+                    android:text="Start ride — project to bike" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_see_phone"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="8dp"
+                    android:text="See map on phone (no bike)" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ===== Search / POI ===== -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Card.OpenCfMoto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.08"
+                    android:text="Search / POI"
+                    android:textAllCaps="true"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <EditText
+                    android:id="@+id/gpx_search"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:hint="Search OpenStreetMap…"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:scrollbars="none">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/gpx_poi_chips"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_search_btn"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Search" />
+
+                <LinearLayout
+                    android:id="@+id/gpx_results"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ===== Favorites & history ===== -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Card.OpenCfMoto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.08"
+                    android:text="Favorites &amp; markers"
+                    android:textAllCaps="true"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <LinearLayout
+                    android:id="@+id/gpx_favorites"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:letterSpacing="0.08"
+                    android:text="History"
+                    android:textAllCaps="true"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <LinearLayout
+                    android:id="@+id/gpx_history"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ===== GPX track ===== -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Card.OpenCfMoto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.08"
+                    android:text="GPX track"
+                    android:textAllCaps="true"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_pick"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="12dp"
+                    android:text="Choose GPX file…" />
+
+                <TextView
+                    android:id="@+id/gpx_file_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="No file selected"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_offline"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="8dp"
+                    android:enabled="false"
+                    android:text="Download offline maps" />
+
+                <ProgressBar
+                    android:id="@+id/gpx_progress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/gpx_progress_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_open_map"
+                    style="@style/Widget.OpenCfMoto.Button.Connect"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="8dp"
+                    android:enabled="false"
+                    android:text="Open GPX on map" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_project"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="8dp"
+                    android:enabled="false"
+                    android:text="Project GPX to bike" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ===== Map settings ===== -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Card.OpenCfMoto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.08"
+                    android:text="Map settings"
+                    android:textAllCaps="true"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="Units"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_units_metric"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="Metric" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_units_imperial"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="Imperial" />
+                </LinearLayout>
+
+                <!-- Kept for code refs; segments replace the cycle button. -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_units"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="Map theme"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_theme_auto"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="Auto" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_theme_day"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="4dp"
+                        android:layout_weight="1"
+                        android:text="Day" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_theme_night"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="Night" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_theme"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="Voice prompts"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_voice_on"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="On" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_voice_off"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="Off" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_voice_pref"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="Next stop details"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_next_stop_on"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="On" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_next_stop_off"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="Off" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_next_stop_pref"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="Auto-finish on arrive"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_auto_finish_on"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="On" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_auto_finish_off"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="Off" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_auto_finish"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="Dash chrome"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_chrome_dark"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="Dark" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_chrome_black"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="4dp"
+                        android:layout_weight="1"
+                        android:text="Black" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_chrome_slate"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="4dp"
+                        android:layout_weight="1"
+                        android:text="Slate" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_chrome_forest"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="Forest" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_chrome"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="3D buildings"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_buildings_on"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="On" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_buildings_off"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="Off" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_buildings_3d"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="Route mode"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Fast = quickest roads. Fun = twistier. Circuit = go to a place and return home."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_route_fast"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="Fast" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_route_fun"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="Fun" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_hub_circuit"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="10dp"
+                    android:text="Open map · pick place · Circuit there and back" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="Avoid tolls"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_avoid_tolls_on"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="On" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_avoid_tolls_off"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="Off" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="Avoid highways"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_avoid_hwy_on"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="On" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_avoid_hwy_off"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="Off" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="Fun circuit length"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_circuit_30"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="30 km" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_circuit_60"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="4dp"
+                        android:layout_weight="1"
+                        android:text="60 km" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_circuit_100"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="100 km" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ===== Offline maps ===== -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Card.OpenCfMoto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.08"
+                    android:text="Offline maps"
+                    android:textAllCaps="true"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/gpx_pack_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="Download an area to ride without a connection — like Google Maps offline areas. Do it on home Wi‑Fi; bike Wi‑Fi has no internet."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="Detail"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_offline_detail_std"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="Standard" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_offline_detail_high"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="High" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_offline_detail"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="Radius"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_offline_radius_10"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="10 km" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_offline_radius_25"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="4dp"
+                        android:layout_weight="1"
+                        android:text="25 km" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/gpx_offline_radius_50"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="50 km" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_offline_radius"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_offline_here"
+                    style="@style/Widget.OpenCfMoto.Button.Connect"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="12dp"
+                    android:text="Download area around me" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_offline_track"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="8dp"
+                    android:enabled="false"
+                    android:text="Download area around GPX" />
+
+                <ProgressBar
+                    android:id="@+id/gpx_offline_progress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/gpx_offline_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_offline_clear_raster"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Clear cached bike tiles" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ===== Routing ===== -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Card.OpenCfMoto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.08"
+                    android:text="Routing"
+                    android:textAllCaps="true"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="Advanced (optional). Personal OpenRouteService key if you want one."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <EditText
+                    android:id="@+id/gpx_ors_key"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:autofillHints="password"
+                    android:hint="OpenRouteService API key"
+                    android:inputType="textNoSuggestions"
+                    android:maxLines="1"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_ors_save"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Save routing key" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ===== Extras ===== -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Card.OpenCfMoto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.08"
+                    android:text="Extras"
+                    android:textAllCaps="true"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_park_here"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="12dp"
+                    android:text="Mark parking here" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_go_parked"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="8dp"
+                    android:enabled="false"
+                    android:text="Navigate to parked bike" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_clear_parked"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="8dp"
+                    android:enabled="false"
+                    android:text="Clear parked spot" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_set_home_hub"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Set Home here" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_go_home_hub"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="8dp"
+                    android:enabled="false"
+                    android:text="Navigate Home" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_corridor_poi"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="8dp"
+                    android:enabled="false"
+                    android:text="Download roadside POI (track)" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_export_map"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Export map data…" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/gpx_import_map"
+                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Import map data…" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:lineSpacingExtra="2dp"
+            android:text="Map / GPX uses MapLibre vector tiles (online) and optional offline region packs. Search/OSRM/limits need phone internet before bike Wi‑Fi. Dash: End / Park / Recalc, LIMIT, Heading / North, zoom, 3D pitch."
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+    </LinearLayout>
+</ScrollView>

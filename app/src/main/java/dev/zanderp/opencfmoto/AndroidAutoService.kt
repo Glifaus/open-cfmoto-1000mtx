@@ -36,6 +36,8 @@ class AndroidAutoService : Service() {
     private var receiver: AaReceiver? = null
     private var mediaButtons: MediaButtonBridge? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    /** Dim screen wake while GPX Presentation is up (VirtualDisplay stalls if the phone sleeps hard). */
+    private var screenWakeLock: PowerManager.WakeLock? = null
     // Wi-Fi locks that keep the bike link fast for the whole streaming session (see [acquireWifiLocks]).
     // Two are held on purpose: LOW_LATENCY only engages while the app is foreground AND the screen is
     // on, but riders are told to ride with the screen OFF — so HIGH_PERF (which holds regardless of
@@ -62,6 +64,18 @@ class AndroidAutoService : Service() {
         active = this
         when (intent?.action) {
             ACTION_STOP -> { stopSelf(); return START_NOT_STICKY }
+            ACTION_GPX_WAKE -> {
+                // Ensure FGS + wake for Map Presentation; also bring the receiver up so a
+                // mid-ride wake request can't leave us without a pipeline.
+                startAsForeground()
+                startReceiver()
+                startWatchdog()
+                isRunning = true
+                applyGpxScreenWake(true)
+                reacquireLocks()
+                AppHttp.ensureCellularUplink()
+                return START_STICKY
+            }
         }
         startAsForeground()
         startReceiver()
@@ -93,21 +107,11 @@ class AndroidAutoService : Service() {
     }
 
     /**
-     * Auto-log the ride: once we're actually streaming to the dash, start the shared [TripRecorder]
-     * (if the rider enabled trip logging and location is granted). The recorder is stopped and saved
-     * when the session ends (user Exit → [onAaSessionEnded], or service teardown → [onDestroy]); a
-     * transient RECONNECTING blip is left alone so a single ride isn't split by a brief drop.
+     * Auto-log the ride while AA is streaming and/or the built-in map UI is live (see [TripAutoLog]).
+     * A transient RECONNECTING blip with the map still up is left alone so one ride isn't split.
      */
     private fun tickTripLogging() {
-        val rec = TripLogger.current
-        if (!AppSettings.logTrips(this)) {
-            if (rec != null && rec.recording) rec.stopAndSave()
-            return
-        }
-        if (ConnectionState.phase == Phase.STREAMING) {
-            val r = TripLogger.get(this)
-            if (!r.recording && r.start()) LogBus.log("[trip] auto-logging this ride")
-        }
+        TripAutoLog.sync(this)
     }
 
     private fun tickWatchdog() {
@@ -144,6 +148,13 @@ class AndroidAutoService : Service() {
         if (ConnectionState.phase == Phase.STREAMING) sawStream = true
         if (!AppSettings.autoRecovery(this)) return
         if (!isRunning || aaParked || !sawStream) return
+        // Never tear down while the Map / GPX Presentation is live — backgrounding or a brief
+        // Wi‑Fi blip must not kill the dash map (wake lock + VirtualDisplay stay up).
+        if (GpxSession.active) {
+            wifiDownSince = 0L
+            if (screenWakeLock?.isHeld != true) applyGpxScreenWake(true)
+            return
+        }
         // Only park for a real Wi-Fi outage — a dash-only drop with Wi-Fi still up is the prober's job.
         if (BikeWifi.currentNetwork == null) {
             val now = System.currentTimeMillis()
@@ -162,7 +173,8 @@ class AndroidAutoService : Service() {
     /** Stop the AA receiver + transcode (and any futile probing) but keep the service alive. */
     private fun tearDownAaKeepService() {
         AaVideoBridge.onSteadyVideo = null
-        try { TripLogger.current?.stopAndSave() } catch (_: Exception) {}
+        // Don't bank the trip if the map HUD is still live — [TripAutoLog] keeps recording.
+        try { TripAutoLog.sync(this) } catch (_: Exception) {}
         try { BikeLink.prober?.stop() } catch (_: Exception) {}
         try { mediaButtons?.stop() } catch (_: Exception) {}
         mediaButtons = null
@@ -171,8 +183,16 @@ class AndroidAutoService : Service() {
         AaVideoBridge.pipeline = null
         try { pipeline?.stop() } catch (_: Exception) {}
         pipeline = null
-        try { if (wakeLock?.isHeld == true) wakeLock?.release() } catch (_: Exception) {}
-        releaseWifiLocks()   // parked: let the radio idle again while we wait for the bike
+        if (GpxSession.active) {
+            // Map Presentation still needs CPU + screen wake even if AA video is parked.
+            reacquireLocks()
+            applyGpxScreenWake(true)
+            LogBus.log("[GPX] keeping wake locks — map session still active")
+        } else {
+            try { if (wakeLock?.isHeld == true) wakeLock?.release() } catch (_: Exception) {}
+            releaseScreenWake()
+            releaseWifiLocks()   // parked: let the radio idle again while we wait for the bike
+        }
     }
 
     private fun parkAa() {
@@ -252,6 +272,44 @@ class AndroidAutoService : Service() {
             if (wakeLock?.isHeld != true) wakeLock?.acquire(4 * 60 * 60 * 1000L)
         } catch (_: Exception) {}
         acquireWifiLocks()
+    }
+
+    /** Hold a bright/dim screen wake while the GPX Presentation / VirtualDisplay is streaming. */
+    fun applyGpxScreenWake(on: Boolean) {
+        try {
+            if (on) {
+                reacquireLocks() // CPU + Wi‑Fi locks — screen-off must not stall the map pipeline
+                if (screenWakeLock?.isHeld == true) return
+                val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+                @Suppress("DEPRECATION")
+                // SCREEN_BRIGHT keeps the VirtualDisplay painting when the rider pockets the phone;
+                // SCREEN_DIM alone is ignored on several OEMs once the Activity is backgrounded.
+                val wl = pm.newWakeLock(
+                    PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                    "OpenCfMoto:GpxPresentation",
+                )
+                wl.setReferenceCounted(false)
+                wl.acquire(4 * 60 * 60 * 1000L)
+                screenWakeLock = wl
+                LogBus.log("[GPX] screen wake lock held (Presentation stay-alive)")
+            } else {
+                if (GpxSession.active) {
+                    LogBus.log("[GPX] ignoring screen-wake release — map session still active")
+                    return
+                }
+                releaseScreenWake()
+            }
+        } catch (e: Exception) {
+            LogBus.log("[GPX] screen wake failed: $e")
+        }
+    }
+
+    private fun releaseScreenWake() {
+        try {
+            screenWakeLock?.let { if (it.isHeld) it.release() }
+        } catch (_: Exception) {
+        }
+        screenWakeLock = null
     }
 
     /**
@@ -423,26 +481,26 @@ class AndroidAutoService : Service() {
     /**
      * Drop the whole projection: stop the bike link (dash stops pulling the compositor's last frame,
      * so no frozen image), leave the bike Wi-Fi, mark STOPPED, and stop the service (which tears down
-     * the receiver, pipeline, and wake lock in [onDestroy]). Shared by the AA-exit path and app
-     * close/kill ([onTaskRemoved]).
+     * the receiver, pipeline, and wake lock in [onDestroy]). Used by explicit Stop / Connect-Stop /
+     * AA-exit — not by swiping the app away ([onTaskRemoved] keeps the HUD streaming).
      */
     private fun fullTeardown() {
         AaVideoBridge.onSteadyVideo = null
-        try { TripLogger.current?.stopAndSave() } catch (_: Exception) {}
         try { BikeLink.prober?.stop() } catch (_: Exception) {}
         try { BikeWifi.leave(applicationContext, LogBus::log) } catch (_: Exception) {}
         ConnectionState.set(Phase.STOPPED, "")
+        // Bank the trip unless the map UI is still bound (phone preview); onDestroy syncs again.
+        try { TripAutoLog.sync(this) } catch (_: Exception) {}
         stopSelf()   // onDestroy tears down the receiver, pipeline, and wake lock
     }
 
     /**
-     * The user swiped the app away from recents (or the task was killed). A foreground service
-     * survives task removal, which would leave Android Auto projecting a frozen dash. Tear the whole
-     * thing down so closing/killing the app also closes AA + the projected maps on the HUD.
+     * App task removed (swipe from recents / leave to launcher). Keep the FGS + wake locks +
+     * video pipeline running so the bike HUD map keeps streaming until the rider taps Stop.
      */
     override fun onTaskRemoved(rootIntent: Intent?) {
-        LogBus.log("[AA] app closed/killed — stopping projection to the dash")
-        try { fullTeardown() } catch (_: Exception) {}
+        LogBus.log("[AA] app task removed — keeping projection / FGS alive for bike HUD")
+        reacquireLocks()
         super.onTaskRemoved(rootIntent)
     }
 
@@ -451,7 +509,7 @@ class AndroidAutoService : Service() {
         aaParked = false
         if (active === this) active = null
         watchdogHandler.removeCallbacksAndMessages(null)
-        try { TripLogger.current?.stopAndSave() } catch (_: Exception) {}
+        try { TripAutoLog.sync(this) } catch (_: Exception) {}
         try { mediaButtons?.stop() } catch (_: Exception) {}
         mediaButtons = null
         try { receiver?.stop() } catch (_: Exception) {}
@@ -461,6 +519,7 @@ class AndroidAutoService : Service() {
         pipeline = null
         try { if (wakeLock?.isHeld == true) wakeLock?.release() } catch (_: Exception) {}
         wakeLock = null
+        releaseScreenWake()
         releaseWifiLocks()
         wifiLockLowLatency = null
         wifiLockHighPerf = null
@@ -511,7 +570,30 @@ class AndroidAutoService : Service() {
             active?.updateForegroundType()
         }
 
+        /**
+         * Screen + CPU wake for GPX Presentation. Starts the FGS if needed so backgrounding /
+         * screen-off cannot stall the VirtualDisplay (previously a no-op when AA wasn't up yet).
+         */
+        fun setGpxScreenWake(ctx: Context, on: Boolean) {
+            val svc = active
+            if (svc != null) {
+                svc.applyGpxScreenWake(on)
+                return
+            }
+            if (!on) return
+            // Bring the FGS up (wake path) so backgrounding can't kill the VirtualDisplay.
+            val i = Intent(ctx, AndroidAutoService::class.java).setAction(ACTION_GPX_WAKE)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ctx.startForegroundService(i)
+                else ctx.startService(i)
+                LogBus.log("[GPX] starting FGS for Presentation stay-alive")
+            } catch (e: Exception) {
+                LogBus.log("[GPX] could not start FGS for wake: $e")
+            }
+        }
+
         const val ACTION_STOP = "dev.zanderp.opencfmoto.ACTION_STOP_AA"
+        const val ACTION_GPX_WAKE = "dev.zanderp.opencfmoto.ACTION_GPX_WAKE"
 
         fun start(ctx: Context) {
             val i = Intent(ctx, AndroidAutoService::class.java)

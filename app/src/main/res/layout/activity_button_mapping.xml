@@ -31,12 +31,51 @@
             android:textColor="@color/text_secondary"
             android:textSize="14sp" />
 
-        <!-- ===== Gestures ===== -->
+        <!-- ===== Cluster preset ===== -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Card.OpenCfMoto"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Your left switch cluster"
+                    android:textColor="@color/text_secondary"
+                    android:textAllCaps="true"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.08" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="CFMOTO ships a few different left pods. Pick the one that matches your bars — doubles and long-press do not work the same on every cluster."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_cluster_preset"
+                    style="@style/Widget.OpenCfMoto.Segment"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Apply cluster preset…" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ===== Gestures ===== -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Card.OpenCfMoto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
 
             <LinearLayout
                 android:layout_width="match_parent"

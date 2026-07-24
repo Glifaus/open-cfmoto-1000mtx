@@ -17,15 +17,15 @@ every ride — all from an Android phone in your pocket.
 
 <br/>
 
-<img src="docs/screenshots/01_main.png" width="240" alt="Home screen"/>&nbsp;
-<img src="docs/screenshots/02_setup.png" width="240" alt="Setup — display"/>&nbsp;
-<img src="docs/screenshots/09_trip_map.png" width="240" alt="Logged ride on the map"/>
+![Home screen](docs/screenshots/01_main.png)
+![Map hub](docs/screenshots/14_map_hub.png)
+![Saved trips by day](docs/screenshots/08_trips.png)
 
 <br/><br/>
 
 ### 🎥 Live demo — Android Auto on a CFMoto dash
 
-<img src="docs/media/hud-demo.gif" width="640" alt="Android Auto running on the CFMoto MotoPlay dashboard"/>
+![Android Auto on the CFMoto MotoPlay dashboard](docs/media/hud-demo.gif)
 
 **▶ [Watch the full demo](docs/media/hud-demo.mp4)** — Google Maps navigation + media, driven from the
 dash touchscreen.
@@ -49,14 +49,14 @@ dash touchscreen.
 | 👆 **Multi-touch** | Two-finger pinch-to-zoom and full tap/scroll straight from the dash touchscreen (ghost-touch filter for noisy digitizers). |
 | 📺 **Dash view** | Big home-screen button — watch and drive the live dash from the phone (touch, pad, fullscreen). |
 | 🎛️ **Controls** | Big home-screen button — on-screen D-pad/knob, media volume, and handlebar-button mapping. |
-| 🕹️ **Handlebar buttons → AA** | On touchless / focus-mode dashes, ▲/▼/Enter navigate Android Auto over Bluetooth — every gesture remappable; Select-hold → Home. |
+| 🕹️ **Handlebar buttons → AA** | On touchless / focus-mode dashes, ◀/▶/★ (or ▲/▼) navigate Android Auto over Bluetooth — tap / hold / ×2 on each, every gesture remappable. |
 | 🧭 **Navigate-to + saved places** | Type a destination or map a handlebar button to a saved place for one-press turn-by-turn. |
 | 🎙️ **Voice / Assistant** | Streams your (helmet) mic to Android Auto so "Hey Google" sets a destination hands-free. |
 | ⚡ **One-tap Connect & Auto-connect** | Remembers your bike; reconnects on launch when in range; Wi‑Fi join timeout + auto re-join after ignition cycles. |
 | 📶 **Wi‑Fi AP or Direct (P2P)** | Normal hotspot join, or **Wi‑Fi Direct** for dashes that are Group Owners (e.g. **CL‑C450**). Setup: Auto / AP / P2P. |
 | 🖼️ **Screen margins** | Dedicated page — inset Android Auto from top/bottom/left/right (e.g. blank the 800NK Advanced MotoPlay pull-down). |
 | 🏍️ **Garage (multiple bikes)** | Name + photo per bike; each keeps its own display, resolution, power, and button settings. |
-| 🛰️ **Trip computer + ride logging** | Live speed/distance/duration from GPS, auto-logs every ride, saved trips + route maps. |
+| 🛰️ **Trip computer + ride logging** | Live speed/distance/duration from GPS, auto-logs every ride, day calendar of saved trips, route thumbnails, **Export GPX**. |
 | 📐 **Smart resolution & learned panels** | Auto-fits recognized dashes; remembers measured panel size and picks a better AA resolution next connect. |
 | 🌗 **Map dark mode** | Day / Night / Auto — from Setup, Controls, or Dash view; applies live. |
 | 🔋 **Battery & power tuning** | Smooth / Balanced / Saver + **Auto** (adapts to heat & Wi‑Fi). |
@@ -65,7 +65,8 @@ dash touchscreen.
 | 🧰 **Diagnostics & problem report** | Live logs (secrets redacted by default), Share Logs, and Setup → **Report a problem**. |
 | 📤 **Share / import bike tuning** | Export profile, resolution, fit, margins & button map as JSON (no passwords / personal prefs) — share on Discord, Import on another phone. |
 | 📶 **Wi‑Fi-off alert** | If phone Wi‑Fi is off when connecting, a dialog offers **Wi‑Fi settings** (one tap). |
-| 📱 **Whole-screen mirroring** | Optional: mirror the entire phone instead of Android Auto. |
+| 🗺️ **Map / GPX** | Free ride, GPX tracks, OSM search/POI, Home/favorites/markers, parked pin, road routing, voice cues — on the bike dash or phone. |
+| 📱 **Mirror phone** | Cast the phone screen when you really need it (screen on; awkward for nav apps). |
 
 ---
 
@@ -73,7 +74,7 @@ dash touchscreen.
 
 - **A CFMoto (or CFMoto scooter / ATV) whose dash can show a MotoPlay / EasyConnect QR.**
   **No T‑BOX required.** Works on **US and international** units. See the full list:
-  **[Supported bikes](docs/SUPPORTED-BIKES.md)**. Touch dashes use the screen; non‑touch /
+  **[Supported bikes](docs/09-SUPPORTED-BIKES.md)**. Touch dashes use the screen; non‑touch /
   focus-mode bikes use **Controls** + handlebar buttons. Unknown dashes are learned after the first
   connect.
 - **An Android phone**, Android **10 or newer**.
@@ -87,7 +88,7 @@ No root, no VPN, no PC required to ride.
 
 ## 🏍️ Supported bikes
 
-**→ Full list (source of truth): [docs/SUPPORTED-BIKES.md](docs/SUPPORTED-BIKES.md)**  
+**→ Full list (source of truth): [docs/09-SUPPORTED-BIKES.md](docs/09-SUPPORTED-BIKES.md)**  
 (same content as Setup → Supported bikes in the app)
 
 **Rule:** if the dash shows a **pairing QR**, try OpenCfMoto. T‑BOX / CFMOTO RIDE subscription is
@@ -162,7 +163,8 @@ You only do this once.
 ### 4. Connect and ride
 
 1. In OpenCfMoto tap **Scan bike** and point the camera at the dash's QR code. The app reads your bike
-   model + Wi‑Fi and remembers it.
+   model + Wi‑Fi and remembers it. **If the Android QR won't scan or connect**, switch the dash to
+   the **iOS / CarPlay QR** and scan that instead (same Wi‑Fi; often more reliable).
 2. Android Auto starts in the background and the phone pops a **Wi‑Fi dialog** to join the bike's
    hotspot (e.g. *CFMOTO4288*) — tap **Connect / Allow**.
 3. The dash connects and **Android Auto appears on the dashboard**. 🎉
@@ -186,17 +188,17 @@ The **Trip** screen is a GPS-driven ride computer showing live speed, distance, 
 max/avg speed. Speed/distance come from the phone's GPS (the bike doesn't share telemetry over the
 mirroring link).
 
-- **Automatic logging** — with *Log trips automatically* enabled, every projection session records a
-  ride in the background, auto-segmenting when you stop for a while.
-- **Saved trips** — tap **Saved trips** to browse past rides with their stats; tap one to see its
-  **route on a map** (OpenStreetMap), or long-press to delete.
+- **Automatic logging** — with *Log trips automatically* enabled, every **Android Auto projection**
+  and every **built-in Map** session (free ride / GPX / Navigate-to on the dash or phone preview)
+  records a ride in the background into the same Saved trips list, auto-segmenting when you stop
+  for a while. Manual **Record ride** on the map still works if you turned auto-log off.
+- **Saved trips** — browse by **day** (‹ › calendar), each card shows a **route thumbnail**, stats, and
+  **Export GPX**; tap a card for the full OpenStreetMap route, or long-press to delete.
 - Manual **Start / Pause / Reset** controls are there too.
 
-<p>
-<img src="docs/screenshots/04_trip.png" width="220" alt="Trip computer"/>&nbsp;
-<img src="docs/screenshots/08_trips.png" width="220" alt="Saved trips"/>&nbsp;
-<img src="docs/screenshots/09_trip_map.png" width="220" alt="Ride route on the map"/>
-</p>
+![Trip computer](docs/screenshots/04_trip.png)
+![Saved trips by day](docs/screenshots/08_trips.png)
+![Ride route on the map](docs/screenshots/09_trip_map.png)
 
 <br clear="all"/>
 
@@ -258,7 +260,8 @@ This app runs a live video transcoder, so it always draws power and warms the ph
 - **Auto-connect on launch** — start projecting automatically when a paired bike's Wi‑Fi is in range.
 - **Auto-recovery watchdog** — if the dash drops or the stream stalls, reconnect automatically.
 - **Seamless resume** — see below.
-- **Log trips automatically** — record every ride's route + stats while projecting.
+- **Log trips automatically** — record every ride's route + stats while projecting **or** using the
+  built-in Map (same Saved trips list).
 
 <br clear="all"/>
 
@@ -288,9 +291,10 @@ backpack while riding.
 
 ### 🎛️ Handlebar & on-screen controls
 
-**Touchscreen dashes** (800MT, 800NK Advanced, …) are driven by touch. The **1000 MT‑X** and
-**non-touch** CFDL16-class bikes (450SR, 675SR, 300SR, 450NK, 675NK, 450MT, 450CL‑C, …) are driven by
-the **handlebar buttons** and an **on-screen pad** — Android Auto stays in focus/knob mode so those
+**Touchscreen dashes** (800MT Explore with a working touch panel, 800NK Advanced, …) are driven by
+touch. The **1000 MT‑X** and **non-touch** CFDL16-class bikes (450SR, 675SR, 300SR, 450NK, 675NK,
+450MT, 450CL‑C, …) — and any dash where you turn on **Disable touchscreen** — are driven by the
+**handlebar buttons** and an **on-screen pad**. Android Auto stays in focus/knob mode so those
 controls can move a cursor. (On the 1000 MT‑X you can still unlock the bike's own touch lock for
 native menus; mirrored AA is handlebar-first so buttons keep working.)
 
@@ -305,36 +309,157 @@ On the home screen, tap the big **Controls** button (next to **Dash view**).
 
 **Handlebar buttons → Android Auto.** The buttons reach the phone over **Bluetooth** (AVRCP) — *not*
 the mirroring link — so you must **pair the phone to the bike over Bluetooth** first. Turn on
-*Handlebar buttons drive Android Auto* and the defaults are:
+*Handlebar buttons drive Android Auto*. The app maps by **meaning** (Backward / Forward / Select),
+then auto-routes whatever your bike sends — ▲/▼ *volume* on many non-touch dashes, or ◀/▶ *track*
+keys on the 800MT 5-way — into those gestures.
 
-| Gesture (button) | Default action |
+#### Which left switch do you have?
+
+CFMOTO ships more than one left pod. **Doubles and long-press are not equal across them** — pick the
+photo that matches your bars, then in **Controls → Customize buttons → Apply cluster preset…** load
+the matching config (or follow the tables below by hand).
+
+<p>
+<img src="docs/screenshots/16_cluster_back_set.png" width="220" alt="Cluster A — BACK / SET diamond"/>&nbsp;
+<img src="docs/screenshots/17_cluster_mode_ent.png" width="220" alt="Cluster B — MODE / ENT"/>&nbsp;
+<img src="docs/screenshots/18_cluster_5way_explore.png" width="220" alt="Cluster C — 5-way Explore"/>
+</p>
+
+| Photo | Cluster | What the bike can send | Preset in the app |
+| --- | --- | --- | --- |
+| **A** | **BACK / SET** diamond (▲ ▼ BACK SET, turn signals, red horn) | Reliable **taps**. Discrete hold / Select ×2 usually missing; ▲▲/▼▼ *volume* ×2 often still works. | **BACK / SET diamond (limited)** |
+| **B** | **MODE / ENT** (M MODE, +, Fn, center, ⌄ back, ENT, ▲ ▼) | Taps + often Select ×2; holds / ◀◀ ▶▶ best-effort (tune delays). | **MODE / ENT cluster** |
+| **C** | **5-way Explore** (Fn, ★, D-pad with voice in the center) | Full **tap / hold / ×2** on ◀ / ▶ / ★ (verified on 800MT Explore). | **5-way Explore (Fn / ★ / voice)** — shipped default |
+
+**Actions you can assign** to any gesture (Customize buttons): Do nothing · Knob forward / back · Select / OK · Back · Home · Assistant · D-pad ↑ ↓ ← → · Navigate to saved place 1 / 2 / 3.
+
+##### Cluster C — 5-way Explore (recommended default)
+
+Use this if your left pod looks like photo **C** (voice icon in the middle of the D-pad).
+
+| Gesture | Physical | Default action |
+| --- | --- | --- |
+| **Backward** | ◀ (or ▲ volume on some non-touch dashes) | Rotary knob back (move focus) |
+| **Forward** | ▶ (or ▼ volume) | Rotary knob forward (move focus) |
+| **Select** | ★ / start / Enter — quick tap | Select / OK |
+| **Backward (hold)** | press and hold ◀ | Do nothing (D-pad ↑ unused on these AA screens) |
+| **Forward (hold)** | press and hold ▶ | Do nothing (D-pad ↓ unused) |
+| **Select (hold)** | press and hold ★ / Enter | Home (app list) |
+| **Backward ×2** | double-tap ◀ | D-pad left (into / across apps) |
+| **Forward ×2** | double-tap ▶ | D-pad right |
+| **Select ×2** | double-tap ★ / Enter | Back (to the launcher bar) |
+
+That’s **9 remappable gestures** on three physical buttons (tap / hold / ×2 each). Holds need a real
+key-up from the bike (track-key ◀/▶ / ★) — the ▲/▼ *volume* path on some non-touch dashes has no
+release, so hold is unavailable there (×2 via a big volume jump still works).
+
+![Handlebar buttons driving Android Auto on the dash](docs/media/buttons-demo.gif)
+
+**▶ [Watch the full silent demo](docs/media/buttons-demo.mp4)** — ◀ / ▶ / ★ taps, holds, and double-taps.
+
+**How to ride with it**
+
+1. Pair Bluetooth phone ↔ bike, connect mirroring, turn on *Handlebar buttons drive Android Auto*.
+2. **◀ / ▶** = knob (move the list). **★ tap** = Select / OK.
+3. **◀ ◀ / ▶ ▶** = D-pad left / right (into apps / across the bar). **★ ★** = **Back**.
+4. **★ hold** = **Home**. ◀/▶ holds are unused by default (remap if you want).
+5. Remap any of the nine rows in Customize buttons (including *Navigate to saved place 1/2/3*).
+6. Timing: Setup → **Double-tap delay** / **Hold delay**. See [Tune timing & verify in Logs](#tune-timing--verify-in-logs).
+
+##### Cluster A — BACK / SET diamond (limited)
+
+Use this if your left pod looks like photo **A**. The bike firmware usually collapses a physical
+long-press into one short AVRCP tap (~30–100 ms) and does **not** emit a discrete double-tap — we
+cannot invent hold / Select ×2 in software if those events never leave the bars.
+
+Preset **BACK / SET diamond (limited)** — all nine rows:
+
+| Gesture | Action | Notes |
+| --- | --- | --- |
+| **Backward** | Knob back | Instant (no double-tap wait) |
+| **Forward** | Knob forward | Instant |
+| **Select** | Select / OK | Instant |
+| **Backward (hold)** | Do nothing | Firmware usually won't send a real hold |
+| **Forward (hold)** | Do nothing | same |
+| **Select (hold)** | Do nothing | same |
+| **Backward ×2** | **Back** | Often via hard ▲▲ volume flick |
+| **Forward ×2** | **Home** | Often via hard ▼▼ volume flick |
+| **Select ×2** | Do nothing | Discrete double Select almost never arrives |
+
+**How to ride with it**
+
+1. Apply that preset — taps feel snappy; try a firm double-flick on ▲/▼ for Back / Home.
+2. If volume ×2 never fires, use the **on-screen pad** (Controls / Dash view) for Back / Home, or remap one single.
+3. Setup timing sliders will not create hold/Select ×2 if the firmware isn't sending them.
+4. Optional: map Select to *Navigate to saved place 1* if you mainly need one-press nav.
+
+##### Cluster B — MODE / ENT
+
+Use this if your left pod looks like photo **B** (ENT on the right, return arrow on the left, MODE / + / Fn above).
+
+Preset **MODE / ENT cluster** — all nine rows:
+
+| Gesture | Action | Notes |
+| --- | --- | --- |
+| **Backward** | Knob back | Primary navigation |
+| **Forward** | Knob forward | Primary navigation |
+| **Select** | Select / OK | ENT / center |
+| **Backward (hold)** | Do nothing | Remap if your dash sends a real hold |
+| **Forward (hold)** | Do nothing | same |
+| **Select (hold)** | Home | Needs key-up |
+| **Backward ×2** | D-pad left | Best-effort (or volume-coalesced) |
+| **Forward ×2** | D-pad right | Best-effort |
+| **Select ×2** | Back | Try two firm taps inside ~300–450 ms |
+
+**How to ride with it**
+
+1. Apply that preset.
+2. Confirm ★★ → Back and ◀◀ / ▶▶ → D-pad ←/→ in a quiet driveway before relying on them in traffic.
+3. If ×2 never fires: raise **Handlebar double-tap delay** to 450 ms, or set ×2 rows to *Do nothing* and use the on-screen pad.
+4. MODE / Fn / + on the pod are usually **bike-native** (dash menus) — not remapped unless your firmware also emits AVRCP (check Logs for `[BTN] media key …`).
+
+##### Shared tips (every cluster)
+
+- Every gesture stays **remappable** after a preset (knob, D-pad, select, back, home, Assistant, do-nothing, or *navigate to a saved place*).
+- **On-screen pad + Navigate to…** — Controls also has a D-pad, rotary knob, and a **"Navigate to…"** box. Save up to three places and map them to a handlebar button for **one-press** navigation with the phone in your pocket (*Display over other apps* required for background launch — the app prompts you when a nav button is mapped).
+- **Voice** — map any gesture (or tap **Voice**) to the Assistant; OpenCfMoto streams the mic to Android Auto (grant microphone when asked).
+
+##### Tune timing & verify in Logs
+
+Changes apply on the **next press** (no reconnect).
+
+1. **Setup → Handlebar**
+   - **Double-tap delay** — `200 ms` (snappy singles) · `300 ms` (default) · `450 ms` (forgiving doubles). Longer = easier ×2, but every single tap waits that long before firing (except the BACK/SET preset, which skips the wait).
+   - **Hold delay** — `500 ms` · `600 ms` (default) · `800 ms`. Applies to **◀ / ▶ / ★** hold, not only Select.
+2. **Controls → Customize buttons** — remap any of the 9 gestures; use **Apply cluster preset…** first if you changed bikes.
+3. **Diagnostics (home → Logs)** while projecting with *Handlebar buttons drive Android Auto* **ON** — press the bars and watch for `[BTN]` lines:
+
+| Log line | Meaning |
 | --- | --- |
-| **Backward** — ◀ left, or ▲ volume on non-touch dashes | Rotary knob back (previous item) |
-| **Forward** — ▶ right, or ▼ volume on non-touch dashes | Rotary knob forward (next item) |
-| **Select** — Enter / ★ (start) button, quick tap | Select / OK |
-| **Select (hold)** — press and hold Enter / ★ | Home (app list) |
-| **Backward ×2** (double-tap Backward) | D-pad left |
-| **Forward ×2** (double-tap Forward) | D-pad right |
-| **Select ×2** (double-tap Enter / ★) | Back |
+| `media key KEYCODE_MEDIA_PREVIOUS/NEXT/PAUSE down` | Raw key reached the phone |
+| `volume UP/DOWN (… jump=N)` / `×2` | ▲/▼ volume path; `jump≥3` or `×2` = coalesced double |
+| `backward\|forward\|select held 72ms → tap` | Released before hold delay → counted as tap (then may wait for ×2) |
+| `… held 640ms → long press` | Hold recognized (ms ≥ your Hold delay) |
+| `… key-repeat → long press` | Dash sent key-down repeats while held |
+| `Backward ×2 → …` / `Forward ×2 → …` / `Select ×2 → …` | Double-tap fired and ran its mapped action |
+| `Backward (hold) → …` / `Forward (hold) → …` / `Select (hold) → …` | Hold fired and ran its mapped action |
+| `Backward → Knob back` (etc.) | Single tap committed |
 
-The mapping is by **meaning, not by physical button**: the app auto-routes whatever your bike
-sends — the 450SR's ▲/▼ volume, or the 800MT's ◀/▶ track keys — into the same Backward / Forward /
-Select gestures, so one setup works across bikes. If double-taps feel too slow or too picky, tweak
-**Handlebar double-tap delay** / **Select hold delay** in Setup (200–450 ms / 500–800 ms).
+**How to tune from the log**
 
-Every gesture is **remappable** in **Customize buttons** (knob, D-pad, select, back, home, Assistant,
-do-nothing, or *navigate to a saved place*). While the mode is on, the buttons stop skipping music
-tracks (Android gives the media buttons to one app at a time) — toggle it off for normal media
-control.
+- Want ×2 but only see `held … → tap` then a single action: raise **Double-tap delay** to **450 ms**, or tap faster inside the window.
+- Hold always shows `held 80ms → tap`: the bike isn’t keeping the key down — set that hold row to *Do nothing* (typical BACK/SET).
+- Hold shows `held 550ms → tap` with delay at 600: drop **Hold delay** to **500 ms**, or hold a bit longer.
+- No `[BTN]` lines at all: Bluetooth not paired / capture switch off / music app stole focus (see below — look for `reclaiming media buttons`).
 
-**On-screen pad + Navigate to…** The Controls screen also has an on-screen D-pad, rotary knob, and a
-**"Navigate to…"** box: type an address and turn-by-turn appears on the dash, no dash interaction
-needed. Save up to three places and map them to a handlebar button for **one-press** navigation with
-the phone in your pocket (that background launch needs *Display over other apps* — the app prompts you
-when a nav button is mapped).
+##### Handlebar buttons vs music apps
 
-**Voice.** Map any gesture (or tap **Voice**) to the Assistant and ask for directions through your
-helmet mic — OpenCfMoto streams the mic to Android Auto (grant the microphone permission when asked).
+With *Handlebar buttons drive Android Auto* **ON** (default), the bars drive the Android Auto UI
+(not track-skip). Music can keep playing — control it by navigating that UI with the bars or the
+on-screen pad. Turn the switch **OFF** only if you want the physical bars to control media again.
+
+If Spotify (or another player) steals the buttons mid-ride: press **★** to **pause** the song so
+OpenCfMoto can reclaim the bars for navigation, then start music again when you want.
 
 ### 📺 Dash view (watch & control from the phone)
 
@@ -370,14 +495,55 @@ before you ride — then pocket it. On touch dashes you can **drive it with your
 
 ---
 
+## 🗺️ Map / GPX (adventure nav)
+
+Android Auto (Maps / Waze) does **not** replace adventure tracks. **OpenCfMoto Map / GPX** projects a
+bike-sized map to the dash (own-content path — MapLibre on phone, osmdroid on the bike stream) using
+OpenStreetMap data:
+
+![OpenCfMoto Map on the CFMoto dash — free ride / search](docs/media/map-demo-1.gif)
+
+![OpenCfMoto Map on the CFMoto dash — route preview & Go](docs/media/map-demo-2.gif)
+
+
+| Mode | What it does |
+|------|----------------|
+| **Free ride** | Map + GPS — speed, altitude, heading-up chase zoom, Follow / North-up |
+| **GPX track** | Import `.gpx`, optional offline tiles, turn cues + voice, progress |
+| **Search / POI** | OSM search + fuel/cafe/parking/… chips → preview routes → **Go** |
+| **Type on phone** | Tap Search on the bike → keyboard on the phone home field; results on the dash |
+| **Home / favorites / markers** | Long-press drop a pin to set Home or a marker; favorites from search |
+| **Parked** | Mark / update / clear parking; navigate back to the pin |
+| **Navigate-to** | Road routes (OSRM / ORS / offline) with Fast / Fun alts; Recalc re-routes |
+| **Circuit** | There-and-back loop to a place and home again |
+| **Speed limit** | Nearby OSM `maxspeed` on the dash (Overpass) |
+| **Arrival / parking sheet** | Real arrival offers Park / Find parking — **End** does not fake “Arrived” |
+| **Region packs** | Offline PMTiles + routing graphs (download on home Wi‑Fi) |
+| **Map backup** | Export / import favorites, markers, history, parked, map prefs |
+
+![Map hub — start ride, search, history](docs/screenshots/14_map_hub.png)
+
+**Your own API keys (optional).** Map tiles, search/POI, and basic routing work out of the box via
+public OpenStreetMap / OSRM / Valhalla endpoints — **no key required**. For stricter
+avoid-highways / avoid-tolls and more reliable ORS routing, paste your own free
+[OpenRouteService](https://openrouteservice.org/) API key in **Map hub → OpenRouteService API key →
+Save routing key**. Your key stays on the phone (never uploaded by OpenCfMoto). Clear the field to
+fall back to the free routers again. Offline region packs also route without any online key.
+
+Dash widgets: **speed / left / ETA / alt / limit**, maneuver cue, **End / Park / Recalc**, Follow,
+Heading/North, Voice, zoom. Phone can stay pocketed — or type destinations from the home search bar
+while the map is on the bike.
+
+**Mirror app** is only for casting the phone UI (needs screen on / awkward aspect). Prefer **Map** for
+OpenCfMoto routes and **Connect** for Maps/Waze Android Auto.
+
 ## 🔘 Button reference
 
 | Button | What it does |
 | --- | --- |
-| **Connect to `<bike>`** | One-tap reconnect to your last paired bike and project Android Auto. |
-| **Scan bike** | Scan a bike's pairing QR to pair/connect (adds it to the Garage). |
-| **Mirror** | Mirror your **whole phone screen** to the dash instead of Android Auto. |
-| **Stop** | Stop everything and leave bike Wi‑Fi / P2P. |
+| **Connect / Stop** | Connect starts Android Auto on the dash; becomes **Stop** while linking or projecting. |
+| **Scan · Map · Mirror** | Scan QR; Map = OpenCfMoto Map/GPX; Mirror = cast phone. While connected, Map/Mirror switch content. |
+| **Dash view · Controls** | Phone HUD and D-pad / handlebar (same row). |
 | **Dash view** | Live in-app mirror of the dash — touch + on-screen controls. |
 | **Controls** | On-screen D-pad/knob, volume, handlebar mapping, Navigate-to. |
 | **Setup** | Permissions, AA setup, display/margins, Wi‑Fi transport, profiles, updates, About. |
@@ -400,7 +566,7 @@ before you ride — then pocket it. On touch dashes you can **drive it with your
 
 | Symptom | Try this |
 | --- | --- |
-| App **won't connect** / keeps retrying, or the dash shows **"device is not on the network"** | Usually the **dash Wi‑Fi** is stuck. On the phone-connection screen, **toggle Android ↔ iOS (CarPlay) QR** to restart the hotspot, then **Connect** again. After an ignition cycle the app **re-requests Wi‑Fi** automatically; some firmwares still need the pairing/QR screen once. |
+| App **won't connect** / keeps retrying, or the dash shows **"device is not on the network"** | Usually the **dash Wi‑Fi** is stuck. On the phone-connection screen, **toggle Android ↔ iOS (CarPlay) QR** to restart the hotspot, then **Connect** again (scanning the **iOS QR** is fine — often works when the Android one is flaky). After an ignition cycle the app **re-requests Wi‑Fi** automatically; some firmwares still need the pairing/QR screen once. |
 | **CL‑C450 / DIRECT‑…** never joins | In Setup set Wi‑Fi to **P2P** (or Auto). These dashes are often Wi‑Fi Direct Group Owners, not a normal AP. |
 | Dash stays **blank** and the app says to **close the official CFMoto app** | The official CFMoto / EasyConnect app grabs the same link ports, so the bike connects to *it* instead. The app pops a prompt with **Close & retry** (best-effort) and **App settings** (tap *Force stop*); do that and reconnect. |
 | App reports **VPN** blocking bike Wi‑Fi | Always-on VPN with “Block connections without VPN” returns EPERM when pinning sockets to the bike AP. Turn the VPN off for the ride, disable that kill-switch, or allow LAN / local network in the VPN app — then Connect again. |
@@ -496,7 +662,7 @@ or run a modified version as a network-accessible service — you **must** relea
 corresponding source under the AGPL-3.0 and keep the copyright/attribution notices intact. **Nobody
 can take OpenCfMoto closed-source or ship a proprietary product built on it.**
 
-> **Why AGPL:** the Android Auto receiver (`dev.zanderp.opencfmoto/aa/`) is derived from the AGPLv3
+> **Why AGPL:** the Android Auto receiver (`dev.coletz.opencfmoto/aa/`) is derived from the AGPLv3
 > project [headunit-revived](https://github.com/andreknieriem/headunit-revived), so the combined work
 > is AGPL-3.0 by inheritance. This is the strongest copyleft available and is a deliberate choice to
 > keep the project — and every fork of it — open.

@@ -87,6 +87,16 @@ class PxcHandshake(
         profile = BikeProfiles.select(json, log)
         val early = BikeProfileHolder.active
         val startedSpec = BikeProfileHolder.aaVideo  // what Android Auto actually started / negotiated with
+        // Keep a measured landscape panel (e.g. 800MT 1280×576) when CLIENT_INFO scoring would
+        // flip to the near-square 800NK Advanced profile — that mis-route resized touch/margins
+        // mid-session while AA stayed on the landscape stream (connect/drop flaps in field logs).
+        val earlyPanel = early.panelSize
+        val earlyIsWide = earlyPanel != null && earlyPanel.first >= earlyPanel.second * 3 / 2
+        if (earlyIsWide && profile === Cfdl26NkTouchProfile) {
+            log("[$tag] keeping landscape QR/measured profile '${early.name}' " +
+                "(CLIENT_INFO preferred '${profile.name}' but panel ${earlyPanel!!.first}x${earlyPanel.second} is wide)")
+            profile = early
+        }
         if (early !== profile) {
             log("[$tag] profile refined from QR guess '${early.name}' → CLIENT_INFO '${profile.name}' " +
                 "(AA already started at the QR-guess resolution)")

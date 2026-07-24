@@ -1,22 +1,31 @@
 package dev.zanderp.opencfmoto
 
+import android.annotation.SuppressLint
 import android.app.Presentation
 import android.content.Context
 import android.graphics.Color
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.Surface
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
+import android.widget.FrameLayout
 
 /**
  * H.264 video pipeline for MotoPlay mirroring.
@@ -59,6 +68,12 @@ class VideoPipeline(
     private var presentation: Presentation? = null
     private var drainThread: Thread? = null
     private var aaCompositor: AaCompositor? = null
+    /** Letterbox scaler for MediaProjection (whole-screen or single-app) → bike encoder. */
+    private var mirrorScaler: AaCompositor? = null
+    private var projectionCallback: android.media.projection.MediaProjection.Callback? = null
+    private var mirrorDisplayListener: DisplayManager.DisplayListener? = null
+    private var gpxVoice: GpxVoice? = null
+    private var gpxDashUi: GpxDashUi? = null
     private var encoderW = 0
     private var encoderH = 0
     @Volatile private var running = false
@@ -111,8 +126,11 @@ class VideoPipeline(
 
         val projection = ProjectionHolder.projection
         if (projection != null) {
-            log("[VIDEO] FULL-SCREEN mirror mode (MediaProjection)")
+            log("[VIDEO] mirror mode (MediaProjection — whole screen or single app)")
             setupProjectionDisplay(projection)
+        } else if (GpxSession.active) {
+            log("[VIDEO] GPX viewer mode (Presentation)")
+            main.post { setupGpxPresentation() }
         } else {
             log("[VIDEO] own-content mode (Presentation)")
             main.post { setupDisplayAndPresentation() }
@@ -123,12 +141,20 @@ class VideoPipeline(
     private fun createEncoder(w: Int, h: Int): Boolean {
         try {
             val profile = BikeProfileHolder.active
-            val bitrate = VideoPrefs.bitrateFor(context, profile)
+            // Map / GPX Presentation changes every pan/GPS tick — give H.264 more bits + shorter GOP
+            // so motion doesn't smear into block artifacts on the bike (phone preview skips encode).
+            val mapBoost = GpxSession.active
+            val bitrate = (VideoPrefs.bitrateFor(context, profile) * if (mapBoost) 1.35f else 1f).toInt()
+            val iframeSec = if (mapBoost) {
+                maxOf(1, profile.videoIFrameIntervalSec / 2)
+            } else {
+                profile.videoIFrameIntervalSec
+            }
             fun baseFormat() = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, w, h).apply {
                 setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
                 setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
                 setInteger(MediaFormat.KEY_FRAME_RATE, profile.videoFrameRate)
-                setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, profile.videoIFrameIntervalSec) // frequent keyframes for late joiners
+                setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iframeSec)
                 // Surface-input encoders only emit on new buffers; a STATIC screen (e.g. mirror of
                 // an idle app) then produces zero frames and the bike times out. Repeat the last
                 // frame if nothing new arrives so output is continuous even when the screen is still.
@@ -213,18 +239,114 @@ class VideoPipeline(
         }
     }
 
-    /** Full-screen mirror: capture the real device display into the encoder surface. */
+    /**
+     * Mirror the phone (whole display or a single app on Android 14+) into the bike encoder.
+     *
+     * Capture goes into an [AaCompositor] SurfaceTexture so [onCapturedContentResize] can retarget
+     * the VirtualDisplay to the real capture size (required for single-app sharing — feeding the
+     * encoder surface directly at bike size yields black / no frames). The compositor maps into the
+     * fixed bike canvas [width]x[height].
+     *
+     * Single-app capture only produces frames while that app is visible. Staying in OpenCfMoto after
+     * picking an app yields `visible=false` and a black dash — [MainActivity] moves our task back.
+     */
     private fun setupProjectionDisplay(projection: android.media.projection.MediaProjection) {
         try {
-            // Required on API 34+: register a callback before creating the virtual display.
-            projection.registerCallback(object : android.media.projection.MediaProjection.Callback() {
-                override fun onStop() { log("[VIDEO] MediaProjection stopped") }
-            }, main)
-            val flags = android.hardware.display.DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR
+            val encSurf = inputSurface ?: run {
+                log("[VIDEO] projection display failed: no encoder surface"); return
+            }
+            val metrics = context.resources.displayMetrics
+            val density = metrics.densityDpi.coerceAtLeast(160)
+            // Start the capture buffer at the physical display size; app-capture resize updates it.
+            val initW = metrics.widthPixels.coerceAtLeast(width).let { it - (it % 2) }
+            val initH = metrics.heightPixels.coerceAtLeast(height).let { it - (it % 2) }
+
+            val scaler = AaCompositor(log).also { it.start(initW, initH) }
+            mirrorScaler = scaler
+            val captureSurf = scaler.inputSurface ?: run {
+                log("[VIDEO] projection display failed: no compositor input"); return
+            }
+            // Setup ▸ Screen fit (same preference as AA). Prefer Fit for mirror so tall phone /
+            // single-app buffers letterbox instead of cropping to a slice.
+            fun currentFit() = VideoPrefs.fit(context)
+            fun applyMirrorOutput(srcW: Int, srcH: Int, reason: String) {
+                val fit = currentFit()
+                scaler.updateCaptureSize(srcW, srcH)
+                scaler.setOutput(encSurf, width, height, srcW, srcH, fit)
+                log("[MIRROR] $reason src=${srcW}x$srcH → canvas ${width}x$height fit=$fit")
+            }
+            applyMirrorOutput(initW, initH, "initial")
+            scaler.setFrameCap(VideoPrefs.power(context).fps)
+
+            var lastCapW = initW
+            var lastCapH = initH
+
+            fun onCaptureSize(w: Int, h: Int, reason: String) {
+                // Even dims for SurfaceTexture / encoder math. Must use VirtualDisplay.resize —
+                // MediaProjection allows only ONE createVirtualDisplay per consent token.
+                val rw = w.coerceAtLeast(2).let { it + (it % 2) }
+                val rh = h.coerceAtLeast(2).let { it + (it % 2) }
+                if (rw == lastCapW && rh == lastCapH && reason == "resize") return
+                lastCapW = rw; lastCapH = rh
+                log("[MIRROR] app-capture $reason ${w}x$h → VD ${rw}x$rh → canvas ${width}x$height")
+                try {
+                    virtualDisplay?.resize(rw, rh, density)
+                } catch (e: Exception) {
+                    log("[MIRROR] VirtualDisplay.resize failed: $e")
+                }
+                applyMirrorOutput(rw, rh, reason)
+            }
+
+            val cb = object : android.media.projection.MediaProjection.Callback() {
+                override fun onStop() {
+                    log("[MIRROR] MediaProjection stopped")
+                    ProjectionService.setKeepScreenOn(context, false)
+                }
+
+                override fun onCapturedContentResize(w: Int, h: Int) {
+                    onCaptureSize(w, h, "resize")
+                }
+
+                override fun onCapturedContentVisibilityChanged(isVisible: Boolean) {
+                    log("[MIRROR] capture visible=$isVisible")
+                    if (!isVisible) {
+                        log(
+                            "[MIRROR] shared app is in the background — Android sends no frames. " +
+                                "Prefer Entire screen for riding, or leave the shared app on top.",
+                        )
+                    }
+                }
+            }
+            projectionCallback = cb
+            // Required on API 34+: register before createVirtualDisplay.
+            projection.registerCallback(cb, main)
+
+            val flags = DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR
             virtualDisplay = projection.createVirtualDisplay(
-                "OpenCfMotoMirror", width, height, 160, flags, inputSurface, null, main,
+                "OpenCfMotoMirror", initW, initH, density, flags, captureSurf, null, main,
             )
-            log("[VIDEO] mirroring device screen → ${width}x${height} (letterboxed to fit)")
+            ProjectionService.setKeepScreenOn(context, true)
+            // Fold / rotate: re-apply fit if metrics change without a content-resize callback.
+            val displayListener = object : DisplayManager.DisplayListener {
+                override fun onDisplayAdded(displayId: Int) {}
+                override fun onDisplayRemoved(displayId: Int) {}
+                override fun onDisplayChanged(displayId: Int) {
+                    if (!running) return
+                    val m = context.resources.displayMetrics
+                    val dw = m.widthPixels.coerceAtLeast(2).let { it - (it % 2) }
+                    val dh = m.heightPixels.coerceAtLeast(2).let { it - (it % 2) }
+                    // Only nudge when we're still on whole-screen-sized capture (not single-app).
+                    if (lastCapW >= dw - 2 || lastCapH >= dh - 2) {
+                        onCaptureSize(dw, dh, "display-changed")
+                    } else {
+                        applyMirrorOutput(lastCapW, lastCapH, "display-changed-refit")
+                    }
+                }
+            }
+            mirrorDisplayListener = displayListener
+            val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+            dm.registerDisplayListener(displayListener, main)
+            log("[VIDEO] mirroring → capture ${initW}x$initH → bike ${width}x$height (fit=${currentFit()})")
         } catch (e: Exception) {
             log("[VIDEO] projection display failed: $e")
         }
@@ -232,13 +354,7 @@ class VideoPipeline(
 
     private fun setupDisplayAndPresentation() {
         try {
-            val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-            val flags = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY or
-                DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION
-            val vd = dm.createVirtualDisplay("OpenCfMoto", width, height, 160, inputSurface, flags)
-            virtualDisplay = vd
-            val display = vd?.display ?: run { log("[VIDEO] virtualDisplay.display null"); return }
-
+            val display = createOwnVirtualDisplay() ?: return
             val pres = Presentation(context, display)
             val root = LinearLayout(pres.context).apply {
                 orientation = LinearLayout.VERTICAL
@@ -246,7 +362,7 @@ class VideoPipeline(
                 setBackgroundColor(Color.parseColor("#0D47A1"))
             }
             val title = TextView(pres.context).apply {
-                text = "Hacked by Coletz :P"
+                text = "OpenCfMoto"
                 setTextColor(Color.WHITE)
                 textSize = 28f
                 gravity = Gravity.CENTER
@@ -263,7 +379,6 @@ class VideoPipeline(
             presentation = pres
             log("[VIDEO] presentation shown on virtual display")
 
-            // Animate so the stream is visibly live (forces continuous frames).
             val ticker = object : Runnable {
                 var n = 0
                 override fun run() {
@@ -276,6 +391,58 @@ class VideoPipeline(
         } catch (e: Exception) {
             log("[VIDEO] display/presentation failed: $e")
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun setupGpxPresentation() {
+        try {
+            if (!GpxSession.active) {
+                log("[GPX] session inactive — placeholder"); setupDisplayAndPresentation(); return
+            }
+            if (GpxSession.mode == GpxSession.Mode.GPX && GpxSession.trackFile == null) {
+                log("[GPX] no track — placeholder"); setupDisplayAndPresentation(); return
+            }
+            val display = createOwnVirtualDisplay() ?: return
+            val pres = Presentation(context, display)
+            val root = LayoutInflater.from(pres.context).inflate(R.layout.presentation_gpx, null)
+            val ui = GpxDashUi(pres.context, root, log, isAlive = { running }, projected = true)
+            if (!ui.bind()) {
+                ui.release()
+                setupDisplayAndPresentation()
+                return
+            }
+            gpxDashUi = ui
+            gpxVoice = null
+            pres.setContentView(root)
+            try {
+                pres.window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            } catch (_: Exception) {
+            }
+            pres.show()
+            presentation = pres
+            // Screen + FGS wake so phone sleep / background doesn't stall VirtualDisplay.
+            AppHttp.ensureCellularUplink()
+            AndroidAutoService.setGpxScreenWake(context, true)
+            log("[GPX] presentation shown → ${width}x${height}")
+        } catch (e: Exception) {
+            log("[GPX] presentation failed: $e")
+            try { gpxDashUi?.release() } catch (_: Exception) {}
+            gpxDashUi = null
+            setupDisplayAndPresentation()
+        }
+    }
+
+    private fun createOwnVirtualDisplay(): android.view.Display? {
+        val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        val flags = DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY or
+            DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION
+        // Scale density to the bike resolution so controls stay glanceable without crowding the panel.
+        // Higher TARGET_DASH_WIDTH_DP → lower dpi → smaller chrome (~20% vs the old 720dp target).
+        val densityDpi = Math.round(160.0 * width / TARGET_DASH_WIDTH_DP).toInt().coerceIn(160, 640)
+        val vd = dm.createVirtualDisplay("OpenCfMoto", width, height, densityDpi, inputSurface, flags)
+        virtualDisplay = vd
+        log("[VIDEO] own display ${width}x${height} @ ${densityDpi}dpi")
+        return vd?.display ?: run { log("[VIDEO] virtualDisplay.display null"); null }
     }
 
     private fun drainLoop() {
@@ -462,7 +629,32 @@ class VideoPipeline(
         drainThread?.interrupt(); drainThread = null
         try { aaCompositor?.release() } catch (_: Exception) {}
         aaCompositor = null
+        try { mirrorScaler?.release() } catch (_: Exception) {}
+        mirrorScaler = null
+        mirrorDisplayListener?.let { listener ->
+            try {
+                val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+                dm.unregisterDisplayListener(listener)
+            } catch (_: Exception) {}
+        }
+        mirrorDisplayListener = null
+        projectionCallback?.let { cb ->
+            try { ProjectionHolder.projection?.unregisterCallback(cb) } catch (_: Exception) {}
+        }
+        projectionCallback = null
+        ProjectionService.setKeepScreenOn(context, false)
+        AndroidAutoService.setGpxScreenWake(context, false)
+        GpxSession.clearTouchTarget()
+        // Killing projection mid-route must not leave NAV_TO sticky — reopen would "resume"
+        // and immediately flash Arrived if you're still near that place.
+        if (GpxSession.active && GpxSession.mode == GpxSession.Mode.NAV_TO) {
+            GpxSession.abandonStaleNavigation("projection stopped")
+        }
+        try { gpxVoice?.shutdown() } catch (_: Exception) {}
+        gpxVoice = null
         main.post {
+            try { gpxDashUi?.release() } catch (_: Exception) {}
+            gpxDashUi = null
             try { presentation?.dismiss() } catch (_: Exception) {}
             presentation = null
             try { virtualDisplay?.release() } catch (_: Exception) {}
@@ -478,6 +670,13 @@ class VideoPipeline(
     }
 
     companion object {
+        /**
+         * Logical width (dp) we render the own-content dash at, regardless of the bike's pixel
+         * resolution. Smaller = bigger chrome. 900dp keeps HUD controls readable without the FAB /
+         * speedometer crowding the metrics bar on typical bike panels.
+         */
+        const val TARGET_DASH_WIDTH_DP = 900.0
+
         /**
          * Encoder's static-screen frame-repeat floor (µs). Must stay comfortably under the bike's ~9s
          * media-socket timeout so an unchanging map still holds the link, but far slower than the old

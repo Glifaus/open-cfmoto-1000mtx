@@ -60,6 +60,11 @@ internal class AapControlMedia(private val aapTransport: AapTransport) : AapCont
 
     private fun mediaStartRequest(request: Media.Start, channel: Int): Int {
         AaLog.i("Media Start Request %s: session=%d, config_index=%d", Channel.name(channel), request.sessionId, request.configurationIndex)
+        // Audio channels mean guidance / media is about to play on the phone — don't let the
+        // handlebar bridge steal focus during that hand-off (buttons reclaim after the hold).
+        if (Channel.isAudio(channel)) {
+            dev.zanderp.opencfmoto.AaVideoBridge.noteAaAudioActive()
+        }
         aapTransport.setSessionId(channel, request.sessionId)
         // The mic must echo this session id back in its MICROPHONE_RESPONSE.
         if (channel == Channel.ID_MIC) aapTransport.microphone?.setSessionId(request.sessionId)
@@ -236,6 +241,13 @@ internal class AapControlService(private val aapTransport: AapTransport) : AapCo
 
     private fun audioFocusRequest(notification: Control.AudioFocusRequestNotification, channel: Int): Int {
         AaLog.i("Audio Focus Request: ${notification.request}")
+        when (notification.request) {
+            Control.AudioFocusRequestNotification.AudioFocusRequestType.GAIN,
+            Control.AudioFocusRequestNotification.AudioFocusRequestType.GAIN_TRANSIENT,
+            Control.AudioFocusRequestNotification.AudioFocusRequestType.GAIN_TRANSIENT_MAY_DUCK ->
+                dev.zanderp.opencfmoto.AaVideoBridge.noteAaAudioActive()
+            else -> Unit
+        }
         // Always grant — the phone must believe the head unit has audio focus.
         val mappedState = focusResponse[notification.request]
         if (mappedState != null) {

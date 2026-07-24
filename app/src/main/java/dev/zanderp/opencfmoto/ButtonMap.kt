@@ -43,7 +43,9 @@ enum class ButtonAction(val id: String, val label: String) {
  * The **semantic** gestures a CFMoto handlebar can produce, regardless of which physical buttons a
  * given bike uses. Different dashes send navigation on different buttons, but they all collapse to a
  * "previous / next / select" trio, so we map by meaning and let [MediaButtonBridge] route whatever
- * the bike sends into the matching gesture — no per-bike layout config needed:
+ * the bike sends into the matching gesture. Physical clusters still differ in whether hold / ×2
+ * events exist — riders pick a [ButtonClusterPreset] (BACK/SET vs MODE/ENT vs 5-way Explore) when
+ * the shipped defaults don't match their pod:
  *   • **Backward / Forward** — the CFDL16 dashes (450SR etc.) send these as ▲/▼ *volume* writes;
  *     the 800MT's 5-way sends them as ◀/▶ *previous-/next-track*. Either way ◀/▲ = backward and
  *     ▶/▼ = forward.
@@ -51,11 +53,11 @@ enum class ButtonAction(val id: String, val label: String) {
  *     coalesced volume write with a bigger jump, or two quick writes inside a short window; on the
  *     800MT's discrete track keys it is a second key event inside that same window (see
  *     [MediaButtonBridge]). Either way, two quick presses = the ×2 gesture.
- *   • **Select / Select ×2 / Select (hold)** — the OK / ★ (start) button, which every dash sends as
- *     an AVRCP play/pause. A quick tap (after the double-tap window) is [SELECT_PRESS]; a second
- *     press within the window is [SELECT_DOUBLE]; holding past the long-press threshold is
- *     [SELECT_LONG]. Hold timing needs a distinct key-up, so it only works on dashes that send a
- *     release (the ▲/▼ volume path has no release event).
+ *   • **Backward/Forward/Select (hold)** — press-and-hold past the long-press threshold (or a
+ *     key-down repeat). Needs a real key-up / repeat from the bike — works on ◀/▶ / ★ track keys;
+ *     the ▲/▼ *volume* path has no release, so hold is unavailable there.
+ *   • **Select / Select ×2** — the OK / ★ (start) button as AVRCP play/pause. A quick tap (after
+ *     the double-tap window) is [SELECT_PRESS]; a second press within the window is [SELECT_DOUBLE].
  *
  * [label] is the semantic name (with the physical buttons that trigger it); [hint] explains it.
  */
@@ -65,9 +67,13 @@ enum class ButtonGesture(
     val hint: String,
     val default: ButtonAction,
 ) {
+    // AA focus/knob UI: knob steps the list; D-pad ←/→ drills in/out of apps; Enter selects;
+    // Enter×2 = Back (returns to the launcher bar). D-pad ↑/↓ usually do nothing on these dashes.
     NAV_BACK("navBack", "Backward  ◀ / ▲", "◀ left, or the ▲ volume press on non-touch dashes", ButtonAction.KNOB_BACK),
     NAV_FWD("navFwd", "Forward  ▶ / ▼", "▶ right, or the ▼ volume press on non-touch dashes", ButtonAction.KNOB_FORWARD),
     SELECT_PRESS("selectPress", "Select  Enter / ★", "a quick tap of the OK / ★ start button", ButtonAction.SELECT),
+    NAV_BACK_LONG("navBackLong", "Backward (hold)  ◀", "press and hold ◀ (track-key dashes only)", ButtonAction.NONE),
+    NAV_FWD_LONG("navFwdLong", "Forward (hold)  ▶", "press and hold ▶ (track-key dashes only)", ButtonAction.NONE),
     SELECT_LONG("selectLong", "Select (hold)  Enter / ★", "press and hold the OK / ★ button", ButtonAction.HOME),
     NAV_BACK_DOUBLE("navBackDouble", "Backward ×2", "double-tap backward within a short window", ButtonAction.DPAD_LEFT),
     NAV_FWD_DOUBLE("navFwdDouble", "Forward ×2", "double-tap forward within a short window", ButtonAction.DPAD_RIGHT),
@@ -82,7 +88,7 @@ object ButtonMap {
     private const val PREF = "button_map"
     private const val KEY_DEFAULTS_VER = "defaults_ver"
     /** Bumped when shipping new [ButtonGesture.default] values — migrates riders still on old defaults. */
-    private const val DEFAULTS_VER = 3
+    private const val DEFAULTS_VER = 6
 
     fun get(context: Context, gesture: ButtonGesture): ButtonAction {
         ensureDefaultsMigrated(context)
@@ -107,9 +113,8 @@ object ButtonMap {
         ButtonGesture.entries.all { get(context, it) == it.default }
 
     /**
-     * One-shot upgrade of shipped defaults (v2: ×2 = D-pad L/R, Select ×2 = Back). Clears stored
-     * values that still match the *previous* defaults so the new ones apply; custom mappings stay.
-     * Also un-swaps the common inverted knob (◀→forward / ▶→back) left over from earlier testing.
+     * One-shot upgrade of shipped defaults. Clears stored values that still match a *previous*
+     * default so the new ones apply; intentional custom mappings stay.
      */
     fun ensureDefaultsMigrated(context: Context) {
         val p = prefs(context)
@@ -126,6 +131,16 @@ object ButtonMap {
         }
         // v3: Select hold → Home (was Assistant)
         clearIfStored(context, ButtonGesture.SELECT_LONG, ButtonAction.ASSISTANT)
+        // v4: Forward hold → D-pad down (was Back; Select ×2 already covers Back)
+        clearIfStored(context, ButtonGesture.NAV_FWD_LONG, ButtonAction.BACK)
+        // v5: Backward hold → D-pad up (was Assistant)
+        clearIfStored(context, ButtonGesture.NAV_BACK_LONG, ButtonAction.ASSISTANT)
+        // v6: AA knob UI — singles must be knob (not D-pad ↑↓, which does nothing on these dashes).
+        // Undo the bad “tap = D-pad up/down” map; holds that were ↑↓ become Do nothing.
+        clearIfStored(context, ButtonGesture.NAV_BACK, ButtonAction.DPAD_UP)
+        clearIfStored(context, ButtonGesture.NAV_FWD, ButtonAction.DPAD_DOWN)
+        clearIfStored(context, ButtonGesture.NAV_BACK_LONG, ButtonAction.DPAD_UP)
+        clearIfStored(context, ButtonGesture.NAV_FWD_LONG, ButtonAction.DPAD_DOWN)
         p.edit().putInt(KEY_DEFAULTS_VER, DEFAULTS_VER).apply()
     }
 

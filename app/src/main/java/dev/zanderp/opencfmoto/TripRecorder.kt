@@ -14,8 +14,8 @@ import android.os.SystemClock
 
 /**
  * Records a ride from the phone's GPS: live speed, distance, moving time, max speed, and the full
- * track for the map. One recorder is shared process-wide via [TripLogger] so the foreground service
- * (auto-logging a projected ride) and the [TripActivity] HUD never double-count the same ride.
+ * track for the map. One recorder is shared process-wide via [TripLogger] so Android Auto projection,
+ * the built-in Map ([TripAutoLog]), and the [TripActivity] HUD never double-count the same ride.
  *
  * Auto-segmenting: if the bike sits still longer than [IDLE_SPLIT_MS], the current leg is finalised
  * and saved and a fresh one begins — so parking mid-journey splits into sensible separate trips.

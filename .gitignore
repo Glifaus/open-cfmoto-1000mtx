@@ -26,3 +26,22 @@ logs/
 
 # Local working notes only — fork scans, WIP research. Never ship to main.
 docs/work/
+investigation-notes.md
+
+# Phone pulls / ad-hoc encodes — not source.
+.tmp_phone/
+
+# Ad-hoc phone/debug screencaps left in the repo root during development.
+_*.png
+_*.jpg
+_*.jpeg
+shot*.png
+shot*.jpg
+shot*.jpeg
+motoplay_shot.png
+
+
+# Draft release notes live on GitHub Releases only.
+release-notes-*.md
+.kotlin/
+

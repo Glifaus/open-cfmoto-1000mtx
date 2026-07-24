@@ -42,6 +42,8 @@ class ButtonMappingActivity : AppCompatActivity() {
         buildGestureRows()
         buildPlaceRows()
 
+        findViewById<MaterialButton>(R.id.btn_cluster_preset).setOnClickListener { pickClusterPreset() }
+
         findViewById<MaterialButton>(R.id.btn_overlay).setOnClickListener {
             try {
                 startActivity(NavLauncher.overlayPermissionIntent(this))
@@ -155,15 +157,40 @@ class ButtonMappingActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.btn_reset).isEnabled = !ButtonMap.isAllDefault(this)
     }
 
+    private fun pickClusterPreset() {
+        val presets = ButtonClusterPreset.entries
+        val labels = presets.map { it.title }.toTypedArray()
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Left switch cluster")
+            .setItems(labels) { _, which ->
+                val preset = presets[which]
+                MaterialAlertDialogBuilder(this)
+                    .setTitle(preset.title)
+                    .setMessage(preset.summary + "\n\nReplace the current mapping for this bike? Saved places are kept.")
+                    .setPositiveButton("Apply") { _, _ ->
+                        preset.apply(this)
+                        LogBus.log("→ button mapping preset: ${preset.title}")
+                        refresh()
+                        Toast.makeText(this, "Applied: ${preset.title}", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun confirmReset() {
         MaterialAlertDialogBuilder(this)
             .setTitle("Reset to defaults?")
             .setMessage(
-                "Every gesture goes back to how it shipped: ▲/▼ press = knob, ▲▲ = home, " +
-                    "▼▼ = back, enter tap = select, enter×2 / enter hold = voice.\n\nSaved places are kept."
+                "Every gesture goes back to the 5-way Explore defaults: ◀/▶ = knob, " +
+                    "◀/▶ hold = D-pad ↑↓, ★ = Select, ★ hold = Home, ◀◀/▶▶ = D-pad ←→, ★★ = Back.\n\n" +
+                    "Saved places are kept. For BACK/SET or MODE/ENT hardware, use “Apply cluster preset…” instead."
             )
             .setPositiveButton("Reset") { _, _ ->
                 ButtonMap.resetAll(this)
+                ButtonClusterPreset.saveActive(this, ButtonClusterPreset.FIVE_WAY)
                 LogBus.log("→ button mapping reset to defaults")
                 refresh()
                 Toast.makeText(this, "Reset to defaults", Toast.LENGTH_SHORT).show()

@@ -16,7 +16,8 @@ enum class DoubleTapDelay(val ms: Long, val label: String) {
 }
 
 /**
- * How long Enter / ★ must be held to count as Select (hold) instead of a tap. Applied live.
+ * How long ◀ / ▶ / ★ must be held to count as a hold gesture instead of a tap. Applied live to
+ * every hold channel (not only Select).
  */
 enum class LongPressDelay(val ms: Long, val label: String) {
     SHORT(500L, "500 ms — quicker hold"),

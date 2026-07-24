@@ -11,7 +11,14 @@
         android:layout_height="match_parent"
         android:layout_gravity="center" />
 
-    <!-- Shown when Android Auto isn't live yet -->
+    <!-- Phone Map / GPX preview when no bike / AA pipeline (debug + offline) -->
+    <FrameLayout
+        android:id="@+id/hud_gpx_host"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+    <!-- Shown when Android Auto isn't live yet and no Map preview -->
     <TextView
         android:id="@+id/hud_hint"
         android:layout_width="wrap_content"
@@ -19,7 +26,7 @@
         android:layout_gravity="center"
         android:gravity="center"
         android:padding="24dp"
-        android:text="Start Android Auto and connect to your bike to see the dash here."
+        android:text="Start Android Auto and connect to your bike to see the dash here.\n\nOr tap Map for a phone preview without the bike."
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:visibility="gone" />
@@ -45,6 +52,7 @@
             android:textSize="18sp" />
 
         <TextView
+            android:id="@+id/hud_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -55,9 +63,18 @@
             android:textStyle="bold" />
 
         <Button
+            android:id="@+id/hud_map_hub"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:minWidth="44dp"
+            android:text="Hub"
+            android:visibility="gone" />
+
+        <Button
             android:id="@+id/hud_theme"
             android:layout_width="wrap_content"
             android:layout_height="44dp"
+            android:layout_marginStart="4dp"
             android:minWidth="44dp"
             android:text="🌗"
             android:textSize="16sp" />

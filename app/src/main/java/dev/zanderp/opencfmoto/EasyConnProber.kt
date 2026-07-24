@@ -162,9 +162,13 @@ class EasyConnProber(
         // VPNs (PCAPdroid, AdGuard, work VPN, …) steal the default route after Wi-Fi join.
         // Re-pin the process and warn early; probe sockets also use Network.socketFactory.
         BikeWifi.rebindProcessToBike(context)
+        val vpnSummary = BikeWifi.vpnNetworksSummary(context)
+        if (vpnSummary.isNotEmpty()) {
+            log("!! VPN interface(s) present: $vpnSummary — probes use Network.socketFactory to stay on bike Wi‑Fi")
+        }
         if (BikeWifi.isVpnActive(context)) {
-            log("!! VPN is active — bike link needs a direct path on the bike Wi-Fi. " +
-                "If probes time out: turn VPN off, or disable 'Block connections without VPN' / enable LAN bypass.")
+            log("!! active internet VPN — if probes time out: turn VPN off, or disable " +
+                "'Block connections without VPN' / enable LAN bypass")
             val bindErr = BikeWifi.testBikeSocketBind(context)
             if (BikeWifi.isVpnBindBlocked(bindErr)) {
                 log("!! VPN kill-switch is blocking bike Wi-Fi (EPERM on Network.bindSocket). " +
@@ -326,10 +330,19 @@ class EasyConnProber(
             }
             try { Thread.sleep(2000) } catch (_: InterruptedException) { return }
         }
-        if (!probed && running && BikeWifi.isVpnActive(context)) {
-            log("!! probe never reached the bike while a VPN is active. Turn the VPN off " +
-                "(or allow LAN / disable 'Block connections without VPN') and tap Connect again.")
-            ConnectionState.set(Phase.ERROR, "VPN blocking bike Wi‑Fi — turn VPN off")
+        // Do NOT escalate to Phase.ERROR just because a VPN interface exists — that false-positive
+        // popped the "VPN is blocking the bike" dialog when probes failed for any reason (dash not
+        // on QR, brief Wi‑Fi blip, Maps/cellular race). Only hard-fail on confirmed EPERM kill-switch.
+        if (!probed && running) {
+            val bindErr = BikeWifi.testBikeSocketBind(context)
+            if (BikeWifi.isVpnBindBlocked(bindErr)) {
+                log("!! VPN kill-switch blocked bike bind after probe failure: ${bindErr?.message}")
+                ConnectionState.set(Phase.ERROR, "VPN kill-switch blocking bike Wi‑Fi")
+            } else if (BikeWifi.isVpnActive(context)) {
+                log("!! probe never reached the bike; an internet VPN is also active " +
+                    "(${BikeWifi.vpnNetworksSummary(context)}). If this keeps happening, turn the VPN " +
+                    "off or allow LAN — not treating as hard VPN error (bind still works).")
+            }
         }
     }
 
@@ -699,10 +712,12 @@ class EasyConnProber(
         }
 
         val sink = AaVideoBridge.touchSink
-        if (sink == null) {
-            if (action != 2) log("[$tag] touch dropped, no AA session")
-        } else {
-            sink(action, aaId, x, y)
+        when {
+            sink != null -> sink(action, aaId, x, y)
+            GpxSession.active && GpxSession.dispatchTouch(action, x, y) -> {
+                if (action != 2) log("[$tag] touch → GPX viewer")
+            }
+            else -> if (action != 2) log("[$tag] touch dropped (no AA / GPX sink)")
         }
         if (action == 1) { pointers.remove(dashId); aaIdOf.remove(dashId) }
     }

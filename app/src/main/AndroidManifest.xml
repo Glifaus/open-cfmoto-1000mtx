@@ -62,7 +62,8 @@
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout|density|uiMode"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -77,6 +78,9 @@
             android:exported="false" />
         <activity
             android:name=".TripActivity"
+            android:exported="false" />
+        <activity
+            android:name=".GpxActivity"
             android:exported="false" />
         <activity
             android:name=".TripsListActivity"
@@ -96,6 +100,7 @@
         <activity
             android:name=".HudViewActivity"
             android:exported="false"
+            android:launchMode="singleTop"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
         <activity
             android:name=".ScreenMarginsActivity"

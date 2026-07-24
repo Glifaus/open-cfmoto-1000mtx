@@ -4,13 +4,17 @@
 package dev.zanderp.opencfmoto
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
 import android.view.WindowManager
+import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -22,23 +26,21 @@ import androidx.core.view.WindowInsetsControllerCompat
 import dev.zanderp.opencfmoto.aa.AaInput
 
 /**
- * A full-screen, in-app view of the Android Auto dash. Mirrors the live AA video (a second render
- * target on [AaCompositor]) onto a phone [SurfaceView] so the rider can watch it bigger and — on
- * touch dashes — drive it directly with their fingers before pocketing the phone. A bottom control
- * bar (knob / D-pad / OK / Back / Home / voice) drives AA over the AAP INPUT channel and works on
- * every dash, including non-touch ones where finger touch isn't delivered.
- *
- * Coordinates are sent in AA source space via [AaVideoBridge.previewTouchSink]; the letterbox rect is
- * computed the same way [AaCompositor.setPreview] fits the source into the surface, so a tap on the
- * preview lands on the same spot the dash shows.
+ * Full-screen in-app dash: live AA video when connected, or Map / GPX phone preview when
+ * [GpxSession] is active without a bike (debug / offline).
  */
 class HudViewActivity : AppCompatActivity() {
 
     private lateinit var surface: SurfaceView
+    private lateinit var gpxHost: FrameLayout
     private lateinit var hint: TextView
+    private lateinit var titleView: TextView
     private var attached = false
     private var noSessionToastAt = 0L
     private var fullscreen = false
+    private var gpxPreview = false
+    private var gpxUi: GpxDashUi? = null
+    private var boundSessionKey: String? = null
     private lateinit var insetsController: WindowInsetsControllerCompat
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,13 +49,13 @@ class HudViewActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         surface = findViewById(R.id.hud_surface)
+        gpxHost = findViewById(R.id.hud_gpx_host)
         hint = findViewById(R.id.hud_hint)
+        titleView = findViewById(R.id.hud_title)
 
         insetsController = WindowInsetsControllerCompat(window, findViewById(R.id.hud_root)).apply {
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
-        // Keep the top bar buttons out from under the status bar / camera cutout. In fullscreen the
-        // bars are hidden so the inset is 0 (and the bar itself is gone anyway) — no wasted space.
         val topbar = findViewById<View>(R.id.hud_topbar)
         val baseTopPad = topbar.paddingTop
         val baseLeftPad = topbar.paddingLeft
@@ -65,7 +67,6 @@ class HudViewActivity : AppCompatActivity() {
             v.setPadding(baseLeftPad + bars.left, baseTopPad + bars.top, baseRightPad + bars.right, v.paddingBottom)
             insets
         }
-        // Back exits fullscreen first (so the rider isn't stuck with no visible controls), then closes.
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (fullscreen) setFullscreen(false) else finish()
@@ -75,6 +76,7 @@ class HudViewActivity : AppCompatActivity() {
         surface.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {}
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+                if (gpxPreview) return
                 val pipe = AaVideoBridge.pipeline
                 if (pipe == null) {
                     LogBus.log("[HUD] no AA pipeline — preview will show once Android Auto is live")
@@ -100,6 +102,9 @@ class HudViewActivity : AppCompatActivity() {
         surface.setOnTouchListener { _, e -> onSurfaceTouch(e); true }
 
         findViewById<View>(R.id.hud_close).setOnClickListener { finish() }
+        findViewById<View>(R.id.hud_map_hub).setOnClickListener {
+            GpxActivity.start(this)
+        }
         findViewById<View>(R.id.hud_toggle_controls).setOnClickListener { toggleControls() }
         findViewById<View>(R.id.hud_fullscreen).setOnClickListener { setFullscreen(!fullscreen) }
         findViewById<View>(R.id.hud_theme).setOnClickListener { cycleMapTheme() }
@@ -119,38 +124,162 @@ class HudViewActivity : AppCompatActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        // Force rebuild when Hub opens a new GPX / nav session into an existing preview.
+        refreshMode(forceReload = true)
+    }
+
     override fun onResume() {
         super.onResume()
-        refreshHint()
+        refreshMode(forceReload = false)
     }
 
-    private fun refreshHint() {
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // We keep configChanges so the map isn't torn down — still reflow the Waze chrome.
+        gpxUi?.onConfigurationChanged()
+    }
+
+    override fun onPause() {
+        if (isFinishing) stopGpxPreview()
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        stopGpxPreview()
+        super.onDestroy()
+    }
+
+    private fun sessionKey(): String =
+        "${GpxSession.mode}|${GpxSession.trackName}|${GpxSession.trackFile?.absolutePath}|${GpxSession.destination?.lat}|${GpxSession.destination?.lon}"
+
+    private fun refreshMode(forceReload: Boolean) {
+        // Live Android Auto video always wins: the phone Map preview is only a fallback for when
+        // there's no bike pipeline. This keeps a previously-opened preview from sticking over the
+        // real HUD once the bike connects.
         val live = AaVideoBridge.pipeline != null
-        hint.visibility = if (live) View.GONE else View.VISIBLE
+        val wantGpx = !live && GpxSession.active
+        if (wantGpx) {
+            val key = sessionKey()
+            val needReload = forceReload ||
+                intent.getBooleanExtra(EXTRA_FORCE_RELOAD, false) ||
+                key != boundSessionKey
+            intent.removeExtra(EXTRA_FORCE_RELOAD)
+            startGpxPreview(reload = needReload)
+        } else {
+            stopGpxPreview()
+            val live = AaVideoBridge.pipeline != null
+            hint.visibility = if (live) View.GONE else View.VISIBLE
+            surface.visibility = View.VISIBLE
+            gpxHost.visibility = View.GONE
+            findViewById<View>(R.id.hud_topbar).visibility =
+                if (fullscreen) View.GONE else View.VISIBLE
+            findViewById<View>(R.id.hud_map_hub).visibility = View.GONE
+            findViewById<View>(R.id.hud_controls).visibility =
+                if (fullscreen) View.GONE else View.VISIBLE
+            findViewById<View>(R.id.hud_toggle_controls).visibility = View.VISIBLE
+            titleView.text = "Dash view"
+        }
     }
 
-    /** Cycle Auto → Day → Night and apply it live to the dash (and this preview). */
+    private fun startGpxPreview(reload: Boolean) {
+        if (gpxPreview && gpxUi != null && !reload) {
+            hint.visibility = View.GONE
+            return
+        }
+        stopGpxPreview()
+        gpxPreview = true
+        gpxHost.removeAllViews()
+        val root = try {
+            LayoutInflater.from(this).inflate(R.layout.presentation_gpx, gpxHost, false)
+        } catch (e: Exception) {
+            gpxPreview = false
+            LogBus.log("[HUD] inflate map chrome failed: $e")
+            Toast.makeText(this, "Map UI failed to open", Toast.LENGTH_LONG).show()
+            return
+        }
+        gpxHost.addView(
+            root,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+            ),
+        )
+        val ui = GpxDashUi(this, root, { LogBus.log(it) }, isAlive = { !isFinishing && gpxPreview })
+        val ok = try {
+            ui.bind()
+        } catch (e: Exception) {
+            LogBus.log("[HUD] bind map failed: $e")
+            false
+        } catch (oom: OutOfMemoryError) {
+            LogBus.log("[HUD] bind map OOM: $oom")
+            false
+        }
+        if (!ok) {
+            gpxPreview = false
+            try { ui.release() } catch (_: Exception) {}
+            gpxHost.removeAllViews()
+            Toast.makeText(this, "Could not load map — try again from Map hub", Toast.LENGTH_LONG).show()
+            return
+        }
+        gpxUi = ui
+        boundSessionKey = sessionKey()
+        surface.visibility = View.GONE
+        gpxHost.visibility = View.VISIBLE
+        hint.visibility = View.GONE
+        // Map chrome has its own search / Hub / close — hide Dash topbar so search
+        // isn't crushed under the punch-hole + app bar.
+        findViewById<View>(R.id.hud_topbar).visibility = View.GONE
+        findViewById<View>(R.id.hud_map_hub).visibility = View.GONE
+        findViewById<View>(R.id.hud_controls).visibility = View.GONE
+        findViewById<View>(R.id.hud_toggle_controls).visibility = View.GONE
+        // Waze-style: ride immersive — no system status bar eating the map.
+        insetsController.hide(WindowInsetsCompat.Type.systemBars())
+        titleView.text = when (GpxSession.mode) {
+            GpxSession.Mode.GPX -> "GPX · ${GpxSession.trackName}"
+            GpxSession.Mode.NAV_TO -> "Nav · ${GpxSession.trackName}"
+            GpxSession.Mode.FREE_RIDE -> "Map preview"
+        }
+        LogBus.log("[HUD] Map preview bound (${GpxSession.mode} '${GpxSession.trackName}')")
+    }
+
+    private fun stopGpxPreview() {
+        if (!gpxPreview && gpxUi == null) {
+            boundSessionKey = null
+            return
+        }
+        gpxPreview = false
+        boundSessionKey = null
+        try { gpxUi?.release() } catch (_: Exception) {}
+        gpxUi = null
+        gpxHost.removeAllViews()
+        gpxHost.visibility = View.GONE
+        insetsController.show(WindowInsetsCompat.Type.systemBars())
+    }
+
     private fun cycleMapTheme() {
         val theme = NightPrefs.cycle(this)
         val on = NightPrefs.isNightNow(this)
         AaVideoBridge.nightSink?.invoke(on)
+        gpxUi?.applyTheme()
         val extra = if (theme == MapTheme.AUTO) " (${if (on) "night" else "day"} now)" else ""
         Toast.makeText(this, "Map theme: ${theme.label}$extra", Toast.LENGTH_SHORT).show()
     }
 
     private fun toggleControls() {
+        if (gpxPreview) return
         val bar = findViewById<View>(R.id.hud_controls)
         bar.visibility = if (bar.visibility == View.VISIBLE) View.GONE else View.VISIBLE
     }
 
-    /**
-     * Fullscreen = pure dash. Hides the app's top/control bars and the phone's status/nav bars for an
-     * unobstructed view. Back (or another swipe-down + the reappearing bar) exits.
-     */
     private fun setFullscreen(on: Boolean) {
         fullscreen = on
         findViewById<View>(R.id.hud_topbar).visibility = if (on) View.GONE else View.VISIBLE
-        findViewById<View>(R.id.hud_controls).visibility = if (on) View.GONE else View.VISIBLE
+        if (!gpxPreview) {
+            findViewById<View>(R.id.hud_controls).visibility = if (on) View.GONE else View.VISIBLE
+        }
         if (on) {
             insetsController.hide(WindowInsetsCompat.Type.systemBars())
             Toast.makeText(this, "Fullscreen — press Back to exit", Toast.LENGTH_SHORT).show()
@@ -159,8 +288,8 @@ class HudViewActivity : AppCompatActivity() {
         }
     }
 
-    /** Forward preview touches (multi-finger) into AA source space, letterbox-aware. */
     private fun onSurfaceTouch(e: MotionEvent) {
+        if (gpxPreview) return
         val sink = AaVideoBridge.previewTouchSink
         if (sink == null) {
             val now = System.currentTimeMillis()
@@ -192,15 +321,9 @@ class HudViewActivity : AppCompatActivity() {
         sink(action, e.getPointerId(index), src.first, src.second)
     }
 
-    /**
-     * Map a touch in the SurfaceView to AA source coordinates, mirroring [AaCompositor]'s aspect-fit.
-     * Returns null for touches in the black letterbox bars.
-     */
     private fun mapToSource(vx: Float, vy: Float): Pair<Int, Int>? {
         val vw = surface.width
         val vh = surface.height
-        // Usable (aspect-correct) content area — matches AaCompositor's preview fit and match-aspect
-        // crop. Touches map into the usable region, which is the content's coded coordinate space.
         val sw = BikeProfileHolder.aaUsableWidth
         val sh = BikeProfileHolder.aaUsableHeight
         if (vw == 0 || vh == 0 || sw == 0 || sh == 0) return null
@@ -226,6 +349,10 @@ class HudViewActivity : AppCompatActivity() {
     }
 
     private fun key(code: Int) {
+        if (gpxPreview) {
+            Toast.makeText(this, "AA controls need a bike connection", Toast.LENGTH_SHORT).show()
+            return
+        }
         val sink = AaVideoBridge.keySink
         if (sink == null) {
             Toast.makeText(this, "Connect to the bike first", Toast.LENGTH_SHORT).show()
@@ -235,6 +362,10 @@ class HudViewActivity : AppCompatActivity() {
     }
 
     private fun scroll(delta: Int) {
+        if (gpxPreview) {
+            Toast.makeText(this, "AA controls need a bike connection", Toast.LENGTH_SHORT).show()
+            return
+        }
         val sink = AaVideoBridge.scrollSink
         if (sink == null) {
             Toast.makeText(this, "Connect to the bike first", Toast.LENGTH_SHORT).show()
@@ -253,5 +384,17 @@ class HudViewActivity : AppCompatActivity() {
 
     companion object {
         private const val REQ_MIC = 72
+        const val EXTRA_GPX_PREVIEW = "gpx_preview"
+        const val EXTRA_FORCE_RELOAD = "gpx_force_reload"
+
+        fun startGpxPreview(ctx: android.content.Context) {
+            ctx.startActivity(
+                Intent(ctx, HudViewActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    putExtra(EXTRA_GPX_PREVIEW, true)
+                    putExtra(EXTRA_FORCE_RELOAD, true)
+                },
+            )
+        }
     }
 }

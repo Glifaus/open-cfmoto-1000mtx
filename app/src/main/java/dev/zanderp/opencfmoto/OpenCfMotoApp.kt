@@ -4,6 +4,7 @@
 package dev.zanderp.opencfmoto
 
 import android.app.Application
+import org.maplibre.android.MapLibre
 
 /** Process entry — installs crash capture before any Activity runs. */
 class OpenCfMotoApp : Application() {
@@ -15,5 +16,13 @@ class OpenCfMotoApp : Application() {
         }
         CrashGuard.install(this)
         CrashGuard.hydrateLogBus(this)
+        AppHttp.init(this)
+        try {
+            MapLibre.getInstance(this)
+            // Pin MapLibre style/tile HTTP to cellular while the process is bound to bike Wi‑Fi.
+            org.maplibre.android.module.http.HttpRequestUtil.setOkHttpClient(AppHttp.mapLibreOkHttpClient())
+        } catch (e: Exception) {
+            android.util.Log.w("OpenCfMoto", "MapLibre init failed: $e")
+        }
     }
 }

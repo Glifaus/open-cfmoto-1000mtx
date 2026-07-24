@@ -230,8 +230,16 @@ object BikeProfileHolder {
     /**
      * Setup ▸ "Disable touchscreen" — when true, never advertise a touchscreen to Android Auto
      * (focus/knob UI) even if the active profile claims touch. Synced from [AppSettings.forceNonTouch].
+     * Mutually exclusive with [forceTouch].
      */
     @Volatile var forceNonTouch: Boolean = false
+
+    /**
+     * Setup ▸ "Force touchscreen" — when true, always advertise a touchscreen to Android Auto
+     * (touch UI) even if the active profile is non-touch (e.g. 1000 MT‑X). Synced from
+     * [AppSettings.forceTouch]. Mutually exclusive with [forceNonTouch].
+     */
+    @Volatile var forceTouch: Boolean = false
 
     /**
      * Setup ▸ bike profile override. Synced from [ProfilePrefs]; [ProfileOverride.AUTO] means
@@ -247,8 +255,14 @@ object BikeProfileHolder {
     val aaUsableWidth: Int get() = (aaVideo.width - aaContentMargins.marginW).coerceIn(1, aaVideo.width)
     val aaUsableHeight: Int get() = (aaVideo.height - aaContentMargins.marginH).coerceIn(1, aaVideo.height)
 
-    /** Whether AA / CLIENT_INFO should advertise a touchscreen (profile ∧ ¬forceNonTouch). */
-    val advertisesScreenTouch: Boolean get() = !forceNonTouch && active.supportsScreenTouch
+    /** Whether AA / CLIENT_INFO should advertise a touchscreen.
+     *  [forceNonTouch] wins over [forceTouch]; otherwise profile default. */
+    val advertisesScreenTouch: Boolean
+        get() = when {
+            forceNonTouch -> false
+            forceTouch -> true
+            else -> active.supportsScreenTouch
+        }
 }
 
 /** Shared base CLIENT_INFO reply. Keys/order match the original PxcHandshake.buildClientInfoReply so
@@ -380,9 +394,10 @@ object Nk800Profile : BikeProfile {
  * previous/next/confirm buttons (see the 1000 MT-X owner's manual). Advertising a touchscreen to
  * Android Auto puts it in touch UI with **no focus cursor**, so those buttons do nothing — the
  * classic "no touch but touch enabled" trap. We therefore treat this profile as non-touch for AA
- * ([supportsScreenTouch]=false → focus/knob UI) and do **not** claim touch in our CLIENT_INFO
- * reply. Dash touch events are still forwarded if the rider unlocks the panel; the in-app Dash
- * view / on-screen pad also work. The landscape 800MT profile stays touch=true.
+ * ([supportsScreenTouch]=false → focus/knob UI) by default. Riders who unlock the panel and want
+ * touch AA can turn on Setup ▸ **Force touchscreen**. Dash touch events are still forwarded when
+ * the panel sends them; the in-app Dash view / on-screen pad also work. The landscape 800MT
+ * profile stays touch=true.
  */
 object Cfdl26PortraitProfile : BikeProfile {
     override val name = "CFDL26 / MotoPlay Portrait (1000 MT-X)"
@@ -411,9 +426,11 @@ object Cfdl26PortraitProfile : BikeProfile {
         return s
     }
 
-    /** Plain reply — no supportScreenTouch claim (see class KDoc). */
+    /** Claim touch only when Setup ▸ Force touchscreen (or a future profile default) advertises it. */
     override fun buildClientInfoReply(info: JSONObject, huid: String?, phoneUuid: String): JSONObject =
-        basePhoneClientInfo(huid, phoneUuid, advertisedSupportFunction)
+        basePhoneClientInfo(huid, phoneUuid, advertisedSupportFunction).apply {
+            if (BikeProfileHolder.advertisesScreenTouch) put("supportScreenTouch", true)
+        }
 
     override fun handleUnknownControl(
         tag: String, frame: PxcFrame, out: OutputStream, log: (String) -> Unit,
@@ -461,9 +478,12 @@ object Cfdl26NkTouchProfile : BikeProfile {
         val sdk = info.optString("sdkVersion")
         if (sdk.isNotEmpty() && !sdk.startsWith("0.")) s += 2
         if (s > 0 && info.optInt("supportFunction", 0) == 128) s += 1
-        // Tie-breakers vs 800MT landscape (same package / CFDL26).
-        if (info.optString("version_name") == "CFDL26.2.3.0.5") s += 3
-        if (info.optString("HUID").startsWith("6KWV")) s += 2
+        // Tie-breakers vs 800MT landscape (same package / CFDL26 / often same version_name).
+        // Do NOT bonus a shared firmware string like CFDL26.2.3.0.5 — that mis-routed real 800MT
+        // units (HUID 6WWV, landscape 1280×576) to this near-square profile (logs 2026-07-24).
+        if (info.optString("HUID").startsWith("6KWV")) s += 4
+        // Near-square Advanced is not landscape-adaptive; 800MT AP dashes advertise that flag.
+        if (info.optBoolean("supportLandscapeAdaptive", false)) s -= 4
         if (info.optBoolean("supportMirrorOverlayTouch", false)) s += 1
         if (info.optBoolean("supportScreenTouch", false)) s += 1
         return s
@@ -551,6 +571,8 @@ object Cfdl26LandscapeProfile : BikeProfile {
     override val requiresSockServerAuth = true
     override val supportsScreenTouch = true
     override val advertisedSupportFunction = 128
+    /** Typical 800MT / Explore AP panel; measured sizes (e.g. 1280×576) override via DashMemory. */
+    override val panelSize = 1280 to 576
 
     /** The 800MT has a landscape screen. Ask AA for landscape 800x480 — the resolution proven to
      *  stream end-to-end on this dash (see docs/05-DEBUG-KNOWLEDGE.md). The compositor letterboxes it
@@ -569,7 +591,9 @@ object Cfdl26LandscapeProfile : BikeProfile {
         if (info.optString("package_name") == "com.cfmoto.easyconnect") s += 3
         if (s > 0 && info.optInt("supportFunction", 0) == 128) s += 1
         // Prefer landscape when the unit is clearly landscape / not the Advanced near-square path.
-        if (info.optBoolean("supportLandscapeAdaptive", false)) s += 2
+        if (info.optBoolean("supportLandscapeAdaptive", false)) s += 4
+        // 800MT Explore / MT-X AP family often uses 6WWV… HUID (vs 6KWV… on NK Advanced).
+        if (info.optString("HUID").startsWith("6WWV")) s += 3
         if (!info.optBoolean("supportScreenTouch", false)) s -= 1
         return s
     }

@@ -14,10 +14,18 @@ android {
         applicationId = "dev.zanderp.opencfmoto"
         minSdk = 29
         targetSdk = 36
-        versionCode = 24
-        versionName = "1.0.21"
+        versionCode = 29
+        versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Default OpenRouteService key used when the rider hasn't entered their own. Supply it via
+        // `-PorsApiKey=...`, an `orsApiKey` in gradle.properties, or the ORS_API_KEY env var so the
+        // key isn't hardcoded in source. Empty → routing falls back to the OSRM demo, then beeline.
+        val orsDefaultKey = (project.findProperty("orsApiKey") as String?)
+            ?: System.getenv("ORS_API_KEY")
+            ?: ""
+        buildConfigField("String", "ORS_API_KEY", "\"$orsDefaultKey\"")
     }
 
     buildTypes {
@@ -51,6 +59,9 @@ dependencies {
     implementation(libs.protobuf.java)
     implementation(libs.conscrypt.android)
     implementation(libs.osmdroid)
+    implementation(libs.maplibre)
+    // Compile-time OkHttp for MapLibre cellular pin (MapLibre brings it as runtime only).
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)

@@ -42,6 +42,7 @@ class SetupActivity : AppCompatActivity() {
     private lateinit var dblTapDesc: TextView
     private lateinit var holdDesc: TextView
     private lateinit var nonTouchDesc: TextView
+    private lateinit var forceTouchDesc: TextView
     private lateinit var profileDesc: TextView
     private lateinit var btStatus: TextView
     private lateinit var resumeBtn: MaterialButton
@@ -76,6 +77,7 @@ class SetupActivity : AppCompatActivity() {
         dblTapDesc = findViewById(R.id.dbltap_desc)
         holdDesc = findViewById(R.id.hold_desc)
         nonTouchDesc = findViewById(R.id.nontouch_desc)
+        forceTouchDesc = findViewById(R.id.forcetouch_desc)
         profileDesc = findViewById(R.id.profile_desc)
         btStatus = findViewById(R.id.bt_status)
         resumeBtn = findViewById(R.id.resume_perm_btn)
@@ -117,6 +119,8 @@ class SetupActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.logtrips_off).setOnClickListener { setLogTrips(false) }
         findViewById<MaterialButton>(R.id.nontouch_on).setOnClickListener { setForceNonTouch(true) }
         findViewById<MaterialButton>(R.id.nontouch_off).setOnClickListener { setForceNonTouch(false) }
+        findViewById<MaterialButton>(R.id.forcetouch_on).setOnClickListener { setForceTouch(true) }
+        findViewById<MaterialButton>(R.id.forcetouch_off).setOnClickListener { setForceTouch(false) }
         findViewById<MaterialButton>(R.id.profile_auto).setOnClickListener { setProfileOverride(ProfileOverride.AUTO) }
         findViewById<MaterialButton>(R.id.profile_legacy).setOnClickListener { setProfileOverride(ProfileOverride.LEGACY) }
         findViewById<MaterialButton>(R.id.profile_nk800).setOnClickListener { setProfileOverride(ProfileOverride.NK800) }
@@ -242,7 +246,7 @@ class SetupActivity : AppCompatActivity() {
     private fun setLongPress(delay: LongPressDelay) {
         ButtonTimingPrefs.setLongPress(this, delay)
         refreshOptions()
-        Toast.makeText(this, "Select hold delay: ${delay.label}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Hold delay: ${delay.label}", Toast.LENGTH_SHORT).show()
     }
 
     private fun setAutoConnect(on: Boolean) {
@@ -267,6 +271,12 @@ class SetupActivity : AppCompatActivity() {
         AppSettings.setForceNonTouch(this, on)
         refreshOptions()
         toast("Disable touchscreen: ${if (on) "on" else "off"}")
+    }
+
+    private fun setForceTouch(on: Boolean) {
+        AppSettings.setForceTouch(this, on)
+        refreshOptions()
+        toast("Force touchscreen: ${if (on) "on" else "off"}")
     }
 
     private fun setProfileOverride(ov: ProfileOverride) {
@@ -315,6 +325,10 @@ class SetupActivity : AppCompatActivity() {
             "On — focus/knob UI so handlebar buttons work"
         else
             "Off — use the bike profile (touch dashes stay touch)"
+        forceTouchDesc.text = if (AppSettings.forceTouch(this))
+            "On — Android Auto touch UI (tap the dash)"
+        else
+            "Off — use the bike profile (1000 MT‑X stays focus/knob)"
         val pov = ProfilePrefs.get(this)
         profileDesc.text = "${pov.shortLabel} — ${pov.detail}"
 
@@ -362,6 +376,9 @@ class SetupActivity : AppCompatActivity() {
         highlight(AppSettings.forceNonTouch(this),
             R.id.nontouch_on to true,
             R.id.nontouch_off to false)
+        highlight(AppSettings.forceTouch(this),
+            R.id.forcetouch_on to true,
+            R.id.forcetouch_off to false)
         highlight(ProfilePrefs.get(this),
             R.id.profile_auto to ProfileOverride.AUTO,
             R.id.profile_legacy to ProfileOverride.LEGACY,

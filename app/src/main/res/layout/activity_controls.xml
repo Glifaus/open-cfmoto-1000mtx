@@ -453,7 +453,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Requires the phone paired to the bike over Bluetooth. While on, the buttons navigate Android Auto instead of skipping music tracks."
+                    android:text="Requires the phone paired to the bike over Bluetooth.\n\nWhile on, the bars drive the Android Auto UI (not track-skip). Music can keep playing — start/stop/skip by navigating that UI with the bars or the on-screen pad. Turn OFF only if you want the physical bars to control media again."
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 

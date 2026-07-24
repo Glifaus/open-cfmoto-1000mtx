@@ -517,6 +517,59 @@
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:lineSpacingExtra="2dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Force touchscreen"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/forcetouch_desc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="6dp"
+                    android:text="Off — use the bike profile (1000 MT‑X stays focus/knob)"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/forcetouch_on"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="On" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/forcetouch_off"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="Off" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Turn On for a touch panel on a focus/knob profile (e.g. 1000 MT‑X): Android Auto advertises a touchscreen so you can tap the dash. Turns off Disable touchscreen. Unlock the bike's own touch lock if needed. Applies next Connect — Stop first if you're already projecting."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:lineSpacingExtra="2dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -810,7 +863,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Select hold delay"
+                    android:text="Hold delay"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />

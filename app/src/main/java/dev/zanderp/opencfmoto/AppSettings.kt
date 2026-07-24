@@ -14,6 +14,9 @@ import android.content.Context
  *    stalls or the dash drops, without a manual Stop/Start. Default on.
  *  - [forceNonTouch] — never advertise a touchscreen to Android Auto (focus/knob UI). Use when
  *    handlebar buttons do nothing because a touch profile was selected for a non-touch dash.
+ *  - [forceTouch] — always advertise a touchscreen to Android Auto (touch UI). Use on bikes that
+ *    default to focus/knob (e.g. 1000 MT‑X) when the rider wants panel touch. Mutually exclusive
+ *    with [forceNonTouch].
  */
 object AppSettings {
     private const val PREFS = "opencfmoto_bike"
@@ -21,6 +24,7 @@ object AppSettings {
     private const val KEY_AUTO_RECOVERY = "auto_recovery"
     private const val KEY_LOG_TRIPS = "log_trips"
     private const val KEY_FORCE_NON_TOUCH = "force_non_touch"
+    private const val KEY_FORCE_TOUCH = "force_touch"
     private const val KEY_INCLUDE_SECRETS = "include_secrets_in_logs"
     private const val KEY_TRANSPORT = "wifi_transport"
 
@@ -41,8 +45,20 @@ object AppSettings {
 
     fun forceNonTouch(ctx: Context): Boolean = prefs(ctx).getBoolean(KEY_FORCE_NON_TOUCH, false)
     fun setForceNonTouch(ctx: Context, on: Boolean) {
-        prefs(ctx).edit().putBoolean(KEY_FORCE_NON_TOUCH, on).apply()
+        val e = prefs(ctx).edit().putBoolean(KEY_FORCE_NON_TOUCH, on)
+        if (on) e.putBoolean(KEY_FORCE_TOUCH, false)
+        e.apply()
         BikeProfileHolder.forceNonTouch = on
+        if (on) BikeProfileHolder.forceTouch = false
+    }
+
+    fun forceTouch(ctx: Context): Boolean = prefs(ctx).getBoolean(KEY_FORCE_TOUCH, false)
+    fun setForceTouch(ctx: Context, on: Boolean) {
+        val e = prefs(ctx).edit().putBoolean(KEY_FORCE_TOUCH, on)
+        if (on) e.putBoolean(KEY_FORCE_NON_TOUCH, false)
+        e.apply()
+        BikeProfileHolder.forceTouch = on
+        if (on) BikeProfileHolder.forceNonTouch = false
     }
 
     /** When true, Share Logs / LogBus keep Wi‑Fi passwords and serials. Default off. */
@@ -60,6 +76,7 @@ object AppSettings {
     /** Sync holder flags from prefs (call on process start / before connect). */
     fun applyToHolder(ctx: Context) {
         BikeProfileHolder.forceNonTouch = forceNonTouch(ctx)
+        BikeProfileHolder.forceTouch = forceTouch(ctx)
         LogBus.includeSecrets = includeSecretsInLogs(ctx)
         ProfilePrefs.applyToHolder(ctx)
         ButtonMap.ensureDefaultsMigrated(ctx)
