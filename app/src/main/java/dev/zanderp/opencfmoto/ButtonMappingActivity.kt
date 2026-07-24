@@ -43,6 +43,7 @@ class ButtonMappingActivity : AppCompatActivity() {
         buildPlaceRows()
 
         findViewById<MaterialButton>(R.id.btn_cluster_preset).setOnClickListener { pickClusterPreset() }
+        findViewById<MaterialButton>(R.id.btn_cluster_clear).setOnClickListener { confirmClearPreset() }
 
         findViewById<MaterialButton>(R.id.btn_overlay).setOnClickListener {
             try {
@@ -155,6 +156,11 @@ class ButtonMappingActivity : AppCompatActivity() {
             if (navMapped && !NavLauncher.canLaunchFromBackground(this)) View.VISIBLE else View.GONE
 
         findViewById<MaterialButton>(R.id.btn_reset).isEnabled = !ButtonMap.isAllDefault(this)
+        val active = ButtonClusterPreset.active(this)
+        findViewById<TextView>(R.id.tv_cluster_active).text =
+            if (active != null) "Active: ${active.title}"
+            else "No preset — shipped defaults / your custom map"
+        findViewById<MaterialButton>(R.id.btn_cluster_clear).isEnabled = active != null
     }
 
     private fun pickClusterPreset() {
@@ -186,19 +192,36 @@ class ButtonMappingActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun confirmClearPreset() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Clear cluster preset?")
+            .setMessage(
+                "Removes the active cluster tag and restores shipped gesture defaults. " +
+                    "Saved places stay. Some bikes work fine with no preset — just tweak rows below if needed."
+            )
+            .setPositiveButton("Clear") { _, _ ->
+                ButtonClusterPreset.clear(this)
+                LogBus.log("→ button mapping preset cleared")
+                refresh()
+                Toast.makeText(this, "Preset cleared", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun confirmReset() {
         MaterialAlertDialogBuilder(this)
             .setTitle("Reset to defaults?")
             .setMessage(
-                "Every gesture goes back to the 5-way Explore defaults: ◀/▶ = knob, " +
+                "Every gesture goes back to the shipped defaults: ◀/▶ = knob, " +
                     "★ = Select, ★ hold = Home, ◀◀/▶▶ = D-pad ←→, ★★ = Back.\n\n" +
-                    "Saved places are kept. For BACK/SET or MODE/ENT hardware, use “Apply cluster preset…” instead."
+                    "Does not change which cluster preset is active. Use Clear preset to drop the tag."
             )
             .setPositiveButton("Reset") { _, _ ->
-                ButtonClusterPreset.FIVE_WAY.apply(this)
+                ButtonMap.resetAll(this)
                 LogBus.log("→ button mapping reset to defaults")
                 refresh()
-                Toast.makeText(this, "Reset to defaults (handlebar → AA on)", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Reset to defaults", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel", null)
             .show()

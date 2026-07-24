@@ -112,6 +112,16 @@ enum class ButtonClusterPreset(
             else BikeScope.putString(p, context, KEY_ACTIVE, preset.id)
         }
 
+        /**
+         * Drop the active cluster tag and restore shipped gesture defaults. Some bikes work best
+         * with no preset selected (plain defaults + optional manual tweaks). Does not change
+         * touchscreen or handlebar-capture mode.
+         */
+        fun clear(context: Context) {
+            ButtonMap.resetAll(context)
+            saveActive(context, null)
+        }
+
         private fun prefs(context: Context) =
             context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
     }
