@@ -300,8 +300,13 @@ object BikeWifi {
     /**
      * Always-on VPN with "Block connections without VPN" returns EPERM from
      * [Network.bindSocket] / [Network.getSocketFactory] — the app cannot pin traffic to bike Wi-Fi.
+     *
+     * Requires a **live internet VPN** ([isVpnActive]): bare EPERM / "Operation not permitted"
+     * also shows up when the bike [Network] is stale after Map↔AA toggles or a Wi‑Fi blip, and that
+     * must not pop the kill-switch dialog.
      */
-    fun isVpnBindBlocked(error: Throwable?): Boolean {
+    fun isVpnBindBlocked(context: Context, error: Throwable?): Boolean {
+        if (error == null || !isVpnActive(context)) return false
         var t: Throwable? = error
         while (t != null) {
             val m = t.message ?: ""
@@ -326,7 +331,7 @@ object BikeWifi {
             n.socketFactory.createSocket().close()
             null
         } catch (e1: Exception) {
-            if (isVpnBindBlocked(e1)) return e1
+            if (isVpnBindBlocked(context, e1)) return e1
             try {
                 val s = java.net.Socket()
                 n.bindSocket(s)

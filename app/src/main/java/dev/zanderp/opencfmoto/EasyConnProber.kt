@@ -170,7 +170,7 @@ class EasyConnProber(
             log("!! active internet VPN — if probes time out: turn VPN off, or disable " +
                 "'Block connections without VPN' / enable LAN bypass")
             val bindErr = BikeWifi.testBikeSocketBind(context)
-            if (BikeWifi.isVpnBindBlocked(bindErr)) {
+            if (BikeWifi.isVpnBindBlocked(context, bindErr)) {
                 log("!! VPN kill-switch is blocking bike Wi-Fi (EPERM on Network.bindSocket). " +
                     "Disable Always-on VPN → 'Block connections without VPN', allow LAN, or turn the VPN off.")
                 ConnectionState.set(Phase.ERROR, "VPN kill-switch blocking bike Wi‑Fi")
@@ -323,8 +323,14 @@ class EasyConnProber(
                 if (probed) return
             } catch (e: VpnBypassBlockedException) {
                 log("!! ${e.message}")
-                ConnectionState.set(Phase.ERROR, "VPN kill-switch blocking bike Wi‑Fi")
-                return
+                // Already streaming / linked once this session — Map↔AA toggles can briefly break
+                // the bike Network handle; don't hard-fail the whole ride on a blip.
+                if (everConnected) {
+                    log("!! ignoring VPN bind blip — bike already linked this session; will retry")
+                } else {
+                    ConnectionState.set(Phase.ERROR, "VPN kill-switch blocking bike Wi‑Fi")
+                    return
+                }
             } catch (e: Exception) {
                 log("[PROBE] failed: ${e.javaClass.simpleName}: ${e.message}")
             }
@@ -332,10 +338,11 @@ class EasyConnProber(
         }
         // Do NOT escalate to Phase.ERROR just because a VPN interface exists — that false-positive
         // popped the "VPN is blocking the bike" dialog when probes failed for any reason (dash not
-        // on QR, brief Wi‑Fi blip, Maps/cellular race). Only hard-fail on confirmed EPERM kill-switch.
-        if (!probed && running) {
+        // on QR, brief Wi‑Fi blip, Maps/cellular race). Only hard-fail on confirmed EPERM + live VPN,
+        // and never after we already had a bike link this session.
+        if (!probed && running && !everConnected) {
             val bindErr = BikeWifi.testBikeSocketBind(context)
-            if (BikeWifi.isVpnBindBlocked(bindErr)) {
+            if (BikeWifi.isVpnBindBlocked(context, bindErr)) {
                 log("!! VPN kill-switch blocked bike bind after probe failure: ${bindErr?.message}")
                 ConnectionState.set(Phase.ERROR, "VPN kill-switch blocking bike Wi‑Fi")
             } else if (BikeWifi.isVpnActive(context)) {
@@ -361,7 +368,7 @@ class EasyConnProber(
                 log("[PROBE] socket via Network.socketFactory (VPN bypass)")
                 return s
             } catch (e: Exception) {
-                if (BikeWifi.isVpnBindBlocked(e)) {
+                if (BikeWifi.isVpnBindBlocked(context, e)) {
                     throw VpnBypassBlockedException(
                         "VPN kill-switch blocked Network.socketFactory (EPERM). " +
                             "Disable Always-on VPN → 'Block connections without VPN', allow LAN, or turn VPN off."
@@ -375,7 +382,7 @@ class EasyConnProber(
                 log("[PROBE] socket via Network.bindSocket (VPN bypass)")
                 return s
             } catch (e: Exception) {
-                if (BikeWifi.isVpnBindBlocked(e)) {
+                if (BikeWifi.isVpnBindBlocked(context, e)) {
                     throw VpnBypassBlockedException(
                         "VPN kill-switch blocked Network.bindSocket (EPERM). " +
                             "Disable Always-on VPN → 'Block connections without VPN', allow LAN, or turn VPN off."

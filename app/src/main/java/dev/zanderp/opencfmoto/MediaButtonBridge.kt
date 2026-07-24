@@ -602,17 +602,42 @@ class MediaButtonBridge(private val context: Context, private val log: (String) 
      */
     private fun detectDoubleTap(single: ButtonGesture, double: ButtonGesture, forceDouble: Boolean) {
         val ch = taps.getOrPut(single) { Tap() }
-        ch.lastAt = SystemClock.elapsedRealtime()
+        val now = SystemClock.elapsedRealtime()
+        val gap = now - ch.lastAt
+        ch.lastAt = now
+        val window = ButtonTimingPrefs.doubleTapMs(context)
+
+        if (forceDouble) {
+            ch.pending?.let { handler.removeCallbacks(it); ch.pending = null }
+            run(double)
+            return
+        }
+
+        // Eager singles (5-way / MODE / BACK-SET): fire the tap now. A second tap inside the
+        // window still runs the ×2 action — no lag waiting to disambiguate (BT echoes used to
+        // turn every press into D-pad when we waited).
+        if (ButtonClusterPreset.prefersInstantSingles(context)) {
+            if (ch.pending != null && gap in 1 until window) {
+                ch.pending?.let { handler.removeCallbacks(it) }
+                ch.pending = null
+                run(double)
+                return
+            }
+            run(single)
+            val clear = Runnable { ch.pending = null }
+            ch.pending = clear
+            handler.postDelayed(clear, window)
+            return
+        }
+
         val wasPending = ch.pending != null
         ch.pending?.let { handler.removeCallbacks(it); ch.pending = null }
-        if (forceDouble || wasPending) {
-            run(double)   // coalesced jump, or the 2nd tap arrived before the single fired
-        } else if (ButtonClusterPreset.prefersInstantSingles(context)) {
-            run(single)
+        if (wasPending) {
+            run(double)
         } else {
             val r = Runnable { ch.pending = null; run(single) }
             ch.pending = r
-            handler.postDelayed(r, ButtonTimingPrefs.doubleTapMs(context))
+            handler.postDelayed(r, window)
         }
     }
 

@@ -414,8 +414,8 @@ Preset **MODE / ENT cluster** — all nine rows:
 **How to ride with it**
 
 1. Apply that preset.
-2. Confirm ★★ → Back and ◀◀ / ▶▶ → D-pad ←/→ in a quiet driveway before relying on them in traffic.
-3. If ×2 never fires: raise **Handlebar double-tap delay** to 450 ms, or set ×2 rows to *Do nothing* and use the on-screen pad.
+2. Singles are snappy (no wait); a second tap in the double-tap window still fires ×2 (D-pad ←/→ / Back).
+3. Confirm ★★ → Back and ◀◀ / ▶▶ → D-pad ←/→ in a quiet driveway before relying on them in traffic.
 4. MODE / Fn / + on the pod are usually **bike-native** (dash menus) — not remapped unless your firmware also emits AVRCP (check Logs for `[BTN] media key …`).
 
 ##### Shared tips (every cluster)

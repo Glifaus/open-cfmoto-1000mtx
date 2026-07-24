@@ -31,15 +31,16 @@ enum class ButtonClusterPreset(
         id = "five_way",
         title = "5-way Explore (Fn / ★ / voice)",
         summary = "◀/▶ = knob (move) · ◀◀/▶▶ = D-pad ←/→ (into apps) · ★ = Select · " +
-            "★★ = Back · ★ hold = Home. D-pad ↑↓ unused on these AA screens.",
-        instantSingles = false,
+            "★★ = Back · ★ hold = Home. Singles fire immediately (no lag waiting for ×2).",
+        // Eager singles: waiting for ×2 made every BT echo look like D-pad and felt "dead".
+        instantSingles = true,
     ),
     MODE_ENT(
         id = "mode_ent",
         title = "MODE / ENT cluster",
         summary = "Same AA navigation as 5-way: knob · ×2 = D-pad ←/→ · ★★ = Back. " +
-            "Raise the double-tap delay in Setup if ×2 feels picky.",
-        instantSingles = false,
+            "Singles are snappy; a second tap in the window still fires ×2.",
+        instantSingles = true,
     ),
     BACK_SET(
         id = "back_set",
@@ -50,20 +51,13 @@ enum class ButtonClusterPreset(
         instantSingles = true,
     );
 
-    /** Mapping this preset writes. Unlisted gestures keep [ButtonGesture.default] via [ButtonMap.resetAll]. */
+    /**
+     * Mapping this preset writes. Always covers all nine gestures so [ButtonMap.resetAll] + apply
+     * can't leave a stale custom row behind from a previous preset.
+     */
     fun mapping(): Map<ButtonGesture, ButtonAction> = when (this) {
-        FIVE_WAY -> ButtonGesture.entries.associateWith { it.default }
-        MODE_ENT -> mapOf(
-            ButtonGesture.NAV_BACK to ButtonAction.KNOB_BACK,
-            ButtonGesture.NAV_FWD to ButtonAction.KNOB_FORWARD,
-            ButtonGesture.SELECT_PRESS to ButtonAction.SELECT,
-            ButtonGesture.NAV_BACK_LONG to ButtonAction.NONE,
-            ButtonGesture.NAV_FWD_LONG to ButtonAction.NONE,
-            ButtonGesture.SELECT_LONG to ButtonAction.HOME,
-            ButtonGesture.SELECT_DOUBLE to ButtonAction.BACK,
-            ButtonGesture.NAV_BACK_DOUBLE to ButtonAction.DPAD_LEFT,
-            ButtonGesture.NAV_FWD_DOUBLE to ButtonAction.DPAD_RIGHT,
-        )
+        // Same AA nav model on both pods that can do discrete ×2.
+        FIVE_WAY, MODE_ENT -> ButtonGesture.entries.associateWith { it.default }
         BACK_SET -> mapOf(
             ButtonGesture.NAV_BACK to ButtonAction.KNOB_BACK,
             ButtonGesture.NAV_FWD to ButtonAction.KNOB_FORWARD,
@@ -73,6 +67,7 @@ enum class ButtonClusterPreset(
             ButtonGesture.SELECT_LONG to ButtonAction.NONE,
             ButtonGesture.SELECT_DOUBLE to ButtonAction.NONE,
             // Volume-coalesced ▲▲ / ▼▼ (jump ≥ 3) still fire these on many CFDL16 logs.
+            // Discrete ×2 (if the dash ever sends it) also maps here via eager second-tap.
             ButtonGesture.NAV_BACK_DOUBLE to ButtonAction.BACK,
             ButtonGesture.NAV_FWD_DOUBLE to ButtonAction.HOME,
         )
@@ -86,6 +81,12 @@ enum class ButtonClusterPreset(
             ButtonMap.set(context, gesture, action)
         }
         saveActive(context, this)
+        // Applying a cluster means the rider wants bars → AA. Leaving capture OFF eats keys
+        // in our MediaSession without navigating (looks like "controls stopped working").
+        if (!ButtonMode.isControlAa(context)) {
+            ButtonMode.set(context, true)
+            MediaButtonBridge.instance?.setCaptureActive(true)
+        }
     }
 
     companion object {
@@ -97,18 +98,11 @@ enum class ButtonClusterPreset(
         fun active(context: Context): ButtonClusterPreset? =
             byId(BikeScope.getString(prefs(context), context, KEY_ACTIVE, null))
 
-        /** True when singles should fire with no double-tap delay (BACK/SET, or inferred). */
+        /** True when singles should fire immediately (×2 still fires on a second tap in-window). */
         fun prefersInstantSingles(context: Context): Boolean {
             active(context)?.let { return it.instantSingles }
-            // Infer: rider manually disabled every multi-press / hold gesture.
-            return listOf(
-                ButtonGesture.SELECT_DOUBLE,
-                ButtonGesture.SELECT_LONG,
-                ButtonGesture.NAV_BACK_DOUBLE,
-                ButtonGesture.NAV_FWD_DOUBLE,
-                ButtonGesture.NAV_BACK_LONG,
-                ButtonGesture.NAV_FWD_LONG,
-            ).all { ButtonMap.get(context, it) == ButtonAction.NONE }
+            // No preset → snappy defaults (same as 5-way). Waiting only helps rare custom maps.
+            return true
         }
 
         fun saveActive(context: Context, preset: ButtonClusterPreset?) {

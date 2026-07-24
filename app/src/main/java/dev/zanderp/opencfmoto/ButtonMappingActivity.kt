@@ -171,7 +171,15 @@ class ButtonMappingActivity : AppCompatActivity() {
                         preset.apply(this)
                         LogBus.log("→ button mapping preset: ${preset.title}")
                         refresh()
-                        Toast.makeText(this, "Applied: ${preset.title}", Toast.LENGTH_SHORT).show()
+                        val touchHint =
+                            if (BikeProfileHolder.advertisesScreenTouch && !AppSettings.forceNonTouch(this)) {
+                                " — on touch dashes also turn on Setup → Disable touchscreen so AA has a focus cursor"
+                            } else ""
+                        Toast.makeText(
+                            this,
+                            "Applied: ${preset.title} (handlebar → AA on)$touchHint",
+                            Toast.LENGTH_LONG,
+                        ).show()
                     }
                     .setNegativeButton("Cancel", null)
                     .show()
@@ -185,15 +193,14 @@ class ButtonMappingActivity : AppCompatActivity() {
             .setTitle("Reset to defaults?")
             .setMessage(
                 "Every gesture goes back to the 5-way Explore defaults: ◀/▶ = knob, " +
-                    "◀/▶ hold = D-pad ↑↓, ★ = Select, ★ hold = Home, ◀◀/▶▶ = D-pad ←→, ★★ = Back.\n\n" +
+                    "★ = Select, ★ hold = Home, ◀◀/▶▶ = D-pad ←→, ★★ = Back.\n\n" +
                     "Saved places are kept. For BACK/SET or MODE/ENT hardware, use “Apply cluster preset…” instead."
             )
             .setPositiveButton("Reset") { _, _ ->
-                ButtonMap.resetAll(this)
-                ButtonClusterPreset.saveActive(this, ButtonClusterPreset.FIVE_WAY)
+                ButtonClusterPreset.FIVE_WAY.apply(this)
                 LogBus.log("→ button mapping reset to defaults")
                 refresh()
-                Toast.makeText(this, "Reset to defaults", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Reset to defaults (handlebar → AA on)", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel", null)
             .show()

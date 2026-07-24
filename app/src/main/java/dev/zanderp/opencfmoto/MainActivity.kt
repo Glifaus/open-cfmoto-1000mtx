@@ -676,8 +676,12 @@ class MainActivity : AppCompatActivity() {
         } else {
             rivalPromptShown = false
         }
-        // Only the confirmed kill-switch path (EPERM) — not soft "VPN present" log noise.
-        if (phase == Phase.ERROR && detail.contains("kill-switch", ignoreCase = true)) {
+        // Only a confirmed kill-switch with a live internet VPN — Map↔AA blips can leave a stale
+        // "kill-switch" detail without an actual VPN; don't nag in that case.
+        if (phase == Phase.ERROR &&
+            detail.contains("kill-switch", ignoreCase = true) &&
+            BikeWifi.isVpnActive(this)
+        ) {
             if (!vpnPromptShown) { vpnPromptShown = true; promptVpnKillSwitch() }
         } else {
             vpnPromptShown = false
