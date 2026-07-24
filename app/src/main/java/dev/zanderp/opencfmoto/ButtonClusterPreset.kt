@@ -81,8 +81,9 @@ enum class ButtonClusterPreset(
             ButtonMap.set(context, gesture, action)
         }
         saveActive(context, this)
-        // Applying a cluster means the rider wants bars → AA. Leaving capture OFF eats keys
-        // in our MediaSession without navigating (looks like "controls stopped working").
+        // Cluster = which physical pod map to use. Also turn handlebar→AA on so keys aren't
+        // swallowed with capture off. Does NOT change touchscreen / Disable touchscreen —
+        // touch dashes (800MT, …) keep touch + bars together like before.
         if (!ButtonMode.isControlAa(context)) {
             ButtonMode.set(context, true)
             MediaButtonBridge.instance?.setCaptureActive(true)

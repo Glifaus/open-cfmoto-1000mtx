@@ -171,14 +171,12 @@ class ButtonMappingActivity : AppCompatActivity() {
                         preset.apply(this)
                         LogBus.log("→ button mapping preset: ${preset.title}")
                         refresh()
-                        val touchHint =
-                            if (BikeProfileHolder.advertisesScreenTouch && !AppSettings.forceNonTouch(this)) {
-                                " — on touch dashes also turn on Setup → Disable touchscreen so AA has a focus cursor"
-                            } else ""
+                        // Cluster only picks the bar map + turns handlebar→AA on. Touch stays as-is
+                        // (800MT etc. keep touch + bars together — never force Disable touchscreen).
                         Toast.makeText(
                             this,
-                            "Applied: ${preset.title} (handlebar → AA on)$touchHint",
-                            Toast.LENGTH_LONG,
+                            "Applied: ${preset.title} (handlebar → AA on)",
+                            Toast.LENGTH_SHORT,
                         ).show()
                     }
                     .setNegativeButton("Cancel", null)
