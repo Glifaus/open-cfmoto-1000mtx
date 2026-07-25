@@ -18,8 +18,8 @@ Riders have projected Android Auto with these (US + international as noted):
 
 | Model | Notes |
 | --- | --- |
-| **800MT** (MT‑X / Explore / Explore GT) | Landscape touch (CFDL26) |
-| **1000 MT‑X** | Portrait CFDL26; handlebar-primary by default |
+| **800MT** (Explore / Explore GT) | Landscape touch (CFDL26) |
+| **800MT‑X** / **1000MT‑X** | Portrait CFDL26; handlebar-primary by default |
 | **800NK** (US CRCP / sdk 0.9.23.x) | Non‑touch; dual PXC heartbeat |
 | **800NK Advanced** | Near-square touch (~720×712); use Screen margins for the MotoPlay pull-down |
 | **450SR** (+ SR‑S / TC class) | Non‑touch CFDL16; handlebar + on-screen pad |
