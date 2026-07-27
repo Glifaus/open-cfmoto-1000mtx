@@ -40,6 +40,7 @@ class SetupActivity : AppCompatActivity() {
     private lateinit var resDesc: TextView
     private lateinit var themeDesc: TextView
     private lateinit var dblTapDesc: TextView
+    private lateinit var holdsDesc: TextView
     private lateinit var holdDesc: TextView
     private lateinit var nonTouchDesc: TextView
     private lateinit var forceTouchDesc: TextView
@@ -75,6 +76,7 @@ class SetupActivity : AppCompatActivity() {
         resDesc = findViewById(R.id.res_desc)
         themeDesc = findViewById(R.id.theme_desc)
         dblTapDesc = findViewById(R.id.dbltap_desc)
+        holdsDesc = findViewById(R.id.holds_desc)
         holdDesc = findViewById(R.id.hold_desc)
         nonTouchDesc = findViewById(R.id.nontouch_desc)
         forceTouchDesc = findViewById(R.id.forcetouch_desc)
@@ -108,6 +110,11 @@ class SetupActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.dbltap_fast).setOnClickListener { setDoubleTap(DoubleTapDelay.FAST) }
         findViewById<MaterialButton>(R.id.dbltap_normal).setOnClickListener { setDoubleTap(DoubleTapDelay.NORMAL) }
         findViewById<MaterialButton>(R.id.dbltap_slow).setOnClickListener { setDoubleTap(DoubleTapDelay.SLOW) }
+        findViewById<MaterialButton>(R.id.dbltap_very_slow).setOnClickListener {
+            setDoubleTap(DoubleTapDelay.VERY_SLOW)
+        }
+        findViewById<MaterialButton>(R.id.holds_on).setOnClickListener { setHoldsEnabled(true) }
+        findViewById<MaterialButton>(R.id.holds_off).setOnClickListener { setHoldsEnabled(false) }
         findViewById<MaterialButton>(R.id.hold_short).setOnClickListener { setLongPress(LongPressDelay.SHORT) }
         findViewById<MaterialButton>(R.id.hold_normal).setOnClickListener { setLongPress(LongPressDelay.NORMAL) }
         findViewById<MaterialButton>(R.id.hold_long).setOnClickListener { setLongPress(LongPressDelay.LONG) }
@@ -249,6 +256,17 @@ class SetupActivity : AppCompatActivity() {
         Toast.makeText(this, "Hold delay: ${delay.label}", Toast.LENGTH_SHORT).show()
     }
 
+    private fun setHoldsEnabled(on: Boolean) {
+        ButtonTimingPrefs.setHoldsEnabled(this, on)
+        refreshOptions()
+        Toast.makeText(
+            this,
+            if (on) "Hold detection on"
+            else "Hold detection off — long presses count as taps / ×2",
+            Toast.LENGTH_SHORT,
+        ).show()
+    }
+
     private fun setAutoConnect(on: Boolean) {
         AppSettings.setAutoConnect(this, on)
         refreshOptions()
@@ -313,6 +331,7 @@ class SetupActivity : AppCompatActivity() {
         val res = VideoPrefs.resolution(this)
         val theme = NightPrefs.theme(this)
         val dbl = ButtonTimingPrefs.doubleTap(this)
+        val holdsOn = ButtonTimingPrefs.holdsEnabled(this)
         val hold = ButtonTimingPrefs.longPress(this)
         qualityDesc.text = quality.label
         fitDesc.text = fit.label
@@ -320,7 +339,12 @@ class SetupActivity : AppCompatActivity() {
         resDesc.text = res.label
         themeDesc.text = theme.label
         dblTapDesc.text = dbl.label
-        holdDesc.text = hold.label
+        holdsDesc.text = if (holdsOn) {
+            "On — press-and-hold can fire hold gestures"
+        } else {
+            "Off — every release is a tap / ×2 (use with a long double-tap delay)"
+        }
+        holdDesc.text = if (holdsOn) hold.label else "Ignored while Hold detection is Off"
         nonTouchDesc.text = if (AppSettings.forceNonTouch(this))
             "On — focus/knob UI so handlebar buttons work"
         else
@@ -358,7 +382,11 @@ class SetupActivity : AppCompatActivity() {
         highlight(dbl,
             R.id.dbltap_fast to DoubleTapDelay.FAST,
             R.id.dbltap_normal to DoubleTapDelay.NORMAL,
-            R.id.dbltap_slow to DoubleTapDelay.SLOW)
+            R.id.dbltap_slow to DoubleTapDelay.SLOW,
+            R.id.dbltap_very_slow to DoubleTapDelay.VERY_SLOW)
+        highlight(holdsOn,
+            R.id.holds_on to true,
+            R.id.holds_off to false)
         highlight(hold,
             R.id.hold_short to LongPressDelay.SHORT,
             R.id.hold_normal to LongPressDelay.NORMAL,

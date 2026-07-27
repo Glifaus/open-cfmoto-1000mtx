@@ -801,10 +801,12 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@null"
+                    android:ellipsize="end"
                     android:hint="Search places or address"
                     android:imeOptions="actionSearch"
                     android:inputType="text"
                     android:maxLines="1"
+                    android:singleLine="true"
                     android:textColor="#202124"
                     android:textColorHint="#80868B"
                     android:textSize="17sp" />
@@ -839,6 +841,8 @@
             android:id="@+id/gpx_search_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
             android:paddingHorizontal="16dp"
             android:paddingBottom="4dp"
             android:textColor="#5F6368"
@@ -847,12 +851,16 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:clipChildren="true"
+            android:clipToPadding="true">
 
             <LinearLayout
                 android:id="@+id/gpx_search_results"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:clipChildren="true"
+                android:clipToPadding="true"
                 android:orientation="vertical"
                 android:paddingBottom="24dp" />
         </ScrollView>

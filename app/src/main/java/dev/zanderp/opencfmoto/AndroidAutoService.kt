@@ -48,6 +48,8 @@ class AndroidAutoService : Service() {
     private var wifiLockHighPerf: WifiManager.WifiLock? = null
     private val watchdogHandler = Handler(Looper.getMainLooper())
     private var lastRecoveryAt = 0L
+    /** While set, stall watchdog must not forceReconnect — AA→Map codec swap needs a quiet window. */
+    @Volatile private var softSwitchGraceUntil = 0L
 
     // Adaptive video tuning (PowerMode.AUTO): thermal + link-driven bitrate/fps, run each watchdog tick.
     private val adaptive by lazy { AdaptiveVideoController(applicationContext, LogBus::log) }
@@ -71,10 +73,11 @@ class AndroidAutoService : Service() {
                 return START_NOT_STICKY
             }
             ACTION_GPX_WAKE -> {
-                // Ensure FGS + wake for Map Presentation; also bring the receiver up so a
-                // mid-ride wake request can't leave us without a pipeline.
+                // Map Presentation only — do NOT start the AA receiver here. Starting AA would
+                // publish AaVideoBridge.pipeline and steal the bike's next REQ_RV_DATA_START away
+                // from the owned GPX VideoPipeline (blank / stuck "connected" dash).
                 startAsForeground()
-                startReceiver()
+                ensureMediaButtons()
                 startWatchdog()
                 isRunning = true
                 applyGpxScreenWake(true)
@@ -125,6 +128,7 @@ class AndroidAutoService : Service() {
         val prober = BikeLink.prober ?: return
         if (!prober.isRunning) return
         val now = System.currentTimeMillis()
+        if (now < softSwitchGraceUntil) return
         when {
             ConnectionState.phase == Phase.STREAMING &&
                 prober.msSinceLastFrame() > STALL_MS &&
@@ -467,12 +471,70 @@ class AndroidAutoService : Service() {
                 it.onSessionEnded = { userExit -> onAaSessionEnded(userExit) }
                 it.start()
             }
-            // Capture the bike's handlebar buttons (Bluetooth AVRCP) → Android Auto navigation.
-            mediaButtons = MediaButtonBridge(applicationContext, LogBus::log).also { it.start() }
+            // Capture the bike's handlebar buttons (Bluetooth AVRCP) → AA / Map navigation.
+            ensureMediaButtons()
         } catch (e: Exception) {
             LogBus.log("[AA] receiver start failed: $e")
             stopSelf()
         }
+    }
+
+    /** Keep AVRCP capture alive for AA and for Map (same ButtonMap presets). */
+    private fun ensureMediaButtons() {
+        if (mediaButtons != null) return
+        mediaButtons = MediaButtonBridge(applicationContext, LogBus::log).also { it.start() }
+    }
+
+    /** Stop AA decode/encode only — keep FGS, Wi‑Fi locks, and [MediaButtonBridge]. */
+    private fun parkAaVideoOnly() {
+        AaVideoBridge.onSteadyVideo = null
+        // Avoid onSessionEnded(userExit) → fullTeardown while we swap sources.
+        try { receiver?.onSessionEnded = null } catch (_: Exception) {}
+        try { receiver?.stop() } catch (_: Exception) {}
+        receiver = null
+        AaVideoBridge.pipeline = null
+        try { pipeline?.stop(abandonNavigation = false) } catch (_: Exception) {}
+        pipeline = null
+        ensureMediaButtons()
+        reacquireLocks()
+        applyGpxScreenWake(true)
+        AppHttp.ensureCellularUplink()
+    }
+
+    /**
+     * Soft AA→Map: stop Android Auto video, keep FGS + Wi‑Fi + PXC + handlebar bridge, attach a
+     * GPX Presentation to the existing prober. Does not rejoin the bike AP.
+     */
+    private fun parkAaForMap(): Boolean {
+        if (!GpxSession.active) {
+            LogBus.log("[AA→MAP] no map session — abort soft-switch")
+            return false
+        }
+        val prober = BikeLink.prober
+        if (prober == null || !prober.isRunning) {
+            LogBus.log("[AA→MAP] prober not live — caller should join Wi‑Fi")
+            return false
+        }
+        LogBus.log("[AA→MAP] parking AA video; keeping bike link + handlebar bridge")
+        softSwitchGraceUntil = System.currentTimeMillis() + 8_000L
+        // Drop shared AA frames immediately so 114 doesn't poll a dead codec (stall → reconnect).
+        try { prober.detachVideoSource() } catch (_: Exception) {}
+        parkAaVideoOnly()
+        updateNotification(
+            "OpenCfMoto Map",
+            "Map on the dash — handlebars use your button mapping",
+        )
+        // Attach now — delayed attach left a multi-second black/unresponsive gap and often lost
+        // the media plane until a full Stop/Start.
+        val ok = prober.attachOwnedGpxVideo()
+        if (ok) {
+            LogBus.log("[AA→MAP] Map video attached")
+            ConnectionState.set(Phase.STREAMING)
+        } else {
+            LogBus.log("[AA→MAP] Map attach failed — try Stop then Map")
+            ConnectionState.set(Phase.ERROR, "Map switch failed — Stop, then Map")
+        }
+        return ok
     }
 
     /**
@@ -608,6 +670,24 @@ class AndroidAutoService : Service() {
             } catch (e: Exception) {
                 LogBus.log("[GPX] could not start FGS for wake: $e")
             }
+        }
+
+        /**
+         * Soft-switch a live AA (or FGS) session to Map / GPX on the same bike link.
+         * Call from the main thread. Returns false when the caller should fall back to a fresh Wi‑Fi join.
+         */
+        fun switchToMapProjection(ctx: Context): Boolean {
+            val svc = active
+            if (svc != null) return svc.parkAaForMap()
+            // No AA service — drop any orphaned shared pipeline so 112/attach won't reuse AA.
+            AaVideoBridge.onSteadyVideo = null
+            AaVideoBridge.pipeline = null
+            val prober = BikeLink.prober
+            if (prober != null && prober.isRunning && GpxSession.active) {
+                LogBus.log("[AA→MAP] no AA service — attaching GPX on live prober")
+                return prober.attachOwnedGpxVideo()
+            }
+            return false
         }
 
         const val ACTION_STOP = "dev.zanderp.opencfmoto.ACTION_STOP_AA"

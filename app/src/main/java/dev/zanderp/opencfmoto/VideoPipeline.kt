@@ -77,6 +77,8 @@ class VideoPipeline(
     private var encoderW = 0
     private var encoderH = 0
     @Volatile private var running = false
+    /** True after a successful [start] until [stop]. */
+    val isAlive: Boolean get() = running
 
     // The bitrate the encoder was configured with (the user's target). Adaptive tuning scales DOWN
     // from this; it is the ceiling. 0 until the encoder is created.
@@ -130,10 +132,14 @@ class VideoPipeline(
             setupProjectionDisplay(projection)
         } else if (GpxSession.active) {
             log("[VIDEO] GPX viewer mode (Presentation)")
-            main.post { setupGpxPresentation() }
+            // Soft AA→Map often runs on the main thread — set up immediately so the first IDR
+            // already has map pixels (postponing left the dash on a frozen AA frame).
+            if (Looper.myLooper() == Looper.getMainLooper()) setupGpxPresentation()
+            else main.post { setupGpxPresentation() }
         } else {
             log("[VIDEO] own-content mode (Presentation)")
-            main.post { setupDisplayAndPresentation() }
+            if (Looper.myLooper() == Looper.getMainLooper()) setupDisplayAndPresentation()
+            else main.post { setupDisplayAndPresentation() }
         }
     }
 
@@ -621,7 +627,11 @@ class VideoPipeline(
         }
     }
 
-    fun stop() {
+    /**
+     * @param abandonNavigation when true (default), a live NAV_TO is cleared so reopening the app
+     *   doesn't resume a killed route. Soft AA→Map switches pass false so the destination survives.
+     */
+    fun stop(abandonNavigation: Boolean = true) {
         running = false
         try { dumpOut?.flush(); dumpOut?.close() } catch (_: Exception) {}
         if (dumpOut != null) log("[DUMP] stopped: $dumpPath ($dumpFrames frames) — Share Log to send it")
@@ -643,11 +653,16 @@ class VideoPipeline(
         }
         projectionCallback = null
         ProjectionService.setKeepScreenOn(context, false)
-        AndroidAutoService.setGpxScreenWake(context, false)
+        // Soft AA→Map keeps the FGS wake; only release when this was the map Presentation itself
+        // or a full stop (abandonNavigation). Soft-switch stops the AA compositor with
+        // abandonNavigation=false and must not drop the screen wake before GPX attaches.
+        if (abandonNavigation || gpxDashUi != null) {
+            AndroidAutoService.setGpxScreenWake(context, false)
+        }
         GpxSession.clearTouchTarget()
         // Killing projection mid-route must not leave NAV_TO sticky — reopen would "resume"
         // and immediately flash Arrived if you're still near that place.
-        if (GpxSession.active && GpxSession.mode == GpxSession.Mode.NAV_TO) {
+        if (abandonNavigation && GpxSession.active && GpxSession.mode == GpxSession.Mode.NAV_TO) {
             GpxSession.abandonStaleNavigation("projection stopped")
         }
         try { gpxVoice?.shutdown() } catch (_: Exception) {}

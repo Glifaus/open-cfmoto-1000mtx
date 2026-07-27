@@ -135,11 +135,43 @@ class MainActivity : AppCompatActivity() {
             "→ AA ${spec.width}x${spec.height} @${spec.dpi}dpi$note$touchNote$ovNote$aspectNote")
     }
 
+    /**
+     * Stop the current dash projection so the next mode can open a clean PXC session.
+     * Keeps bike Wi‑Fi (fast re-probe). Optionally preserves an armed Map session / mirror token.
+     */
+    private fun tearDownForModeSwitch(clearMap: Boolean, clearMirror: Boolean) {
+        log("→ mode switch: stop previous projection (keep Wi‑Fi)")
+        try { AaVideoBridge.onSteadyVideo = null } catch (_: Exception) {}
+        AaVideoBridge.pipeline = null
+        AaVideoBridge.touchSink = null
+        AaVideoBridge.keySink = null
+        AaVideoBridge.scrollSink = null
+        AaVideoBridge.previewTouchSink = null
+        AaVideoBridge.nightSink = null
+        try { AndroidAutoService.stop(this) } catch (e: Exception) { log("AA stop: $e") }
+        try { BikeLink.prober?.stop() } catch (e: Exception) { log("prober stop: $e") }
+        try {
+            if (::prober.isInitialized && BikeLink.prober !== prober) prober.stop()
+        } catch (_: Exception) {}
+        if (clearMirror) {
+            ProjectionHolder.projection?.let { try { it.stop() } catch (_: Exception) {} }
+            ProjectionHolder.projection = null
+            try { ProjectionService.stop(this) } catch (_: Exception) {}
+        }
+        if (clearMap) {
+            try { GpxSession.clear() } catch (_: Exception) {}
+            MapInputBridge.clear()
+        }
+        BikeLink.beginHandoff()
+    }
+
     /** Start the Android Auto → bike projection for [qr]. Shared by the one-tap Connect reconnect
      *  and a fresh scan, so both paths behave identically. */
     private fun startAaFlow(qr: QrData) {
         try {
             if (!WifiGate.ensureEnabledOrPrompt(this)) return
+            // Map / Mirror / stale PXC must die first — half-switches leave framesSent=0.
+            tearDownForModeSwitch(clearMap = true, clearMirror = true)
             applyProfile(qr)
             val bikeName = BikeMemory.lastBikeName(this) ?: qr.ssid
             ConnectionState.set(Phase.STARTING_AA, bikeName)
@@ -421,23 +453,47 @@ class MainActivity : AppCompatActivity() {
         // Bike Search tap → focus this field + show the phone keyboard (Presentation has no IME).
         DashRemote.setTypeOnPhoneHandler {
             runOnUiThread {
-                val field = findViewById<android.widget.EditText>(R.id.et_destination) ?: return@runOnUiThread
+                val field = findViewById<android.widget.EditText>(R.id.et_destination)
+                    ?: return@runOnUiThread
                 try {
                     startActivity(
                         Intent(this, MainActivity::class.java)
                             .addFlags(
                                 Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
-                                    Intent.FLAG_ACTIVITY_SINGLE_TOP,
+                                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                                    Intent.FLAG_ACTIVITY_NEW_TASK,
                             ),
                     )
+                } catch (_: Exception) {}
+                // Make the phone field scream "this is the bike search box".
+                field.hint = "Bike dash search — type here"
+                field.setText("")
+                field.setSelection(0)
+                try {
+                    field.setBackgroundColor(0x33FF9800)
+                    field.postDelayed({
+                        try { field.background = null } catch (_: Exception) {}
+                    }, 2500)
                 } catch (_: Exception) {}
                 field.requestFocus()
                 field.post {
                     val imm = getSystemService(INPUT_METHOD_SERVICE)
                         as? android.view.inputmethod.InputMethodManager
-                    imm?.showSoftInput(field, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+                    imm?.showSoftInput(
+                        field,
+                        android.view.inputmethod.InputMethodManager.SHOW_FORCED,
+                    )
                 }
-                Toast.makeText(this, "Type here — results show on the bike", Toast.LENGTH_SHORT).show()
+                try {
+                    @Suppress("DEPRECATION")
+                    (getSystemService(Context.VIBRATOR_SERVICE) as? android.os.Vibrator)
+                        ?.vibrate(40)
+                } catch (_: Exception) {}
+                Toast.makeText(
+                    this,
+                    "Bike search open — type here. Results appear on the dash.",
+                    Toast.LENGTH_LONG,
+                ).show()
             }
         }
         // Live suggestions on the dash while typing on the phone.
@@ -829,7 +885,7 @@ class MainActivity : AppCompatActivity() {
             joinWifiP2p(qr, gateOnAaSteady)
             return
         }
-        BikeWifi.join(
+        BikeWifi.reuseOrJoin(
             context = applicationContext,
             ssid = qr.ssid,
             psk = qr.pwd,
@@ -839,12 +895,11 @@ class MainActivity : AppCompatActivity() {
                     LogBus.log("→ bike Wi-Fi bound (waiting for AA video to go steady)")
                     BikeLink.markWifiReady(network)
                 } else {
-                    // Mirror path: no AA gating — go straight to the PXC flow. (BLE wake-up is not
-                    // required for projection; runBleWakeUpThenProber() remains available if needed.)
+                    // Map / Mirror: no AA gating — rebuild PXC immediately on the bound network.
                     ConnectionState.set(Phase.PXC_CONNECTING)
                     LogBus.log("→ Wi-Fi bound; starting EasyConn PXC flow …")
                     try {
-                        (BikeLink.prober ?: prober).start(BikeWifi.currentNetwork)
+                        (BikeLink.prober ?: prober).start(network ?: BikeWifi.currentNetwork)
                     } catch (e: Exception) {
                         LogBus.log("prober start failed: $e")
                     }
@@ -1217,6 +1272,8 @@ class MainActivity : AppCompatActivity() {
         val saved = BikeMemory.lastQr(this)
         if (saved != null) {
             log("→ Mirror: reusing saved bike '${BikeMemory.lastBikeName(this)}'")
+            // Drop AA / Map / old PXC; keep the MediaProjection token we just armed.
+            tearDownForModeSwitch(clearMap = true, clearMirror = false)
             applyProfile(saved)
             ConnectionState.set(Phase.MIRRORING, BikeMemory.lastBikeName(this) ?: saved.ssid)
             joinWifi(saved, gateOnAaSteady = false)
@@ -1236,8 +1293,8 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Map / GPX session ready.
-     * If already projecting to the bike → switch content over Wi‑Fi.
-     * Otherwise open phone Dash preview (do not auto-join bike Wi‑Fi — that looked like “nothing”).
+     * Always hard-switches: stop previous projection, reopen PXC with Map video (keep Wi‑Fi).
+     * Phone Dash preview only when not sending to the bike.
      */
     private fun beginGpxProjection() {
         if (!GpxSession.active) {
@@ -1245,28 +1302,25 @@ class MainActivity : AppCompatActivity() {
             GpxActivity.start(this)
             return
         }
-        ProjectionHolder.projection = null
         pendingAaStart = false
         ensureLocationPermission()
         val live = ConnectionState.phase == Phase.STREAMING ||
-            ConnectionState.phase == Phase.MIRRORING
+            ConnectionState.phase == Phase.MIRRORING ||
+            ConnectionState.phase == Phase.RECONNECTING ||
+            ConnectionState.phase == Phase.PXC_CONNECTING ||
+            ConnectionState.phase == Phase.STARTING_AA ||
+            ConnectionState.phase == Phase.AA_VIDEO_LIVE ||
+            ConnectionState.phase == Phase.JOINING_WIFI
+        val wantBike = intent?.getBooleanExtra(EXTRA_GPX_TO_BIKE, false) == true || live
+        if (wantBike) intent?.removeExtra(EXTRA_GPX_TO_BIKE)
         val saved = BikeMemory.lastQr(this)
-        if (live && saved != null) {
+        if (wantBike && saved != null) {
             log(
                 "→ Map: ${GpxSession.mode} '${GpxSession.trackName}' → " +
-                    "'${BikeMemory.lastBikeName(this)}'",
+                    "'${BikeMemory.lastBikeName(this)}' (hard switch)",
             )
-            applyProfile(saved)
-            ConnectionState.set(Phase.MIRRORING, BikeMemory.lastBikeName(this) ?: saved.ssid)
-            joinWifi(saved, gateOnAaSteady = false)
-            return
-        }
-        if (intent?.getBooleanExtra(EXTRA_GPX_TO_BIKE, false) == true && saved != null) {
-            intent.removeExtra(EXTRA_GPX_TO_BIKE)
-            log(
-                "→ Map: project to bike ${GpxSession.mode} '${GpxSession.trackName}' → " +
-                    "'${BikeMemory.lastBikeName(this)}'",
-            )
+            // Stop AA / mirror / old sockets, keep Wi‑Fi + GpxSession, then fresh PXC.
+            tearDownForModeSwitch(clearMap = false, clearMirror = true)
             applyProfile(saved)
             ConnectionState.set(Phase.MIRRORING, BikeMemory.lastBikeName(this) ?: saved.ssid)
             joinWifi(saved, gateOnAaSteady = false)

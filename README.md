@@ -429,8 +429,9 @@ Preset **MODE / ENT cluster** — all nine rows:
 Changes apply on the **next press** (no reconnect).
 
 1. **Setup → Handlebar**
-   - **Double-tap delay** — `200 ms` (snappy singles) · `300 ms` (default) · `450 ms` (forgiving doubles). Longer = easier ×2, but every single tap waits that long before firing (except the BACK/SET preset, which skips the wait).
-   - **Hold delay** — `500 ms` · `600 ms` (default) · `800 ms`. Applies to **◀ / ▶ / ★** hold, not only Select.
+   - **Double-tap delay** — `200 ms` · `300 ms` (default) · `450 ms` · `1000 ms` (slow doubles). Longer = easier ×2 when each physical click is slow; singles wait that long unless the cluster fires them instantly.
+   - **Hold detection** — On (default) or **Off**. Turn **Off** when a long physical press must still count as a tap / ×2 (otherwise Hold delay eats it). Pair with `1000 ms` double-tap if needed.
+   - **Hold delay** — `500 ms` · `600 ms` (default) · `800 ms`. Ignored when Hold detection is Off.
 2. **Controls → Customize buttons** — remap any of the 9 gestures; use **Apply cluster preset…** first if you changed bikes.
 3. **Diagnostics (home → Logs)** while projecting with *Handlebar buttons drive Android Auto* **ON** — press the bars and watch for `[BTN]` lines:
 

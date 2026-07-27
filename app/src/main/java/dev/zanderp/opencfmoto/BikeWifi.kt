@@ -104,6 +104,32 @@ object BikeWifi {
         registerCallback()
     }
 
+    /**
+     * Mode switches (AA↔Map↔Mirror) must keep bike Wi‑Fi and only rebuild PXC.
+     * If we're already process-bound to [ssid], fire [onAvailable] immediately — do not
+     * unregister/re-request (that added multi-second stalls and "already running" races).
+     */
+    fun reuseOrJoin(
+        context: Context,
+        ssid: String,
+        psk: String,
+        onAvailable: (Network) -> Unit,
+        onLost: () -> Unit,
+        log: (String) -> Unit,
+    ) {
+        val net = currentNetwork
+        if (active && net != null && this.ssid.equals(ssid, ignoreCase = true)) {
+            this.onAvailableCb = onAvailable
+            this.onLostCb = onLost
+            this.logCb = log
+            rebindProcessToBike(context)
+            log("Wi-Fi already bound: $ssid — skipping re-join (mode switch)")
+            onAvailable(net)
+            return
+        }
+        join(context, ssid, psk, onAvailable, onLost, log)
+    }
+
     private fun registerCallback() {
         val cm = cm ?: return
         val req = request ?: return

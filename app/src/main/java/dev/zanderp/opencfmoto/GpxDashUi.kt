@@ -37,6 +37,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
+import dev.zanderp.opencfmoto.aa.AaInput
 
 /**
  * Shared Map / GPX dash chrome: binds [R.layout.presentation_gpx] for bike Presentation
@@ -109,6 +110,8 @@ class GpxDashUi(
         var lastAutoRerouteMs = 0L
         val statusColorNormal = 0xFFC8D0D8.toInt()
         val statusColorOff = 0xFFFF8A80.toInt()
+        /** Handlebar focus hint: "end" | "go" | "default" (filled after focus nav arms). */
+        var onChromeFocus: ((prefer: String) -> Unit)? = null
 
         root.setBackgroundColor(MapPrefs.chrome(context).color)
         // Map goes edge-to-edge; chrome cards get cutout margins so we don't leave a black strip.
@@ -575,12 +578,23 @@ class GpxDashUi(
             showIdle()
             if (projected) {
                 // Presentation / VirtualDisplay has no IME — type on the phone home field.
-                searchStatus.text = "Type on your phone…"
+                searchInput.hint = "Type on your PHONE keyboard…"
+                searchInput.isFocusable = false
+                searchInput.isFocusableInTouchMode = false
+                searchStatus.setTextColor(0xFFE65100.toInt())
+                searchStatus.textSize = 16f
+                searchStatus.text = "⌨ Type on PHONE — results show here"
                 if (!DashRemote.requestTypeOnPhone()) {
-                    searchStatus.text = "Open OpenCfMoto on phone to type"
+                    searchStatus.text = "Open OpenCfMoto on the phone, then type"
+                } else if (voiceOn) {
+                    try { voiceLocal.speak("Type your search on the phone") } catch (_: Exception) {}
                 }
             } else {
+                searchInput.hint = "Search places or address"
+                searchInput.isFocusable = true
                 searchInput.isFocusableInTouchMode = true
+                searchStatus.setTextColor(0xFF5F6368.toInt())
+                searchStatus.textSize = 13f
                 searchInput.requestFocus()
                 searchInput.post {
                     try {
@@ -674,6 +688,7 @@ class GpxDashUi(
             }
             refreshTitle()
             refreshChrome()
+            onChromeFocus?.invoke("end")
             if (voiceOn) voiceLocal.speak("Navigating to ${place.name}")
             log("[GPX] Go → ${place.name} (cached=${cached != null})")
         }
@@ -741,6 +756,7 @@ class GpxDashUi(
                     previewAlts.addView(chip, lp)
                 }
             }
+            onChromeFocus?.invoke("go")
         }
         fun showPinSetup(place: MapPlace) {
             pinSetupOnly = true
@@ -765,6 +781,7 @@ class GpxDashUi(
             }
             dashLocal.setCenter(place.lat, place.lon, 16.0)
             refreshChrome()
+            onChromeFocus?.invoke("go")
             statusView.text = "Save this pin — open it later to navigate"
         }
         fun previewPlace(place: MapPlace) {
@@ -793,6 +810,7 @@ class GpxDashUi(
                 ).joinToString(" · ")
             }
             refreshChrome()
+            onChromeFocus?.invoke("go")
             val loc = lastLoc
             if (loc == null) {
                 previewMeta.text = listOfNotNull(
@@ -841,10 +859,16 @@ class GpxDashUi(
         }
         fun showSearchResults(list: List<MapPlace>) {
             searchResults.removeAllViews()
+            searchResults.clipChildren = true
+            searchResults.clipToPadding = true
             if (list.isEmpty()) {
+                searchStatus.setTextColor(0xFF5F6368.toInt())
+                searchStatus.textSize = 13f
                 searchStatus.text = "No results"
                 return
             }
+            searchStatus.setTextColor(0xFF5F6368.toInt())
+            searchStatus.textSize = 13f
             searchStatus.text = "${list.size} places"
             for (p in list) {
                 val row = LinearLayout(context).apply {
@@ -853,6 +877,12 @@ class GpxDashUi(
                     setBackgroundColor(0xFFFFFFFF.toInt())
                     isClickable = true
                     isFocusable = true
+                    clipChildren = true
+                    clipToPadding = true
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                    )
                     setOnClickListener { previewPlace(p) }
                 }
                 row.addView(
@@ -861,6 +891,12 @@ class GpxDashUi(
                         setTextColor(0xFF202124.toInt())
                         textSize = 16f
                         setTypeface(typeface, android.graphics.Typeface.BOLD)
+                        maxLines = 1
+                        ellipsize = android.text.TextUtils.TruncateAt.END
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                        )
                     },
                 )
                 if (p.subtitle.isNotBlank() || p.category.isNotBlank()) {
@@ -872,6 +908,12 @@ class GpxDashUi(
                             setTextColor(0xFF5F6368.toInt())
                             textSize = 13f
                             setPadding(0, 6, 0, 0)
+                            maxLines = 2
+                            ellipsize = android.text.TextUtils.TruncateAt.END
+                            layoutParams = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                            )
                         },
                     )
                 }
@@ -950,7 +992,13 @@ class GpxDashUi(
             }.take(12)
             if (idle.isEmpty()) {
                 searchResults.removeAllViews()
-                searchStatus.text = "Search for a place or tap a category"
+                searchStatus.setTextColor(0xFF5F6368.toInt())
+                searchStatus.textSize = 13f
+                searchStatus.text = if (projected) {
+                    "Type on PHONE, or tap a category"
+                } else {
+                    "Search for a place or tap a category"
+                }
             } else {
                 showSearchResults(idle)
                 searchStatus.text = "Recent & favorites"
@@ -1444,6 +1492,7 @@ class GpxDashUi(
             finishToFreeRideUi("Navigation finished", offerParking = false)
             refreshChrome()
             hideSheets()
+            onChromeFocus?.invoke("default")
         }
         root.findViewById<Button>(R.id.gpx_end).setOnClickListener { endRouteNow() }
         root.findViewById<Button>(R.id.gpx_end_bar).setOnClickListener { endRouteNow() }
@@ -1815,6 +1864,224 @@ class GpxDashUi(
         }
 
         GpxSession.setTouchTarget(root)
+
+        // Handlebar / Controls pad → same ButtonMap actions as AA (knob = focus, Select = OK).
+        if (projected) {
+            var focusIdx = 0
+            var focusedView: View? = null
+            val focusColor = 0xFFFF9800.toInt()
+            val focusFill = 0x66FF9800
+            val endBar = root.findViewById<View>(R.id.gpx_end_bar)
+            fun clearFocusPaint(v: View?) {
+                if (v == null) return
+                // Never scale focus — 1.18× dragged place names / chips outside the panel.
+                v.scaleX = 1f
+                v.scaleY = 1f
+                v.elevation = 0f
+                v.translationZ = 0f
+                v.alpha = 1f
+                try {
+                    v.foreground = null
+                } catch (_: Exception) {
+                }
+            }
+            fun paintFocus(v: View) {
+                clearFocusPaint(focusedView)
+                focusedView = v
+                v.scaleX = 1f
+                v.scaleY = 1f
+                v.elevation = 12f
+                v.translationZ = 8f
+                v.alpha = 1f
+                try {
+                    val d = context.resources.displayMetrics.density
+                    val ring = android.graphics.drawable.GradientDrawable().apply {
+                        setColor(focusFill)
+                        setStroke((5 * d).toInt(), focusColor)
+                        cornerRadius = 12 * d
+                    }
+                    v.foreground = ring
+                } catch (_: Exception) {
+                }
+                try {
+                    // Keep focused row inside the ScrollView without expanding past edges.
+                    v.requestRectangleOnScreen(
+                        android.graphics.Rect(0, 0, v.width.coerceAtLeast(1), v.height.coerceAtLeast(1)),
+                        true,
+                    )
+                } catch (_: Exception) {
+                }
+            }
+            fun collectFocusables(): List<View> {
+                val out = ArrayList<View>()
+                fun add(v: View?) {
+                    if (v == null) return
+                    if (v.visibility != View.VISIBLE || !v.isShown || !v.isEnabled) return
+                    if (!v.isClickable && !v.isFocusable) return
+                    out.add(v)
+                }
+                fun addChildren(host: ViewGroup?) {
+                    if (host == null || host.visibility != View.VISIBLE) return
+                    for (i in 0 until host.childCount) add(host.getChildAt(i))
+                }
+                when {
+                    arriveCard.visibility == View.VISIBLE -> {
+                        add(root.findViewById(R.id.gpx_arrive_park))
+                        add(root.findViewById(R.id.gpx_arrive_find))
+                        add(root.findViewById(R.id.gpx_arrive_done))
+                    }
+                    previewCard.visibility == View.VISIBLE -> {
+                        add(root.findViewById(R.id.gpx_preview_go))
+                        add(root.findViewById(R.id.gpx_preview_circuit))
+                        add(root.findViewById(R.id.gpx_preview_cancel))
+                        add(root.findViewById(R.id.gpx_preview_save))
+                        add(root.findViewById(R.id.gpx_preview_home))
+                        add(root.findViewById(R.id.gpx_preview_marker))
+                        addChildren(previewAlts)
+                    }
+                    searchPanel.visibility == View.VISIBLE -> {
+                        addChildren(searchChips)
+                        addChildren(searchResults)
+                        add(root.findViewById(R.id.gpx_search_go))
+                        add(root.findViewById(R.id.gpx_search_close))
+                    }
+                    menuPanel.visibility == View.VISIBLE -> {
+                        add(root.findViewById(R.id.gpx_end))
+                        add(root.findViewById(R.id.gpx_park))
+                        add(root.findViewById(R.id.gpx_go_home))
+                        add(root.findViewById(R.id.gpx_set_home))
+                        add(root.findViewById(R.id.gpx_recalc))
+                        add(recordBtn)
+                        add(root.findViewById(R.id.gpx_create_circuit))
+                        add(followBtn)
+                        add(northBtn)
+                        add(muteBtn)
+                        add(root.findViewById(R.id.gpx_zoom_out))
+                        add(root.findViewById(R.id.gpx_zoom_in))
+                        add(root.findViewById(R.id.gpx_menu_close))
+                    }
+                    else -> {
+                        // Navigating: End first so Select stops the route without hunting.
+                        if (hudBottom.visibility == View.VISIBLE) add(endBar)
+                        if (searchPill.visibility == View.VISIBLE) {
+                            add(searchPill)
+                            add(circuitPill)
+                        }
+                        add(root.findViewById(R.id.gpx_btn_recenter))
+                        add(root.findViewById(R.id.gpx_btn_overview))
+                        add(root.findViewById(R.id.gpx_btn_zoom_in))
+                        add(root.findViewById(R.id.gpx_btn_zoom_out))
+                        add(root.findViewById(R.id.gpx_btn_mute))
+                        add(root.findViewById(R.id.gpx_btn_north))
+                        add(root.findViewById(R.id.gpx_open_menu))
+                    }
+                }
+                return out
+            }
+            val goBtn = root.findViewById<View>(R.id.gpx_preview_go)
+            fun ensureFocus(prefer: String = "default") {
+                val list = collectFocusables()
+                if (list.isEmpty()) {
+                    clearFocusPaint(focusedView)
+                    focusedView = null
+                    return
+                }
+                when (prefer) {
+                    "go" -> {
+                        val i = goBtn?.let { list.indexOf(it) } ?: -1
+                        if (i >= 0) focusIdx = i
+                    }
+                    "end" -> {
+                        val i = endBar?.let { list.indexOf(it) } ?: -1
+                        if (i >= 0) focusIdx = i
+                    }
+                    else -> if (focusedView !in list) focusIdx = 0
+                }
+                focusIdx = focusIdx.coerceIn(0, list.lastIndex)
+                paintFocus(list[focusIdx])
+            }
+            fun moveFocus(delta: Int) {
+                val list = collectFocusables()
+                if (list.isEmpty()) return
+                val cur = focusedView?.let { list.indexOf(it) } ?: -1
+                focusIdx = if (cur >= 0) {
+                    (cur + delta).mod(list.size)
+                } else {
+                    0
+                }
+                paintFocus(list[focusIdx])
+            }
+            fun defaultPrefer(): String = when {
+                previewCard.visibility == View.VISIBLE -> "go"
+                liveMode != GpxSession.Mode.FREE_RIDE && !inPreview -> "end"
+                else -> "default"
+            }
+            fun toggleMenu() {
+                if (menuPanel.visibility == View.VISIBLE) {
+                    hideSheets()
+                    ensureFocus(defaultPrefer())
+                } else {
+                    showMenu()
+                    ensureFocus()
+                }
+            }
+            fun toggleSearch() {
+                if (searchPanel.visibility == View.VISIBLE) {
+                    hideSheets()
+                    ensureFocus(defaultPrefer())
+                } else {
+                    showSearch()
+                    ensureFocus()
+                }
+            }
+            fun handleMapKey(code: Int) {
+                if (released || !isAlive()) return
+                when (code) {
+                    AaInput.KEY_ENTER -> {
+                        ensureFocus()
+                        val v = focusedView
+                        if (v != null) v.performClick() else log("[GPX] Select — nothing focused")
+                    }
+                    AaInput.KEY_BACK -> {
+                        when {
+                            arriveCard.visibility == View.VISIBLE -> hideArriveCard()
+                            previewCard.visibility == View.VISIBLE -> cancelPreview()
+                            searchPanel.visibility == View.VISIBLE ||
+                                menuPanel.visibility == View.VISIBLE -> hideSheets()
+                            else -> log("[GPX] Back — idle")
+                        }
+                        ensureFocus(defaultPrefer())
+                    }
+                    // Universal map: ×2 → D-pad ←/→ (focus). HOME (Select hold) = menu.
+                    AaInput.KEY_HOME -> toggleMenu()
+                    AaInput.KEY_ASSISTANT -> toggleSearch()
+                    AaInput.KEY_LEFT, AaInput.KEY_UP -> moveFocus(-1)
+                    AaInput.KEY_RIGHT, AaInput.KEY_DOWN -> moveFocus(+1)
+                    else -> log("[GPX] unused key $code")
+                }
+            }
+            MapInputBridge.scrollSink = { delta ->
+                main.post {
+                    if (released || !isAlive()) return@post
+                    moveFocus(delta)
+                }
+            }
+            MapInputBridge.keySink = { code ->
+                main.post {
+                    if (released || !isAlive()) return@post
+                    handleMapKey(code)
+                }
+            }
+            onChromeFocus = { prefer ->
+                main.post {
+                    if (released || !isAlive()) return@post
+                    ensureFocus(prefer)
+                }
+            }
+            main.post { ensureFocus(defaultPrefer()) }
+            log("[GPX] handlebar focus nav armed (ButtonMap → Map)")
+        }
+
         log(
             "[GPX] dash map — mode=$liveMode " +
                 "pts=${track?.points?.size ?: 0} wpt=${track?.waypoints?.size ?: 0} " +
@@ -2431,6 +2698,7 @@ class GpxDashUi(
     fun release() {
         if (released) return
         released = true
+        MapInputBridge.clear()
         DashRemote.setHandler(null)
         main.removeCallbacksAndMessages(null)
         locationListener?.let { listener ->
