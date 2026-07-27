@@ -2,7 +2,7 @@
 
 # 🏍️ OpenCfMoto
 
-### Wireless Android Auto on your CFMoto MotoPlay dashboard — no root, no PC.
+### Wireless Android Auto on Carbit / EasyConnect dashes (CFMoto MotoPlay and siblings) — no root, no PC.
 
 Put **Google Maps / Waze** on your bike's dash over Wi-Fi, drive it from the touchscreen, and log
 every ride — all from an Android phone in your pocket.
@@ -34,10 +34,10 @@ dash touchscreen.
 
 ---
 
-> ⚠️ **Community project — not affiliated with or endorsed by CFMoto.** If the dash shows a
-> **MotoPlay / EasyConnect QR**, OpenCfMoto can try to connect — **no T‑BOX required**, US and
-> international. Full model list: **[Supported bikes](docs/SUPPORTED-BIKES.md)**. Don't rely on it
-> for critical navigation — set your route **before** you ride. Use at your own risk.
+> ⚠️ **Community project — not affiliated with CFMoto, Carbit, or other EasyConnect brands.** If the
+> dash shows a **MotoPlay / EasyConnect QR**, OpenCfMoto can try to connect — **no T‑BOX required**,
+> US and international. Full model list: **[Supported bikes](docs/SUPPORTED-BIKES.md)**. Don't rely
+> on it for critical navigation — set your route **before** you ride. Use at your own risk.
 
 ---
 
@@ -88,22 +88,31 @@ No root, no VPN, no PC required to ride.
 
 ## 🏍️ Supported bikes
 
-**→ Full list (source of truth): [docs/09-SUPPORTED-BIKES.md](docs/09-SUPPORTED-BIKES.md)**  
+**→ Full list (source of truth): [docs/SUPPORTED-BIKES.md](docs/SUPPORTED-BIKES.md)**  
 (same content as Setup → Supported bikes in the app)
 
-**Rule:** if the dash shows a **pairing QR**, try OpenCfMoto. T‑BOX / CFMOTO RIDE subscription is
-**not** required. US CRCP dashes and international EasyConnect dashes both work.
+**Rule:** if the dash shows a **pairing QR**, try OpenCfMoto. Same **Carbit / EasyConnect** framework
+used by CFMoto MotoPlay and several sibling brands. T‑BOX / CFMOTO RIDE subscription is **not**
+required. US CRCP and international dashes both work. OpenCfMoto projects **wireless Android Auto**
+(not Apple CarPlay).
 
 <p>
 <img src="docs/screenshots/12_supported_bikes.png" width="240" alt="In-app supported bikes list"/>
 </p>
 
-### Confirmed with OpenCfMoto
+### Confirmed with OpenCfMoto (CFMoto)
 
 800MT (MT‑X / Explore / Explore GT) · 1000 MT‑X · 800NK (US CRCP) · 800NK Advanced · 450SR (+ SR‑S /
 TC) · 450CL‑C / CL‑C450 · **150SC** scooter
 
-### Full list (summary)
+### Other brands (Carbit / EasyConnect)
+
+Try Connect when the dash shows a pairing QR; report results in Discord:
+
+**Voge** · **Zontes** · **Moto Morini** (MotoFun) · **Benelli** (e.g. TRK 702 / 702X) · **QJ Motor**
+(e.g. Fort 4.0) · **Morbidelli** / MBP (e.g. T1002V)
+
+### Full CFMoto list (summary)
 
 | Family | Models |
 | --- | --- |
@@ -127,7 +136,7 @@ Report a working bike that isn’t listed in **[Discord](https://discord.gg/xRt5
 ### 1. Prepare the bike
 
 While parked, open the **MotoPlay / phone-connection (EasyConnect) screen** on the dash so it shows
-its **pairing QR code** — the same QR the official CFMoto app uses.
+its **pairing QR code** — the same QR the official brand / Carbit companion app uses.
 
 ### 2. Install the app
 

@@ -64,7 +64,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:gravity="center"
-                    android:text="Wireless Android Auto for CFMoto MotoPlay dashes."
+                    android:text="Wireless Android Auto for Carbit / EasyConnect dashes (CFMoto MotoPlay and siblings)."
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
             </LinearLayout>

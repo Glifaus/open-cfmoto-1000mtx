@@ -1,12 +1,17 @@
 # Supported bikes
 
-OpenCfMoto talks to any CFMoto dash that can show a **MotoPlay / EasyConnect pairing QR**.
+OpenCfMoto talks to dashes that show a **MotoPlay / EasyConnect pairing QR** — the Carbit software
+framework from Wuhan CARBIT Information Co., Ltd. (also seen as Yi Lian / EasyConn). CFMoto is the
+best-tested brand; several other manufacturers license the same stack.
 
 **You do not need a T‑BOX.** T‑BOX is for the official CFMOTO RIDE cloud / subscription features.
 OpenCfMoto only needs the dash Wi‑Fi (or Wi‑Fi Direct) QR — **US and international** markets both work.
 
-**Quick test:** on the bike, open the phone-connection / MotoPlay screen. If you see a QR code,
-OpenCfMoto can try to connect. No QR → this app cannot join that dash.
+**Quick test:** on the bike, open the phone-connection / MotoPlay / EasyConnect screen. If you see a
+QR code, OpenCfMoto can try to connect. No QR → this app cannot join that dash.
+
+Stock Carbit Ride / brand companion apps (MotoFun, etc.) are separate. OpenCfMoto uses the same QR
+path to project **wireless Android Auto** (not Apple CarPlay).
 
 Community reports welcome in [Discord](https://discord.gg/xRt5yZy2U) so we can keep this list current.
 
@@ -28,7 +33,25 @@ Riders have projected Android Auto with these (US + international as noted):
 
 ---
 
-## Full list — known MotoPlay / EasyConnect dashes
+## Other brands (Carbit / EasyConnect)
+
+These brands commonly ship TFT dashes that license the same Carbit EasyConnect-style pairing
+(QR → bike Wi‑Fi → projection). **If your unit shows a pairing QR, try Connect.** Unknown model IDs
+fall back to the Legacy profile. Please report success or failure (with a log) in Discord so we can
+promote models to “confirmed.”
+
+| Brand | Notes / examples |
+| --- | --- |
+| **Voge** | EasyConnect-style QR on supported TFT models |
+| **Zontes** | Same Carbit framework on many TFT dashes |
+| **Moto Morini** | Often via customized **MotoFun** companion branding |
+| **Benelli** | e.g. TRK 702 / 702X class with EasyConnect-style QR |
+| **QJ Motor** | e.g. Fort 4.0 and other TFT scooters/bikes with the QR |
+| **Morbidelli** (formerly MBP) | e.g. T1002V-class adventure/touring with Carbit dash |
+
+---
+
+## Full list — known CFMoto MotoPlay / EasyConnect dashes
 
 If your model appears below **or** shows a pairing QR, try OpenCfMoto. Trim / year / region variants
 (e.g. “Sport”, “TC”, “Explore GT”) usually share the same dash protocol when the QR is present.
