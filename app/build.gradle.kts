@@ -42,6 +42,12 @@ android {
     buildFeatures {
         buildConfig = true
     }
+
+    // Wireless Android Auto needs the packaged aa_privkey (same as prior releases).
+    lint {
+        disable += "PackagedPrivateKey"
+        checkReleaseBuilds = true
+    }
 }
 
 dependencies {
