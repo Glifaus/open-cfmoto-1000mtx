@@ -876,14 +876,26 @@ class MainActivity : AppCompatActivity() {
         if (!WifiGate.ensureEnabledOrPrompt(this)) return
         ConnectionState.set(Phase.JOINING_WIFI)
         val transport = AppSettings.transport(this)
+        // AUTO: only use Wi‑Fi Direct when the QR SSID is a real P2P group name (DIRECT-…).
+        // Some bikes (e.g. QJ Motor) set action=P2P-only but advertise a normal SoftAP name
+        // like "qj-5G-…"; P2P credential-join rejects those and we waste 25s before AP fallback.
         val useP2p = when (transport) {
             WifiTransport.P2P -> true
             WifiTransport.AP -> false
-            WifiTransport.AUTO -> qr.supportsP2p && !qr.supportsAp
+            WifiTransport.AUTO -> qr.ssid.startsWith("DIRECT-", ignoreCase = true) &&
+                (qr.supportsP2p || !qr.supportsAp)
         }
         if (useP2p) {
             joinWifiP2p(qr, gateOnAaSteady)
             return
+        }
+        if (transport == WifiTransport.AUTO && qr.supportsP2p && !qr.supportsAp &&
+            !qr.ssid.startsWith("DIRECT-", ignoreCase = true)
+        ) {
+            log(
+                "→ QR says P2P-only but SSID '${qr.ssid}' is not DIRECT-* — " +
+                    "joining as SoftAP (Setup → P2P if this bike is truly Wi‑Fi Direct)",
+            )
         }
         BikeWifi.reuseOrJoin(
             context = applicationContext,

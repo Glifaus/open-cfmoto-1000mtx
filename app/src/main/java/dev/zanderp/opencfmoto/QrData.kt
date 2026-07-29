@@ -45,5 +45,30 @@ data class QrData(
         } catch (_: Exception) {
             null
         }
+
+        /**
+         * Synthetic pairing URL for bikes that show SSID + password (e.g. Benelli TRK) instead of
+         * a scannable Carbit QR. [action]=1 → SoftAP path (not Wi‑Fi Direct).
+         * @return raw URL + parsed [QrData], or null if SSID/password blank.
+         */
+        fun buildManual(ssid: String, pwd: String, displayName: String? = null): Pair<String, QrData>? {
+            val s = ssid.trim()
+            val p = pwd // keep internal spaces; only require non-blank
+            if (s.isEmpty() || p.isEmpty()) return null
+            val name = displayName?.trim()?.takeIf { it.isNotEmpty() } ?: s
+            val raw = Uri.Builder()
+                .scheme("http")
+                .authority("manual.opencfmoto.local")
+                .path("/")
+                .appendQueryParameter("ssid", s)
+                .appendQueryParameter("pwd", p)
+                .appendQueryParameter("auth", "wpa2-psk")
+                .appendQueryParameter("action", "1")
+                .appendQueryParameter("name", name)
+                .build()
+                .toString()
+            val qr = parse(raw) ?: return null
+            return raw to qr
+        }
     }
 }

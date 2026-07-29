@@ -84,6 +84,14 @@ class GarageActivity : AppCompatActivity() {
         findViewById<View>(R.id.garage_scan).setOnClickListener {
             scanLauncher.launch(Intent(this, QrScanActivity::class.java))
         }
+        findViewById<View>(R.id.garage_manual).setOnClickListener {
+            ManualWifiPairing.show(this) { raw, qr ->
+                BikeMemory.save(this, raw, qr)
+                Toast.makeText(this, "Added ${BikeMemory.lastBikeName(this)}", Toast.LENGTH_SHORT)
+                    .show()
+                refresh()
+            }
+        }
     }
 
     override fun onResume() {
@@ -220,7 +228,7 @@ class GarageActivity : AppCompatActivity() {
     private fun confirmRemove(bike: SavedBike) {
         MaterialAlertDialogBuilder(this)
             .setTitle("Remove ${bike.name}?")
-            .setMessage("This forgets its pairing, photo and settings. You can re-scan the dash QR later.")
+            .setMessage("This forgets its pairing, photo and settings. You can re-scan the dash QR or enter Wi‑Fi again later.")
             .setPositiveButton("Remove") { _, _ ->
                 deletePhotoFile(bike.photoPath)
                 BikeMemory.remove(this, bike.raw)

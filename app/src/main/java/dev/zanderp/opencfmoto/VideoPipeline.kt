@@ -15,6 +15,7 @@ import android.media.MediaFormat
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.Surface
@@ -410,8 +411,11 @@ class VideoPipeline(
             }
             val display = createOwnVirtualDisplay() ?: return
             val pres = Presentation(context, display)
-            val root = LayoutInflater.from(pres.context).inflate(R.layout.presentation_gpx, null)
-            val ui = GpxDashUi(pres.context, root, log, isAlive = { running }, projected = true)
+            // VirtualDisplay Presentation contexts often lack the app theme — AppCompat/Material
+            // ?attr/… then fail with InflateException "Error inflating class <unknown>".
+            val themed = ContextThemeWrapper(pres.context, R.style.Theme_OpenCfMoto)
+            val root = LayoutInflater.from(themed).inflate(R.layout.presentation_gpx, null)
+            val ui = GpxDashUi(themed, root, log, isAlive = { running }, projected = true)
             if (!ui.bind()) {
                 ui.release()
                 setupDisplayAndPresentation()
@@ -431,7 +435,8 @@ class VideoPipeline(
             AndroidAutoService.setGpxScreenWake(context, true)
             log("[GPX] presentation shown → ${width}x${height}")
         } catch (e: Exception) {
-            log("[GPX] presentation failed: $e")
+            val cause = generateSequence(e.cause) { it.cause }.lastOrNull()
+            log("[GPX] presentation failed: $e${cause?.let { " cause=$it" } ?: ""}")
             try { gpxDashUi?.release() } catch (_: Exception) {}
             gpxDashUi = null
             setupDisplayAndPresentation()

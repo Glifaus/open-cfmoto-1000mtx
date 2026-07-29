@@ -14,8 +14,8 @@ android {
         applicationId = "dev.zanderp.opencfmoto"
         minSdk = 29
         targetSdk = 36
-        versionCode = 33
-        versionName = "2.0.4"
+        versionCode = 35
+        versionName = "2.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

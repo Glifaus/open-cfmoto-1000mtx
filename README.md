@@ -4,6 +4,11 @@
 
 ### Wireless Android Auto on Carbit / EasyConnect dashes (CFMoto MotoPlay and siblings) — no root, no PC.
 
+**CFMoto** · **Voge** · **Moto Morini** · **Morbidelli** · **Zontes** · **Benelli** · **QJ Motor** ·
+**GOES** / **Gladiator** · and other brands with a MotoPlay / EasyConnect pairing QR
+
+[Supported bikes](docs/SUPPORTED-BIKES.md) · [Dash showcase](docs/SHOWCASE.md) — real Android Auto photos from the community
+
 Put **Google Maps / Waze** on your bike's dash over Wi-Fi, drive it from the touchscreen, and log
 every ride — all from an Android phone in your pocket.
 
@@ -30,14 +35,21 @@ every ride — all from an Android phone in your pocket.
 **▶ [Watch the full demo](docs/media/hud-demo.mp4)** — Google Maps navigation + media, driven from the
 dash touchscreen.
 
+<br/>
+
+### 📸 See it on more bikes — [Dash showcase](docs/SHOWCASE.md)
+
+CFMoto · Voge · Morini · Morbidelli and more — community photos of Android Auto on the dash.
+
 </div>
 
 ---
 
 > ⚠️ **Community project — not affiliated with CFMoto, Carbit, or other EasyConnect brands.** If the
 > dash shows a **MotoPlay / EasyConnect QR**, OpenCfMoto can try to connect — **no T‑BOX required**,
-> US and international. Full model list: **[Supported bikes](docs/SUPPORTED-BIKES.md)**. Don't rely
-> on it for critical navigation — set your route **before** you ride. Use at your own risk.
+> US and international. Full model list: **[Supported bikes](docs/SUPPORTED-BIKES.md)** · see it on
+> real dashes: **[Dash showcase](docs/SHOWCASE.md)**. Don't rely on it for critical navigation —
+> set your route **before** you ride. Use at your own risk.
 
 ---
 
@@ -72,11 +84,11 @@ dash touchscreen.
 
 ## 📋 What you need
 
-- **A CFMoto (or CFMoto scooter / ATV) whose dash can show a MotoPlay / EasyConnect QR.**
-  **No T‑BOX required.** Works on **US and international** units. See the full list:
-  **[Supported bikes](docs/09-SUPPORTED-BIKES.md)**. Touch dashes use the screen; non‑touch /
-  focus-mode bikes use **Controls** + handlebar buttons. Unknown dashes are learned after the first
-  connect.
+- **A bike / ATV whose dash can show a MotoPlay / EasyConnect QR** (CFMoto, Voge, Morini, Morbidelli,
+  Zontes, Benelli, QJ Motor, GOES/Gladiator, and siblings). **No T‑BOX required.** Works on **US and
+  international** units. See **[Supported bikes](docs/SUPPORTED-BIKES.md)** and
+  **[Dash showcase](docs/SHOWCASE.md)**. Touch dashes use the screen; non‑touch / focus-mode bikes
+  use **Controls** + handlebar buttons. Unknown dashes are learned after the first connect.
 - **An Android phone**, Android **10 or newer**.
 - **Google Android Auto** set up once (see [step 3](#3-one-time-android-auto-setup)).
 - **OpenCfMoto** from [Releases](https://github.com/zanderp/open-cfmoto/releases/latest) (sideload).
@@ -88,8 +100,9 @@ No root, no VPN, no PC required to ride.
 
 ## 🏍️ Supported bikes
 
-**→ Full list (source of truth): [docs/SUPPORTED-BIKES.md](docs/SUPPORTED-BIKES.md)**  
-(same content as Setup → Supported bikes in the app)
+**→ Full list (source of truth): [docs/SUPPORTED-BIKES.md](docs/SUPPORTED-BIKES.md)** ·
+**→ Dash showcase (photos): [docs/SHOWCASE.md](docs/SHOWCASE.md)**  
+(same model list as Setup → Supported bikes in the app)
 
 **Rule:** if the dash shows a **pairing QR**, try OpenCfMoto. Same **Carbit / EasyConnect** framework
 used by CFMoto MotoPlay and several sibling brands. T‑BOX / CFMOTO RIDE subscription is **not**
@@ -100,17 +113,21 @@ required. US CRCP and international dashes both work. OpenCfMoto projects **wire
 <img src="docs/screenshots/12_supported_bikes.png" width="240" alt="In-app supported bikes list"/>
 </p>
 
-### Confirmed with OpenCfMoto (CFMoto)
+### Confirmed with OpenCfMoto
 
-800MT (MT‑X / Explore / Explore GT) · 1000 MT‑X · 800NK (US CRCP) · 800NK Advanced · 450SR (+ SR‑S /
-TC) · 450CL‑C / CL‑C450 · **150SC** scooter
+**CFMoto:** 800MT (MT‑X / Explore / Explore GT) · 1000 MT‑X · 800NK (US CRCP) · 800NK Advanced ·
+450SR (+ SR‑S / TC) · 450CL‑C / CL‑C450 · **150SC** scooter
+
+**Other brands:** **Voge DS800 Rally** · **Moto Morini X-Cape 649** · **Moto Morini X-Cape 700** ·
+**Moto Morini Seiemmezzo** · **Morbidelli T1002VX**
 
 ### Other brands (Carbit / EasyConnect)
 
 Try Connect when the dash shows a pairing QR; report results in Discord:
 
-**Voge** · **Zontes** · **Moto Morini** (MotoFun) · **Benelli** (e.g. TRK 702 / 702X) · **QJ Motor**
-(e.g. Fort 4.0) · **Morbidelli** / MBP (e.g. T1002V)
+**Voge** (DS800 Rally confirmed) · **Moto Morini** (X-Cape 649 / 700 / Seiemmezzo confirmed; MotoFun) · **Zontes** ·
+**Benelli** (e.g. TRK 702 / 702X) · **QJ Motor** (e.g. Fort 4.0) · **Morbidelli** / MBP (**T1002VX**
+confirmed)
 
 ### Full CFMoto list (summary)
 
@@ -121,7 +138,7 @@ Try Connect when the dash shows a pairing QR; report results in Discord:
 | **Touring / Adventure (MT)** | 450MT · 700MT · 700MT Adventure · 800MT‑X · 800MT Explore · 800MT Explore GT · 1000 MT‑X |
 | **Cruiser (CL)** | 450CL‑C · CL‑C450 |
 | **Scooter** | **150SC** |
-| **ATV / SSV (TFT)** | CFORCE 800 · CFORCE 850 Touring · CFORCE 1000 · CFORCE 1000 Touring |
+| **ATV / SSV (TFT)** | CFORCE 800 · CFORCE 850 Touring · CFORCE 1000 · CFORCE 1000 Touring · **GOES Terrox 1000** / **Gladiator G3 1000** (CFORCE rebadges, confirmed) |
 | **Other** | U10 Pro (where the dash offers the QR) |
 
 Usually **no** projection QR (won’t work unless your unit has one anyway): 800MT Sport · 800MT

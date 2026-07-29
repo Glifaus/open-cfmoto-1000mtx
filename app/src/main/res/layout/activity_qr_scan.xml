@@ -8,26 +8,41 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <TextView
-        android:id="@+id/hint"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="#99000000"
+        android:orientation="vertical"
         android:paddingHorizontal="16dp"
         android:paddingTop="12dp"
-        android:paddingBottom="14dp"
-        android:text="Point the camera at the bike's MotoPlay QR\n\nIf it won't scan or connect — on the dash, switch to the iOS / CarPlay QR and try that one"
-        android:textAlignment="center"
-        android:textColor="#FFFFFF"
-        android:textSize="13sp"
-        android:lineSpacingExtra="2dp" />
+        android:paddingBottom="14dp">
+
+        <TextView
+            android:id="@+id/hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Point the camera at the bike's MotoPlay QR\n\nIf it won't scan — try the iOS / CarPlay QR, or enter Wi‑Fi manually (TRK)."
+            android:textAlignment="center"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:lineSpacingExtra="2dp" />
+
+        <Button
+            android:id="@+id/btn_manual_wifi"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Enter Wi‑Fi manually"
+            android:textColor="#FFB74D" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="88dp"
+        android:layout_marginBottom="120dp"
         android:background="#88000000"
         android:orientation="horizontal"
         android:padding="6dp">

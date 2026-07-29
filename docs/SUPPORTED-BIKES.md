@@ -15,11 +15,23 @@ path to project **wireless Android Auto** (not Apple CarPlay).
 
 Community reports welcome in [Discord](https://discord.gg/xRt5yZy2U) so we can keep this list current.
 
+### Brands (supported & welcome)
+
+| | |
+| --- | --- |
+| **Confirmed** | **CFMoto** · **Voge** · **Moto Morini** · **Morbidelli** · **GOES** / **Gladiator** (CFORCE rebadges) |
+| **Same Carbit / EasyConnect path — try Connect** | **Zontes** · **Benelli** · **QJ Motor** · other TFT dashes with a pairing QR |
+
+**📸 Dash showcase:** **[SHOWCASE.md](SHOWCASE.md)** — curated Android Auto photos from the community
+(one hero shot per confirmed model). Add yours in Discord `#confirmed-working`.
+
 ---
 
 ## Confirmed with OpenCfMoto
 
 Riders have projected Android Auto with these (US + international as noted):
+
+### CFMoto
 
 | Model | Notes |
 | --- | --- |
@@ -30,6 +42,19 @@ Riders have projected Android Auto with these (US + international as noted):
 | **450SR** (+ SR‑S / TC class) | Non‑touch CFDL16; handlebar + on-screen pad |
 | **450CL‑C** / **CL‑C450** | Often Wi‑Fi Direct (P2P) — Setup → Wi‑Fi **Auto** or **P2P** |
 | **150SC** (scooter) | Community-confirmed; same QR / EasyConnect path |
+| **CFORCE 850 / 1000** (ATV TFT) | Community-confirmed |
+| **GOES Terrox 1000** / **Gladiator G3 1000** | Community-confirmed — CFORCE 1000 rebadges; same EasyConnect QR path; **1280×720** often looks clean |
+
+### Other brands (community-confirmed)
+
+| Model | Notes |
+| --- | --- |
+| **Voge DS800 Rally** | Community-confirmed — Carbit / EasyConnect QR |
+| **Moto Morini X-Cape 649** | Community-confirmed (also styled Xcape 649) |
+| **Moto Morini X-Cape 700** | Community-confirmed |
+| **Moto Morini Seiemmezzo** | Community-confirmed — MotoFun / EasyConnect QR |
+| **Morbidelli T1002VX** | Community-confirmed (Argentina) — Carbit / EasyConnect QR |
+| **QJ Motor 600SX / 550SX** (2026) | In progress — QR works (`qj-5G-*`, modelId 37501); use Setup → Wi‑Fi **AP** if Auto mis-picks P2P |
 
 ---
 
@@ -42,12 +67,12 @@ promote models to “confirmed.”
 
 | Brand | Notes / examples |
 | --- | --- |
-| **Voge** | EasyConnect-style QR on supported TFT models |
+| **Voge** | **DS800 Rally confirmed**; other EasyConnect TFT models welcome |
 | **Zontes** | Same Carbit framework on many TFT dashes |
-| **Moto Morini** | Often via customized **MotoFun** companion branding |
-| **Benelli** | e.g. TRK 702 / 702X class with EasyConnect-style QR |
-| **QJ Motor** | e.g. Fort 4.0 and other TFT scooters/bikes with the QR |
-| **Morbidelli** (formerly MBP) | e.g. T1002V-class adventure/touring with Carbit dash |
+| **Moto Morini** | **X-Cape 649 / 700** and **Seiemmezzo** confirmed; often **MotoFun** companion branding |
+| **Benelli** | e.g. TRK 702 / 702X class — SoftAP SSID/password or QR when shown |
+| **QJ Motor** | **600SX / 550SX (2026) testing**; Fort 4.0 and other EasyConnect TFTs |
+| **Morbidelli** (formerly MBP) | **T1002VX confirmed**; other T1002V-class with Carbit dash welcome |
 
 ---
 
@@ -101,6 +126,7 @@ If your model appears below **or** shows a pairing QR, try OpenCfMoto. Trim / ye
 - CFORCE 850 Touring
 - CFORCE 1000 (TFT, typically 2024+)
 - CFORCE 1000 Touring
+- GOES Terrox 1000 / Gladiator G3 1000 (CFORCE 1000 rebadges)
 
 ### Other / regional
 

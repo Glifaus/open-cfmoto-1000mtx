@@ -452,6 +452,8 @@ class AndroidAutoService : Service() {
     private fun startReceiver() {
         if (receiver != null) { LogBus.log("[AA] receiver already started"); return }
         try {
+            // Resume/Connect after a park: process may still be pinned to a dead bike Network.
+            BikeWifi.unbindIfNoBikeNetwork(applicationContext)
             // Compositor mode: the AA decoder renders into the compositor's input surface; the
             // compositor letterboxes it into the bike's canvas (encoder created later, sized to the
             // bike's REQ_CONFIG_CAPTURE dims — see EasyConnProber / VideoPipeline.configureBikeCanvas).
