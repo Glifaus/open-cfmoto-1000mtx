@@ -67,8 +67,13 @@ class MainActivity : AppCompatActivity() {
         log("QR raw: $raw")
         val qr = QrData.parse(raw)
         if (qr == null) {
-            log("QR parse FAILED — missing ssid/pwd?")
-            Toast.makeText(this, "Invalid QR", Toast.LENGTH_SHORT).show()
+            val hint = QrData.parseFailureHint(raw)
+            log("QR parse FAILED — missing ssid/pwd?" + (hint?.let { " ($it)" } ?: ""))
+            Toast.makeText(
+                this,
+                hint ?: getString(R.string.main_invalid_qr),
+                Toast.LENGTH_LONG,
+            ).show()
             return@registerForActivityResult
         }
         log(
@@ -192,6 +197,8 @@ class MainActivity : AppCompatActivity() {
             AndroidAutoService.start(this)
             // Trigger Google AA to project from the FOREGROUND activity (background-activity-launch
             // safe on Android 12+/15), after giving the service's :5288 server time to bind.
+            // AA 16.4+/17.4+ often need the broadcast fallbacks; retry once if video never arrives
+            // (common when the first WirelessStartupReceiver is ignored).
             logView.postDelayed({
                 try {
                     dev.zanderp.opencfmoto.aa.AaSelfMode.trigger(this, log = ::log)
@@ -199,12 +206,33 @@ class MainActivity : AppCompatActivity() {
                     log("AA self-mode trigger failed: $e")
                 }
             }, 900)
+            // Additive retry for AA 16.4+/17.4+ that ignore the first broadcast — skipped if
+            // a session is already live (re-firing START_WIRELESS_PROJECTION kills AAP).
+            logView.postDelayed({
+                val p = ConnectionState.phase
+                if (AaVideoBridge.aaSessionLive || AaVideoBridge.aaDecoding ||
+                    p == Phase.AA_VIDEO_LIVE || p == Phase.PXC_CONNECTING || p == Phase.STREAMING ||
+                    p == Phase.IDLE || p == Phase.STOPPED || p == Phase.ERROR ||
+                    p == Phase.MIRRORING
+                ) {
+                    if (AaVideoBridge.aaSessionLive || AaVideoBridge.aaDecoding) {
+                        log("[AA] skip re-trigger — AA already connected/decoding")
+                    }
+                    return@postDelayed
+                }
+                try {
+                    log("[AA] no video yet — re-triggering self-mode (AA 16.4+/17.4+ fallbacks)")
+                    dev.zanderp.opencfmoto.aa.AaSelfMode.trigger(this, log = ::log)
+                } catch (e: Exception) {
+                    log("AA self-mode re-trigger failed: $e")
+                }
+            }, 4_500)
             // Kick off the Wi-Fi join right away, in parallel with AA boot.
             joinWifi(qr, gateOnAaSteady = true)
         } catch (e: Exception) {
             log("Connect failed (app stays open): $e")
             CrashGuard.persistSession(this)
-            ConnectionState.set(Phase.ERROR, "Connect failed — see Logs / Share Logs")
+            ConnectionState.set(Phase.ERROR, getString(R.string.conn_detail_connect_failed))
         }
     }
 
@@ -213,7 +241,7 @@ class MainActivity : AppCompatActivity() {
         if (CrashGuard.pendingCrashText(this) == null) return
         try {
             androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Recovered after a crash")
+                .setTitle(R.string.main_crash_title)
                 .setMessage(
                     "OpenCfMoto closed unexpectedly last time. The log and crash report were saved — " +
                         "open Logs and tap Share Logs so we can see what happened.",
@@ -251,7 +279,7 @@ class MainActivity : AppCompatActivity() {
                         GpxSession.clear()
                         log("screen-capture armed (FGS up after ${tries * 100}ms) — pick Entire screen or a single app (Android 14+)")
                         androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
-                            .setTitle("Mirror ready")
+                            .setTitle(R.string.main_mirror_ready_title)
                             .setMessage(
                                 "Entire screen — best for riding; phone stays awake while mirroring. " +
                                     "Uses Setup ▸ Screen fit (Fit = whole UI + bars).\n\n" +
@@ -306,51 +334,43 @@ class MainActivity : AppCompatActivity() {
         (connectBtn as? MaterialButton)?.setIconResource(R.drawable.ic_power)
         findViewById<android.widget.TextView>(R.id.brand_version).text =
             "v${BuildConfig.VERSION_NAME}"
-        // These three share a narrow third-width column: put the icon on TOP so the label gets the
-        // full width and isn't clipped (e.g. "Mirror" → "Mirro" when the icon sat inline).
-        (findViewById<View>(R.id.btn_aa_start) as? MaterialButton)?.apply {
-            setIconResource(R.drawable.ic_qr)
+        // Scan / Map / Mirror: icon on top (Tile style). maxLines=1 + autoSize keeps labels
+        // horizontal on narrow phones / large system font (Samsung S22 report).
+        fun MaterialButton.asIconTopTile(iconRes: Int) {
+            setIconResource(iconRes)
             iconGravity = MaterialButton.ICON_GRAVITY_TOP
-            iconPadding = 2
-            setPadding(0, paddingTop, 0, paddingBottom)
+            iconPadding = resources.getDimensionPixelSize(R.dimen.btn_tile_icon_padding)
+            maxLines = 1
+            isSingleLine = true
         }
-        (findViewById<View>(R.id.btn_gpx) as? MaterialButton)?.apply {
-            setIconResource(R.drawable.ic_place)
-            iconGravity = MaterialButton.ICON_GRAVITY_TOP
-            iconPadding = 2
-            setPadding(0, paddingTop, 0, paddingBottom)
-        }
-        (findViewById<View>(R.id.btn_mirror_start) as? MaterialButton)?.apply {
-            setIconResource(R.drawable.ic_cast)
-            iconGravity = MaterialButton.ICON_GRAVITY_TOP
-            iconPadding = 2
-            setPadding(0, paddingTop, 0, paddingBottom)
-        }
+        (findViewById<View>(R.id.btn_aa_start) as? MaterialButton)?.asIconTopTile(R.drawable.ic_qr)
+        (findViewById<View>(R.id.btn_gpx) as? MaterialButton)?.asIconTopTile(R.drawable.ic_place)
+        (findViewById<View>(R.id.btn_mirror_start) as? MaterialButton)?.asIconTopTile(R.drawable.ic_cast)
         (findViewById<View>(R.id.btn_aa_stop) as? MaterialButton)?.setIconResource(R.drawable.ic_stop)
         (findViewById<View>(R.id.btn_hud_view) as? MaterialButton)?.apply {
             setIconResource(R.drawable.ic_cast)
             iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
+            maxLines = 1
         }
         (findViewById<View>(R.id.btn_controls) as? MaterialButton)?.apply {
             setIconResource(R.drawable.ic_devices)
             iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
+            maxLines = 1
         }
-        (findViewById<View>(R.id.btn_setup) as? MaterialButton)?.apply {
-            setIconResource(R.drawable.ic_settings)
+        // Footer 2×2 — icon + label (same pattern as Dash view / Controls).
+        fun MaterialButton.asFooterLink(iconRes: Int) {
+            setIconResource(iconRes)
             iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
+            iconPadding = (6 * resources.displayMetrics.density).toInt()
+            iconSize = (18 * resources.displayMetrics.density).toInt()
+            setIconTintResource(R.color.text_secondary)
+            maxLines = 1
+            isSingleLine = true
         }
-        (findViewById<View>(R.id.btn_devices) as? MaterialButton)?.apply {
-            setIconResource(R.drawable.ic_devices)
-            iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
-        }
-        (findViewById<View>(R.id.btn_trip) as? MaterialButton)?.apply {
-            setIconResource(R.drawable.ic_speed)
-            iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
-        }
-        (toggleLogBtn as? MaterialButton)?.apply {
-            setIconResource(R.drawable.ic_logs)
-            iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
-        }
+        (findViewById<View>(R.id.btn_setup) as? MaterialButton)?.asFooterLink(R.drawable.ic_settings)
+        (findViewById<View>(R.id.btn_devices) as? MaterialButton)?.asFooterLink(R.drawable.ic_devices)
+        (findViewById<View>(R.id.btn_trip) as? MaterialButton)?.asFooterLink(R.drawable.ic_ride)
+        (toggleLogBtn as? MaterialButton)?.asFooterLink(R.drawable.ic_logs)
 
         // All components (bike PXC, Android Auto receiver, video pipeline — including those
         // running in the foreground service) log through LogBus; mirror it into the view.
@@ -440,7 +460,7 @@ class MainActivity : AppCompatActivity() {
             logPanel.visibility = if (show) View.VISIBLE else View.GONE
             // The tips panel and the log panel share the flexible space, so only one shows at a time.
             tipsPanel.visibility = if (show) View.GONE else View.VISIBLE
-            toggleLogBtn.text = if (show) "Hide logs" else "Logs"
+            toggleLogBtn.text = if (show) getString(R.string.main_hide_logs) else getString(R.string.main_logs)
         }
 
         findViewById<View>(R.id.btn_hud_view).setOnClickListener { startActivity(Intent(this, HudViewActivity::class.java)) }
@@ -466,7 +486,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 } catch (_: Exception) {}
                 // Make the phone field scream "this is the bike search box".
-                field.hint = "Bike dash search — type here"
+                field.hint = getString(R.string.main_bike_search_hint)
                 field.setText("")
                 field.setSelection(0)
                 try {
@@ -501,7 +521,8 @@ class MainActivity : AppCompatActivity() {
             private val debounce = android.os.Handler(android.os.Looper.getMainLooper())
             private val run = Runnable {
                 val q = destField.text?.toString()?.trim().orEmpty()
-                if (q.length >= 2 && DashRemote.isAvailable) DashRemote.submit(q)
+                // Live suggestions only while OUR map is on the bike — not while Android Auto is live.
+                if (q.length >= 2 && GpxSession.active && DashRemote.isAvailable) DashRemote.submit(q)
             }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -525,7 +546,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(AboutActivity.URL_KOFI)))
             } catch (_: Exception) {
-                Toast.makeText(this, "Couldn't open donate link", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.main_donate_failed, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -655,7 +676,7 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 LogBus.log("auto-connect failed (app stays open): $e")
                 CrashGuard.persistSession(activity)
-                ConnectionState.set(Phase.ERROR, "Auto-connect failed — see Logs")
+                ConnectionState.set(Phase.ERROR, getString(R.string.conn_detail_auto_connect_failed))
             }
         }, 1200)
     }
@@ -713,8 +734,14 @@ class MainActivity : AppCompatActivity() {
 
     /** Update the big status header + Connect button label from a [ConnectionState] transition. */
     private fun renderStatus(phase: Phase, detail: String) {
-        statusView.text = phase.label
+        statusView.text = getString(phase.labelRes)
         bikeView.text = if (detail.isNotBlank()) detail else bikeLabelText()
+        if (phase == Phase.ERROR && detail.isNotBlank()) {
+            try {
+                AnonymousTelemetry.reportError(this, detail)
+            } catch (_: Exception) {
+            }
+        }
         val color = when (phase) {
             Phase.STREAMING, Phase.MIRRORING -> ContextCompat.getColor(this, R.color.status_live)
             Phase.ERROR -> ContextCompat.getColor(this, R.color.status_error)
@@ -743,10 +770,11 @@ class MainActivity : AppCompatActivity() {
             vpnPromptShown = false
         }
         connectBtn.text = when {
-            phase.busy -> "Stop"
-            phase == Phase.STREAMING || phase == Phase.MIRRORING -> "Stop"
-            BikeMemory.hasSaved(this) -> "Connect to ${BikeMemory.lastBikeName(this)}"
-            else -> "Connect"
+            phase.busy -> getString(R.string.main_stop)
+            phase == Phase.STREAMING || phase == Phase.MIRRORING -> getString(R.string.main_stop)
+            BikeMemory.hasSaved(this) ->
+                getString(R.string.main_connect_to, BikeMemory.lastBikeName(this) ?: "")
+            else -> getString(R.string.main_connect)
         }
         (connectBtn as? MaterialButton)?.setIconResource(
             if (phase.busy || phase == Phase.STREAMING || phase == Phase.MIRRORING) {
@@ -792,7 +820,7 @@ class MainActivity : AppCompatActivity() {
     private fun promptCloseRival() {
         val installed = RivalClient.isInstalled(this)
         com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-            .setTitle("Official CFMoto app is in the way")
+            .setTitle(R.string.main_rival_title)
             .setMessage(
                 "The official CFMoto/EasyConnect app is running and holding the bike's link ports, so " +
                     "the dash stays blank. Close it, then reconnect.\n\n" +
@@ -807,7 +835,7 @@ class MainActivity : AppCompatActivity() {
             }
             .setNeutralButton("App settings") { _, _ ->
                 if (!RivalClient.openAppInfo(this)) {
-                    Toast.makeText(this, "Couldn't open app settings", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.main_settings_failed, Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Dismiss", null)
@@ -858,8 +886,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun bikeLabelText(): String {
         val name = BikeMemory.lastBikeName(this)
-        return if (name != null) "Paired: $name — tap Connect to reconnect"
-        else "No bike paired yet — tap Connect to scan the dash QR"
+        return if (name != null) getString(R.string.main_paired, name)
+        else getString(R.string.main_no_bike_paired)
     }
 
     /**
@@ -1022,46 +1050,102 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** Home search → OpenCfMoto Map hub (not Google Maps / Android Auto). */
+    /**
+     * Home search bar — two modes depending on what's on the bike:
+     *  1) Our Map projected → Nominatim search on the dash ([DashRemote])
+     *  2) Android Auto live → hand off to Google Maps (route should appear on the dash)
+     *  3) Nothing projected → open Map hub search on the phone
+     */
     private fun navigateToTyped() {
         val field = findViewById<android.widget.EditText>(R.id.et_destination)
         val dest = field.text?.toString()?.trim().orEmpty()
         if (dest.isEmpty()) {
-            Toast.makeText(this, "Type a place to search on the map", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.main_type_place, Toast.LENGTH_SHORT).show()
             return
         }
         (getSystemService(INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager)
             ?.hideSoftInputFromWindow(field.windowToken, 0)
-        // 1) Our own map is projected to the bike → type into ITS search (results show on the dash).
-        if (DashRemote.submit(dest)) {
+
+        val aaLive = AaVideoBridge.pipeline != null
+        val ourMapOnBike = GpxSession.active && DashRemote.isAvailable
+
+        // 1) Our own map is on the bike — never send AA intents (would crash/steal Maps).
+        if (ourMapOnBike && DashRemote.submit(dest)) {
             field.setText("")
-            Toast.makeText(this, "Searching \"$dest\" on the dash", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.main_searching_dash, dest), Toast.LENGTH_SHORT).show()
             return
         }
-        // 2) Android Auto (Google Maps / Waze) is live → search/navigate there so it hits the bike.
-        if (AaVideoBridge.pipeline != null && launchMapsSearch(dest)) {
+        // 2) Android Auto is live — resolve place then navigate (free-text google.navigation often
+        //    crashes or won't let the rider pick a route on newer Maps / AA).
+        if (aaLive && !GpxSession.active) {
             field.setText("")
-            Toast.makeText(this, "Sent \"$dest\" to Android Auto", Toast.LENGTH_SHORT).show()
+            sendDestinationToAndroidAuto(dest)
             return
         }
-        // 3) Nothing projected → open our Map hub search on the phone.
+        // Stale DashRemote with no map session: ignore and fall through.
+        if (!aaLive && DashRemote.submit(dest)) {
+            field.setText("")
+            Toast.makeText(this, getString(R.string.main_searching_dash, dest), Toast.LENGTH_SHORT).show()
+            return
+        }
+        // 3) Nothing projected → Map hub on the phone.
         GpxActivity.startSearch(this, dest)
     }
 
-    /** Fire a Google Maps navigation/search intent; while AA is connected it surfaces on the bike. */
-    private fun launchMapsSearch(dest: String): Boolean {
-        val enc = Uri.encode(dest)
-        val attempts = listOf(
-            Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q=$enc"))
-                .setPackage("com.google.android.apps.maps"),
-            Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=$enc"))
-                .setPackage("com.google.android.apps.maps"),
-            Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=$enc")),
+    /**
+     * Look up [dest] (location-biased when possible), then fire Google Maps navigation with
+     * lat/lng so Android Auto gets a clean destination instead of an ambiguous free-text query.
+     */
+    private fun sendDestinationToAndroidAuto(dest: String) {
+        Toast.makeText(this, getString(R.string.main_sent_aa, dest), Toast.LENGTH_SHORT).show()
+        log("[search] AA: looking up \"$dest\"…")
+        val near = lastKnownLatLon()
+        NominatimSearch.searchAsync(
+            query = dest,
+            nearLat = near?.first,
+            nearLon = near?.second,
+            onResult = { places ->
+                runOnUiThread {
+                    val best = places.firstOrNull()
+                    if (best != null) {
+                        // Prefer the place name (city) so Maps starts guidance to that place;
+                        // bare lat/lon with a "(label)" suffix was opening Maps with an empty search.
+                        val place = best.name.ifBlank { dest }
+                        log("[search] AA: resolved → $place (${best.lat},${best.lon})")
+                        if (!NavLauncher.navigate(this, place, ::log)) {
+                            NavLauncher.navigateLatLon(this, best.lat, best.lon, place, ::log)
+                        }
+                    } else {
+                        log("[search] AA: no geocode hit — free-text navigate \"$dest\"")
+                        NavLauncher.navigate(this, dest, ::log)
+                    }
+                }
+            },
+            onError = { err ->
+                runOnUiThread {
+                    log("[search] AA: geocode failed ($err) — free-text navigate \"$dest\"")
+                    NavLauncher.navigate(this, dest, ::log)
+                }
+            },
         )
-        for (i in attempts) {
-            if (runCatching { startActivity(i) }.isSuccess) return true
+    }
+
+    private fun lastKnownLatLon(): Pair<Double, Double>? {
+        return try {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                return null
+            }
+            val lm = getSystemService(LOCATION_SERVICE) as android.location.LocationManager
+            val loc = lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+                ?: lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+            if (loc != null) loc.latitude to loc.longitude else null
+        } catch (_: Exception) {
+            null
         }
-        return false
     }
 
     private fun stopEverything() {
@@ -1170,12 +1254,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkUpdateManual() {
-        Toast.makeText(this, "Checking for update…", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, R.string.main_checking_update, Toast.LENGTH_SHORT).show()
         Thread {
             val release = UpdateChecker.check(this, manual = true)
             runOnUiThread {
                 if (release == null) {
-                    Toast.makeText(this, "You're up to date (or offline)", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.main_up_to_date, Toast.LENGTH_SHORT).show()
                 } else {
                     showUpdateDialog(release)
                 }
@@ -1191,7 +1275,7 @@ class MainActivity : AppCompatActivity() {
                 try {
                     startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(release.downloadUrl)))
                 } catch (_: Exception) {
-                    Toast.makeText(this, "Couldn't open download link", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.main_download_failed, Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Skip") { _, _ -> UpdateChecker.skip(this, release.version) }
@@ -1273,7 +1357,7 @@ class MainActivity : AppCompatActivity() {
             }
             startActivity(Intent.createChooser(send, "Share problem report"))
         } catch (e: Exception) {
-            Toast.makeText(this, "Couldn't share report: $e", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.main_share_report_failed, e.toString()), Toast.LENGTH_LONG).show()
         }
     }
 

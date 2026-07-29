@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Button mapping"
+            android:text="@string/buttons_button_mapping"
             android:textColor="@color/text_primary"
             android:textSize="26sp"
             android:textStyle="bold" />
@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp"
-            android:text="Choose what each handlebar gesture does in Android Auto. Changes apply on the next press — no reconnect needed. Requires the phone paired to the bike over Bluetooth."
+            android:text="@string/buttons_choose_what_each_handlebar_gesture_does_in_andro"
             android:textColor="@color/text_secondary"
             android:textSize="14sp" />
 
@@ -46,7 +46,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Your left switch cluster"
+                    android:text="@string/buttons_your_left_switch_cluster"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -56,7 +56,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="CFMOTO ships a few different left pods. Pick the one that matches your bars — doubles and long-press do not work the same on every cluster."
+                    android:text="@string/buttons_cfmoto_ships_a_few_different_left_pods_pick_the_"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -67,7 +67,7 @@
                     android:layout_marginTop="8dp"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp"
-                    android:text="No preset — shipped defaults / your custom map" />
+                    android:text="@string/buttons_no_preset_shipped_defaults_your_custom_map" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -82,7 +82,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Apply preset…" />
+                        android:text="@string/buttons_apply_preset" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_cluster_clear"
@@ -91,7 +91,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginStart="8dp"
-                        android:text="Clear preset" />
+                        android:text="@string/buttons_clear_preset" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -111,7 +111,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Gestures"
+                    android:text="@string/buttons_gestures"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -130,7 +130,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Reset to defaults" />
+                    android:text="@string/buttons_reset_to_defaults" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -149,7 +149,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Saved places"
+                    android:text="@string/buttons_saved_places"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -159,7 +159,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Map a gesture to “Navigate to saved place” and a press starts turn-by-turn there — hands-free."
+                    android:text="@string/buttons_map_a_gesture_to_navigate_to_saved_place_and_a_p"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -189,7 +189,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Allow navigate-from-handlebars"
+                    android:text="@string/buttons_allow_navigate_from_handlebars"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -198,7 +198,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Starting navigation from a handlebar button while the app is in your pocket needs the “Display over other apps” permission. Without it, use the in-app “Navigate to…” box instead."
+                    android:text="@string/buttons_starting_navigation_from_a_handlebar_button_whil"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -208,7 +208,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:text="Enable “Display over other apps”" />
+                    android:text="@string/buttons_enable_display_over_other_apps" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>

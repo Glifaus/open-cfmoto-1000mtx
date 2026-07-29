@@ -233,7 +233,7 @@ class AndroidAutoService : Service() {
         // doesn't linger onto STREAMING as "Connected … — will resume when the bike is back".
         ConnectionState.set(Phase.STARTING_AA, BikeMemory.lastBikeName(applicationContext) ?: "")
         reacquireLocks()
-        updateNotification("OpenCfMoto — Android Auto", "Reconnecting to the bike dash…")
+        updateNotification(getString(R.string.notif_aa_title), getString(R.string.notif_aa_reconnecting))
 
         startReceiver()
         if (receiver == null) { resumeFailedFallback(); return }
@@ -360,7 +360,7 @@ class AndroidAutoService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             nm.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "Android Auto receiver", NotificationManager.IMPORTANCE_LOW)
+                NotificationChannel(CHANNEL_ID, getString(R.string.notif_aa_channel), NotificationManager.IMPORTANCE_LOW)
             )
         }
     }
@@ -382,7 +382,7 @@ class AndroidAutoService : Service() {
             .setOnlyAlertOnce(true)
             .addAction(
                 Notification.Action.Builder(
-                    Icon.createWithResource(this, R.drawable.ic_stop), "Stop", stopPi,
+                    Icon.createWithResource(this, R.drawable.ic_stop), getString(R.string.main_stop), stopPi,
                 ).build(),
             )
             .build()
@@ -401,14 +401,14 @@ class AndroidAutoService : Service() {
         val hint = if (!SetupHelper.canAutoResume(this))
             "Tap to resume — or enable “Display over other apps” in Setup for hands-free resume"
         else
-            "Tap to resume projection to the dash"
-        updateNotification("Bike reconnected", hint, resume = true)
+            getString(R.string.notif_tap_resume)
+        updateNotification(getString(R.string.notif_bike_reconnected), hint, resume = true)
     }
 
     fun updateForegroundType() {
         val notification = buildNotification(
-            "OpenCfMoto — Android Auto",
-            "Receiving Android Auto for the bike dash — tap to open",
+            getString(R.string.notif_aa_title),
+            getString(R.string.notif_aa_receiving),
             resume = false,
         )
         val hasLocation = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
@@ -523,8 +523,8 @@ class AndroidAutoService : Service() {
         try { prober.detachVideoSource() } catch (_: Exception) {}
         parkAaVideoOnly()
         updateNotification(
-            "OpenCfMoto Map",
-            "Map on the dash — handlebars use your button mapping",
+            getString(R.string.notif_map_title),
+            getString(R.string.notif_map_text),
         )
         // Attach now — delayed attach left a multi-second black/unresponsive gap and often lost
         // the media plane until a full Stop/Start.

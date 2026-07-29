@@ -14,8 +14,8 @@ android {
         applicationId = "dev.zanderp.opencfmoto"
         minSdk = 29
         targetSdk = 36
-        versionCode = 35
-        versionName = "2.0.5"
+        versionCode = 36
+        versionName = "2.0.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -26,6 +26,13 @@ android {
             ?: System.getenv("ORS_API_KEY")
             ?: ""
         buildConfigField("String", "ORS_API_KEY", "\"$orsDefaultKey\"")
+
+        // Anonymous telemetry Worker base URL (no trailing slash). Empty disables uploads.
+        // Override: -PtelemetryUrl=https://….workers.dev  or TELEMETRY_URL env / gradle.properties
+        val telemetryUrl = (project.findProperty("telemetryUrl") as String?)
+            ?: System.getenv("TELEMETRY_URL")
+            ?: "https://opencfmoto-telemetry.hello-3d9.workers.dev"
+        buildConfigField("String", "TELEMETRY_URL", "\"$telemetryUrl\"")
     }
 
     buildTypes {

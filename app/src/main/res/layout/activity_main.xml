@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
@@ -85,7 +86,7 @@
                         android:layout_width="64dp"
                         android:layout_height="64dp"
                         android:background="@drawable/bg_status_circle"
-                        android:contentDescription="Connection status"
+                        android:contentDescription="@string/main_connection_status"
                         android:padding="15dp"
                         android:src="@drawable/ic_ride"
                         android:tint="@color/status_idle" />
@@ -101,7 +102,7 @@
                             android:id="@+id/status_view"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Ready"
+                            android:text="@string/main_ready"
                             android:textColor="@color/text_primary"
                             android:textSize="22sp"
                             android:textStyle="bold" />
@@ -111,7 +112,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="No bike paired yet"
+                            android:text="@string/main_no_bike_paired_yet"
                             android:textColor="@color/text_secondary"
                             android:textSize="13sp" />
 
@@ -133,9 +134,9 @@
                 android:id="@+id/btn_connect"
                 style="@style/Widget.OpenCfMoto.Button.Connect"
                 android:layout_width="match_parent"
-                android:layout_height="62dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Connect" />
+                android:text="@string/main_connect" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -148,21 +149,23 @@
                     android:id="@+id/btn_hud_view"
                     style="@style/Widget.OpenCfMoto.Button.Tonal"
                     android:layout_width="0dp"
-                    android:layout_height="52dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginEnd="5dp"
                     android:layout_weight="1"
-                    android:text="Dash view"
-                    android:textSize="14sp" />
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:text="@string/hud_dash_view" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_controls"
                     style="@style/Widget.OpenCfMoto.Button.Tonal"
                     android:layout_width="0dp"
-                    android:layout_height="52dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginStart="5dp"
                     android:layout_weight="1"
-                    android:text="Controls"
-                    android:textSize="14sp" />
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:text="@string/controls_controls" />
             </LinearLayout>
 
             <LinearLayout
@@ -174,39 +177,45 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_aa_start"
-                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    style="@style/Widget.OpenCfMoto.Button.Tile"
                     android:layout_width="0dp"
-                    android:layout_height="60dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginEnd="4dp"
                     android:layout_weight="1"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:text="Scan"
-                    android:textSize="13sp" />
+                    android:maxLines="1"
+                    app:autoSizeTextType="uniform"
+                    app:autoSizeMinTextSize="@dimen/btn_tile_text_min"
+                    app:autoSizeMaxTextSize="@dimen/btn_tile_text"
+                    app:autoSizeStepGranularity="1sp"
+                    android:text="@string/main_scan" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_gpx"
-                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    style="@style/Widget.OpenCfMoto.Button.Tile"
                     android:layout_width="0dp"
-                    android:layout_height="60dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginHorizontal="4dp"
                     android:layout_weight="1"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:text="Map"
-                    android:textSize="13sp" />
+                    android:maxLines="1"
+                    app:autoSizeTextType="uniform"
+                    app:autoSizeMinTextSize="@dimen/btn_tile_text_min"
+                    app:autoSizeMaxTextSize="@dimen/btn_tile_text"
+                    app:autoSizeStepGranularity="1sp"
+                    android:text="@string/gpx_map" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_mirror_start"
-                    style="@style/Widget.OpenCfMoto.Button.Tonal"
+                    style="@style/Widget.OpenCfMoto.Button.Tile"
                     android:layout_width="0dp"
-                    android:layout_height="60dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:layout_weight="1"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:text="Mirror"
-                    android:textSize="13sp" />
+                    android:maxLines="1"
+                    app:autoSizeTextType="uniform"
+                    app:autoSizeMinTextSize="@dimen/btn_tile_text_min"
+                    app:autoSizeMaxTextSize="@dimen/btn_tile_text"
+                    app:autoSizeStepGranularity="1sp"
+                    android:text="@string/main_mirror" />
             </LinearLayout>
 
             <!-- Hidden: Stop is merged into Connect; keep id for any legacy refs. -->
@@ -214,47 +223,87 @@
                 android:id="@+id/btn_aa_stop"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:text="Stop"
+                android:text="@string/main_stop"
                 android:visibility="gone" />
 
+            <!-- 2×2 so labels stay horizontal on narrow phones / large font. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="vertical">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_setup"
-                    style="@style/Widget.OpenCfMoto.Button.Text"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Setup" />
+                    android:orientation="horizontal">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_devices"
-                    style="@style/Widget.OpenCfMoto.Button.Text"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Garage" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_setup"
+                        style="@style/Widget.OpenCfMoto.Button.Text"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:text="@string/main_setup"
+                        app:icon="@drawable/ic_settings"
+                        app:iconTint="@color/text_secondary"
+                        app:iconGravity="textStart"
+                        app:iconPadding="6dp"
+                        app:iconSize="18dp" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_trip"
-                    style="@style/Widget.OpenCfMoto.Button.Text"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Trip" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_devices"
+                        style="@style/Widget.OpenCfMoto.Button.Text"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:text="@string/garage_garage"
+                        app:icon="@drawable/ic_devices"
+                        app:iconTint="@color/text_secondary"
+                        app:iconGravity="textStart"
+                        app:iconPadding="6dp"
+                        app:iconSize="18dp" />
+                </LinearLayout>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_toggle_log"
-                    style="@style/Widget.OpenCfMoto.Button.Text"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Logs" />
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_trip"
+                        style="@style/Widget.OpenCfMoto.Button.Text"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:text="@string/main_trip"
+                        app:icon="@drawable/ic_ride"
+                        app:iconTint="@color/text_secondary"
+                        app:iconGravity="textStart"
+                        app:iconPadding="6dp"
+                        app:iconSize="18dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_toggle_log"
+                        style="@style/Widget.OpenCfMoto.Button.Text"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:text="@string/main_logs"
+                        app:icon="@drawable/ic_logs"
+                        app:iconTint="@color/text_secondary"
+                        app:iconGravity="textStart"
+                        app:iconPadding="6dp"
+                        app:iconSize="18dp" />
+                </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
@@ -269,7 +318,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:hint="Search a place or address…"
+                    android:hint="@string/main_search_a_place_or_address"
                     android:imeOptions="actionGo"
                     android:inputType="textPostalAddress"
                     android:maxLines="1"
@@ -282,7 +331,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="Go" />
+                    android:text="@string/main_go" />
             </LinearLayout>
 
             <com.google.android.material.card.MaterialCardView
@@ -301,7 +350,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:letterSpacing="0.08"
-                        android:text="Rider tips"
+                        android:text="@string/main_rider_tips"
                         android:textAllCaps="true"
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
@@ -311,7 +360,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:lineSpacingExtra="4dp"
-                        android:text="• Connect — start Android Auto on the dash (becomes Stop while linked).\n• Map — OpenCfMoto map / GPX (not Google Maps). Mirror — cast phone screen.\n• While connected, Map / Mirror switch what the dash shows.\n• Dash view &amp; Controls — phone HUD and D-pad / handlebar."
+                        android:text="@string/main_connect_start_android_auto_on_the_dash_becomes_s"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
 
@@ -321,7 +370,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:text="About &amp; credits" />
+                        android:text="@string/main_about_credits" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_check_update"
@@ -329,7 +378,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:text="Check for update" />
+                        android:text="@string/main_check_for_update" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_problem_report"
@@ -337,7 +386,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:text="Report a problem" />
+                        android:text="@string/main_report_a_problem" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_donate"
@@ -345,7 +394,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Donate"
+                        android:text="@string/about_donate"
                         android:textSize="13sp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -375,7 +424,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:letterSpacing="0.08"
-                            android:text="Diagnostics"
+                            android:text="@string/main_diagnostics"
                             android:textAllCaps="true"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
@@ -386,7 +435,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:minWidth="0dp"
-                            android:text="Share" />
+                            android:text="@string/main_share" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_clear"
@@ -394,7 +443,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:minWidth="0dp"
-                            android:text="Clear" />
+                            android:text="@string/main_clear" />
                     </LinearLayout>
 
                     <ScrollView
@@ -411,7 +460,7 @@
                             android:id="@+id/log_view"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:contentDescription="Logs"
+                            android:contentDescription="@string/main_logs"
                             android:fontFamily="monospace"
                             android:textColor="#9CDCFE"
                             android:textIsSelectable="true"

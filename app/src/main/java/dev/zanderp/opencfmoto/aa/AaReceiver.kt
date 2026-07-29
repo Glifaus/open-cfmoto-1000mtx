@@ -47,6 +47,7 @@ class AaReceiver(
         fallbackHeight = ServiceDiscoveryResponse.AA_HEIGHT
         onFpsChanged = { fps ->
             log("[AA] decode fps=$fps")
+            AaVideoBridge.aaDecoding = true
             if (!steadyVideoFired && fps >= 25) {
                 steadyVideoFired = true
                 log("[AA] steady video reached (fps=$fps) — signalling ready for bike hand-off")
@@ -118,6 +119,8 @@ class AaReceiver(
 
     fun stop() {
         running = false
+        AaVideoBridge.aaSessionLive = false
+        AaVideoBridge.aaDecoding = false
         AaVideoBridge.touchSink = null
         AaVideoBridge.keySink = null
         AaVideoBridge.scrollSink = null
@@ -162,6 +165,8 @@ class AaReceiver(
         t.onQuit = { clean ->
             val userExit = t.wasUserExit
             log("[AA] transport quit (clean=$clean, userExit=$userExit)")
+            AaVideoBridge.aaSessionLive = false
+            AaVideoBridge.aaDecoding = false
             AaVideoBridge.touchSink = null
             AaVideoBridge.keySink = null
             AaVideoBridge.scrollSink = null
@@ -176,6 +181,9 @@ class AaReceiver(
             try { onSessionEnded?.invoke(userExit) } catch (_: Exception) {}
         }
         transport = t
+        AaVideoBridge.aaSessionLive = true
+        AaVideoBridge.aaDecoding = false
+        steadyVideoFired = false
 
         // Bike touchscreen → Android Auto: EasyConnProber decodes dash touches (PXC cmdType 32) and
         // calls this sink with raw bike-canvas coords + a normalised action. Letterbox-map into AA

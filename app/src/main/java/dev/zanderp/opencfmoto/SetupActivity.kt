@@ -142,6 +142,8 @@ class SetupActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.transport_p2p).setOnClickListener { setTransport(WifiTransport.P2P) }
         findViewById<MaterialButton>(R.id.secrets_on).setOnClickListener { setSecrets(true) }
         findViewById<MaterialButton>(R.id.secrets_off).setOnClickListener { setSecrets(false) }
+        findViewById<MaterialButton>(R.id.telemetry_on).setOnClickListener { setTelemetry(true) }
+        findViewById<MaterialButton>(R.id.telemetry_off).setOnClickListener { setTelemetry(false) }
         findViewById<MaterialButton>(R.id.settings_share).setOnClickListener { shareSettingsJson() }
         findViewById<MaterialButton>(R.id.settings_import).setOnClickListener {
             importSettingsLauncher.launch(arrayOf("application/json", "text/*", "*/*"))
@@ -214,25 +216,25 @@ class SetupActivity : AppCompatActivity() {
     private fun setQuality(q: VideoQuality) {
         VideoPrefs.set(this, q)
         refreshOptions()
-        toast("Video quality: ${q.label}")
+        toast(getString(R.string.setup_toast_video_quality, getString(q.labelRes)))
     }
 
     private fun setFit(f: ScreenFit) {
         VideoPrefs.setFit(this, f)
         refreshOptions()
-        toast("Screen fit: ${f.label}")
+        toast(getString(R.string.setup_toast_screen_fit, getString(f.labelRes)))
     }
 
     private fun setPower(m: PowerMode) {
         VideoPrefs.setPower(this, m)
         refreshOptions()
-        toast("Power mode: ${m.label}")
+        toast(getString(R.string.setup_toast_power_mode, getString(m.labelRes)))
     }
 
     private fun setResolution(m: ResolutionMode) {
         VideoPrefs.setResolution(this, m)
         refreshOptions()
-        toast("Resolution: ${m.label}")
+        toast(getString(R.string.setup_toast_resolution, getString(m.labelRes)))
     }
 
     /** Map day/night applies live (no reconnect needed) — push it to any running AA session. */
@@ -240,20 +242,20 @@ class SetupActivity : AppCompatActivity() {
         NightPrefs.setTheme(this, theme)
         AaVideoBridge.nightSink?.invoke(NightPrefs.isNightNow(this))
         refreshOptions()
-        Toast.makeText(this, "Map theme: ${theme.label}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.setup_toast_map_theme, theme.label), Toast.LENGTH_SHORT).show()
     }
 
     /** Button timing applies live — the next press uses the new window. */
     private fun setDoubleTap(delay: DoubleTapDelay) {
         ButtonTimingPrefs.setDoubleTap(this, delay)
         refreshOptions()
-        Toast.makeText(this, "Double-tap delay: ${delay.label}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.setup_toast_dbl_tap, delay.label), Toast.LENGTH_SHORT).show()
     }
 
     private fun setLongPress(delay: LongPressDelay) {
         ButtonTimingPrefs.setLongPress(this, delay)
         refreshOptions()
-        Toast.makeText(this, "Hold delay: ${delay.label}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.setup_toast_hold, delay.label), Toast.LENGTH_SHORT).show()
     }
 
     private fun setHoldsEnabled(on: Boolean) {
@@ -306,7 +308,7 @@ class SetupActivity : AppCompatActivity() {
     private fun setTransport(t: WifiTransport) {
         AppSettings.setTransport(this, t)
         refreshOptions()
-        toast("Wi‑Fi transport: ${t.label}")
+        toast(getString(R.string.setup_toast_transport, t.label))
     }
 
     private fun setSecrets(on: Boolean) {
@@ -316,6 +318,18 @@ class SetupActivity : AppCompatActivity() {
             this,
             if (on) "Shared logs will include secrets — turn off before posting publicly"
             else "Log redaction on",
+            Toast.LENGTH_SHORT,
+        ).show()
+    }
+
+    private fun setTelemetry(on: Boolean) {
+        AppSettings.setAnonymousTelemetry(this, on)
+        refreshOptions()
+        if (on) AnonymousTelemetry.onAppStart(this)
+        Toast.makeText(
+            this,
+            if (on) getString(R.string.setup_anonymous_telemetry_on)
+            else getString(R.string.setup_anonymous_telemetry_off),
             Toast.LENGTH_SHORT,
         ).show()
     }
@@ -333,18 +347,18 @@ class SetupActivity : AppCompatActivity() {
         val dbl = ButtonTimingPrefs.doubleTap(this)
         val holdsOn = ButtonTimingPrefs.holdsEnabled(this)
         val hold = ButtonTimingPrefs.longPress(this)
-        qualityDesc.text = quality.label
-        fitDesc.text = fit.label
-        powerDesc.text = power.label
-        resDesc.text = res.label
+        qualityDesc.text = getString(quality.labelRes)
+        fitDesc.text = getString(fit.labelRes)
+        powerDesc.text = getString(power.labelRes)
+        resDesc.text = getString(res.labelRes)
         themeDesc.text = theme.label
         dblTapDesc.text = dbl.label
         holdsDesc.text = if (holdsOn) {
-            "On — press-and-hold can fire hold gestures"
+            getString(R.string.setup_on_press_and_hold_can_fire_hold_gestures)
         } else {
             "Off — every release is a tap / ×2 (use with a long double-tap delay)"
         }
-        holdDesc.text = if (holdsOn) hold.label else "Ignored while Hold detection is Off"
+        holdDesc.text = if (holdsOn) hold.label else getString(R.string.pref_hold_ignored)
         nonTouchDesc.text = if (AppSettings.forceNonTouch(this))
             "On — focus/knob UI so handlebar buttons work"
         else
@@ -426,6 +440,12 @@ class SetupActivity : AppCompatActivity() {
             if (secrets) "On — passwords/serials stay in shared logs"
             else "Off — passwords and serials are redacted (recommended)"
         highlight(secrets, R.id.secrets_on to true, R.id.secrets_off to false)
+        val telemetry = AppSettings.anonymousTelemetry(this)
+        findViewById<android.widget.TextView>(R.id.telemetry_desc).text =
+            getString(R.string.setup_anonymous_telemetry_desc)
+        findViewById<android.widget.TextView>(R.id.telemetry_id).text =
+            getString(R.string.setup_anonymous_id, AnonymousTelemetry.anonUuidForDisplay(this))
+        highlight(telemetry, R.id.telemetry_on to true, R.id.telemetry_off to false)
     }
 
     /** Refresh the Bluetooth pairing status line shown in the helper card. */

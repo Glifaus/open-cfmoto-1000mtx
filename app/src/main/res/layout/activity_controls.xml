@@ -29,7 +29,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Controls"
+            android:text="@string/controls_controls"
             android:textColor="@color/text_primary"
             android:textSize="26sp"
             android:textStyle="bold" />
@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp"
-            android:text="Drive Android Auto without touching the dash: type a destination, use the on-screen pad, or map the bike's handlebar buttons."
+            android:text="@string/controls_drive_android_auto_without_touching_the_dash_typ"
             android:textColor="@color/text_secondary"
             android:textSize="14sp" />
         </LinearLayout>
@@ -60,7 +60,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Navigate to…"
+                    android:text="@string/controls_navigate_to"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -70,7 +70,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Type an address or place; the route appears on the dash. Enter it while parked."
+                    android:text="@string/controls_type_an_address_or_place_the_route_appears_on_th"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -79,7 +79,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:hint="Destination"
+                    android:hint="@string/controls_destination"
                     android:inputType="textPostalAddress"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_secondary" />
@@ -90,7 +90,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Navigate" />
+                    android:text="@string/controls_navigate" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -110,7 +110,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Map theme"
+                    android:text="@string/controls_map_theme"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -121,7 +121,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Auto switches the dash map to dark at night and light by day. Applies instantly while projecting."
+                    android:text="@string/controls_auto_switches_the_dash_map_to_dark_at_night_and_"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -139,7 +139,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="Auto" />
+                        android:text="@string/controls_auto" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/theme_day"
@@ -148,7 +148,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:layout_weight="1"
-                        android:text="Day" />
+                        android:text="@string/controls_day" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/theme_night"
@@ -157,7 +157,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Night" />
+                        android:text="@string/controls_night" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -186,7 +186,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="On-screen pad"
+                        android:text="@string/controls_on_screen_pad"
                         android:textColor="@color/text_secondary"
                         android:textAllCaps="true"
                         android:textSize="12sp"
@@ -200,7 +200,7 @@
                         android:minHeight="0dp"
                         android:minWidth="0dp"
                         android:paddingHorizontal="8dp"
-                        android:text="Fullscreen"
+                        android:text="@string/controls_fullscreen"
                         android:textColor="@color/brand_orange"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -210,7 +210,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="The rotary knob steps through lists; the arrows jump between areas. Works only while Android Auto is projecting. Use Fullscreen while riding — the phone stays awake."
+                    android:text="@string/controls_the_rotary_knob_steps_through_lists_the_arrows_j"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -220,7 +220,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="Volume"
+                    android:text="@string/controls_volume"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -230,7 +230,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Phone media volume (nav voice &amp; music). Use this when the bike's volume buttons drive Android Auto."
+                    android:text="@string/controls_phone_media_volume_nav_voice_music_use_this_when"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
 
@@ -245,7 +245,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Low"
+                        android:text="@string/controls_low"
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
 
@@ -263,7 +263,7 @@
                         android:layout_width="28dp"
                         android:layout_height="wrap_content"
                         android:gravity="end"
-                        android:text="8"
+                        android:text="@string/controls_8"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -283,7 +283,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="⟲ Prev" />
+                        android:text="@string/controls_prev" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_dpad_up"
@@ -292,7 +292,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:layout_weight="1"
-                        android:text="▲" />
+                        android:text="@string/controls_str" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_knob_fwd"
@@ -301,7 +301,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Next ⟳" />
+                        android:text="@string/controls_next" />
                 </LinearLayout>
 
                 <!-- left / OK / right -->
@@ -319,7 +319,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="◀" />
+                        android:text="@string/controls_str_2" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_select"
@@ -337,7 +337,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="▶" />
+                        android:text="@string/controls_str_3" />
                 </LinearLayout>
 
                 <!-- down -->
@@ -360,7 +360,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:layout_weight="1"
-                        android:text="▼" />
+                        android:text="@string/controls_str_4" />
 
                     <Space
                         android:layout_width="0dp"
@@ -383,7 +383,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="Back" />
+                        android:text="@string/controls_back" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_home"
@@ -392,7 +392,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:layout_weight="1"
-                        android:text="Home" />
+                        android:text="@string/controls_home" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_assistant"
@@ -401,7 +401,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Voice" />
+                        android:text="@string/controls_voice" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -422,7 +422,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Handlebar buttons"
+                    android:text="@string/controls_handlebar_buttons"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -435,7 +435,7 @@
                     android:layout_marginTop="8dp"
                     android:padding="10dp"
                     android:background="@drawable/hint_pill"
-                    android:text="Your dash is a touchscreen — just tap the screen to navigate. Handlebar-button control is meant for non-touch dashes (e.g. 450SR); on this bike it can't move the menu and only pauses your music."
+                    android:text="@string/controls_your_dash_is_a_touchscreen_just_tap_the_screen_t"
                     android:textColor="@color/text_primary"
                     android:textSize="13sp"
                     android:visibility="gone" />
@@ -445,7 +445,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Handlebar buttons drive Android Auto"
+                    android:text="@string/controls_handlebar_buttons_drive_android_auto"
                     android:textColor="@color/text_primary"
                     android:textSize="15sp" />
 
@@ -453,7 +453,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Requires the phone paired to the bike over Bluetooth.\n\nWhile on, the bars drive the Android Auto UI (not track-skip). Music can keep playing — start/stop/skip by navigating that UI with the bars or the on-screen pad. Turn OFF only if you want the physical bars to control media again."
+                    android:text="@string/controls_requires_the_phone_paired_to_the_bike_over_bluet"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -463,7 +463,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:text="Customize buttons" />
+                    android:text="@string/controls_customize_buttons" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>

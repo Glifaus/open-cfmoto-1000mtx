@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/setup_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -17,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Setup &amp; settings"
+            android:text="@string/setup_setup_settings"
             android:textColor="@color/text_primary"
             android:textSize="26sp"
             android:textStyle="bold" />
@@ -27,7 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp"
-            android:text="A one-time setup so Android Auto can project to your CFMoto dash, plus display and battery options."
+            android:text="@string/setup_a_one_time_setup_so_android_auto_can_project_to_"
             android:textColor="@color/text_secondary"
             android:textSize="14sp" />
 
@@ -46,7 +47,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Get started"
+                    android:text="@string/setup_get_started"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -57,7 +58,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="1. Android Auto"
+                    android:text="@string/setup_1_android_auto"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -67,7 +68,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Android Auto runs Maps/Waze. OpenCfMoto relays its screen to the bike."
+                    android:text="@string/setup_android_auto_runs_maps_waze_opencfmoto_relays_it"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -77,14 +78,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="Install Android Auto" />
+                    android:text="@string/setup_install_android_auto" />
 
                 <TextView
                     android:id="@+id/step2_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="2. Permissions"
+                    android:text="@string/setup_2_permissions"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -94,7 +95,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Camera (scan the dash QR), Location (join the bike Wi-Fi), Notifications (keep running while you ride)."
+                    android:text="@string/setup_camera_scan_the_dash_qr_location_join_the_bike_w"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -109,7 +110,7 @@
                         style="@style/Widget.OpenCfMoto.Button.Tonal"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Grant permissions" />
+                        android:text="@string/setup_grant_permissions" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/step2_settings_btn"
@@ -117,7 +118,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
-                        android:text="App settings" />
+                        android:text="@string/setup_app_settings" />
                 </LinearLayout>
 
                 <TextView
@@ -125,7 +126,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="3. Head-unit mode in Android Auto"
+                    android:text="@string/setup_3_head_unit_mode_in_android_auto"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -135,7 +136,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="In Android Auto settings, tap &quot;Version&quot; ~10 times to unlock Developer settings, then turn ON &quot;Add new cars to Android Auto&quot; / &quot;Unknown sources&quot;. (Can't be checked automatically.)"
+                    android:text="@string/setup_in_android_auto_settings_tap_version_10_times_to"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -145,7 +146,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="Open Android Auto settings" />
+                    android:text="@string/setup_android_auto_settings" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -164,7 +165,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Screen &amp; display"
+                    android:text="@string/setup_screen_display"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -175,7 +176,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Video quality"
+                    android:text="@string/setup_video_quality"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -186,7 +187,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Balanced (recommended)"
+                    android:text="@string/setup_balanced_recommended"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -203,7 +204,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="Smoother" />
+                        android:text="@string/setup_smoother" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/quality_balanced"
@@ -212,7 +213,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:layout_weight="1"
-                        android:text="Balanced" />
+                        android:text="@string/setup_balanced" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/quality_sharp"
@@ -221,7 +222,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Sharper" />
+                        android:text="@string/setup_sharper" />
                 </LinearLayout>
 
                 <!-- Screen fit -->
@@ -229,7 +230,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Screen fit"
+                    android:text="@string/setup_screen_fit"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -240,7 +241,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Fill — edge to edge (crops a little)"
+                    android:text="@string/setup_fill_edge_to_edge_crops_a_little"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -257,7 +258,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="Fill" />
+                        android:text="@string/setup_fill" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/fit_fit"
@@ -266,7 +267,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:layout_weight="1"
-                        android:text="Fit" />
+                        android:text="@string/setup_fit" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/fit_stretch"
@@ -275,7 +276,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Stretch" />
+                        android:text="@string/setup_stretch" />
                 </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
@@ -284,13 +285,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Screen margins…" />
+                    android:text="@string/setup_screen_margins" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Inset Android Auto from each edge of the dash (top / bottom / left / right). Useful on 800NK Advanced for the MotoPlay pull-down."
+                    android:text="@string/setup_inset_android_auto_from_each_edge_of_the_dash_to"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:lineSpacingExtra="2dp" />
@@ -300,7 +301,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Map theme"
+                    android:text="@string/controls_map_theme"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -311,7 +312,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Auto (day / night)"
+                    android:text="@string/setup_auto_day_night"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -328,7 +329,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="Auto" />
+                        android:text="@string/controls_auto" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/theme_day"
@@ -337,7 +338,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:layout_weight="1"
-                        android:text="Day" />
+                        android:text="@string/controls_day" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/theme_night"
@@ -346,7 +347,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Night" />
+                        android:text="@string/controls_night" />
                 </LinearLayout>
 
                 <!-- Resolution & orientation -->
@@ -354,7 +355,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Resolution &amp; orientation"
+                    android:text="@string/setup_resolution_orientation"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -365,7 +366,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Auto — match your bike (recommended)"
+                    android:text="@string/setup_auto_match_your_bike_recommended"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -374,13 +375,13 @@
                     style="@style/Widget.OpenCfMoto.Segment"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Auto" />
+                    android:text="@string/controls_auto" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:text="Landscape"
+                    android:text="@string/setup_landscape"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="11sp"
@@ -400,7 +401,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="800×480" />
+                        android:text="@string/setup_800_480" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/res_land_hd"
@@ -409,14 +410,14 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="1280×720" />
+                        android:text="@string/setup_1280_720" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:text="Portrait"
+                    android:text="@string/setup_portrait"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="11sp"
@@ -436,7 +437,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="720×1280" />
+                        android:text="@string/setup_720_1280" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/res_port_hd"
@@ -445,14 +446,14 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="1080×1920" />
+                        android:text="@string/setup_1080_1920" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Auto fits recognized CFMoto dashes. If your bike's screen is a different shape (e.g. a tall portrait display) or isn't recognized, pick the orientation + size that matches it. Android Auto supports only these fixed sizes, so Screen fit above decides how it's placed (Fill crops, Fit adds bars, Stretch distorts). HD is sharper but heavier and can black-screen on some dashes — drop to a smaller size or Auto if so."
+                    android:text="@string/setup_auto_fits_recognized_cfmoto_dashes_if_your_bike_"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:lineSpacingExtra="2dp" />
@@ -463,13 +464,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Match panel aspect…" />
+                    android:text="@string/setup_match_panel_aspect" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Disable touchscreen"
+                    android:text="@string/setup_disable_touchscreen"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -480,7 +481,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Off — use the bike profile (touch dashes stay touch)"
+                    android:text="@string/setup_off_use_the_bike_profile_touch_dashes_stay_touch"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -497,7 +498,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="On" />
+                        android:text="@string/gpx_on" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/nontouch_off"
@@ -506,14 +507,14 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Off" />
+                        android:text="@string/res_off" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Turn On if handlebar buttons do nothing: Android Auto runs in focus/knob mode (no touchscreen advertised) so ▲/▼/Enter work. Needed next Connect — Stop first if you're already projecting."
+                    android:text="@string/setup_turn_on_if_handlebar_buttons_do_nothing_android_"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:lineSpacingExtra="2dp" />
@@ -522,7 +523,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Force touchscreen"
+                    android:text="@string/setup_force_touchscreen"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -533,7 +534,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Off — use the bike profile (1000 MT‑X stays focus/knob)"
+                    android:text="@string/setup_off_use_the_bike_profile_1000_mt_x_stays_focus_k"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -550,7 +551,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="On" />
+                        android:text="@string/gpx_on" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/forcetouch_off"
@@ -559,14 +560,14 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Off" />
+                        android:text="@string/res_off" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Turn On for a touch panel on a focus/knob profile (e.g. 1000 MT‑X): Android Auto advertises a touchscreen so you can tap the dash. Turns off Disable touchscreen. Unlock the bike's own touch lock if needed. Applies next Connect — Stop first if you're already projecting."
+                    android:text="@string/setup_turn_on_for_a_touch_panel_on_a_focus_knob_profil"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:lineSpacingExtra="2dp" />
@@ -588,7 +589,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Battery &amp; power"
+                    android:text="@string/setup_battery_power"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -600,7 +601,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Balanced — 24 fps (recommended)"
+                    android:text="@string/setup_balanced_24_fps_recommended"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -617,7 +618,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="Auto" />
+                        android:text="@string/controls_auto" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/power_smooth"
@@ -626,7 +627,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:layout_weight="1"
-                        android:text="Smooth" />
+                        android:text="@string/setup_smooth" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/power_balanced"
@@ -635,7 +636,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:layout_weight="1"
-                        android:text="Balanced" />
+                        android:text="@string/setup_balanced" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/power_saver"
@@ -644,14 +645,14 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Saver" />
+                        android:text="@string/setup_saver" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="This app runs a live video transcoder — it always draws power and warms the phone. Keep it on the bike's USB charger, and turn the phone screen OFF while riding (projection keeps running)."
+                    android:text="@string/setup_this_app_runs_a_live_video_transcoder_it_always_"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:lineSpacingExtra="2dp" />
@@ -673,7 +674,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Bike profile"
+                    android:text="@string/setup_bike_profile"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -685,7 +686,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Auto — detect from the bike (recommended)"
+                    android:text="@string/setup_auto_detect_from_the_bike_recommended"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -694,7 +695,7 @@
                     style="@style/Widget.OpenCfMoto.Segment"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Auto" />
+                    android:text="@string/controls_auto" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -710,7 +711,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="Legacy" />
+                        android:text="@string/setup_legacy" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/profile_nk800"
@@ -719,7 +720,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="800NK" />
+                        android:text="@string/setup_800nk" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -736,7 +737,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="800MT" />
+                        android:text="@string/setup_800mt" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/profile_1000mtx"
@@ -745,7 +746,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="1000 MT-X" />
+                        android:text="@string/setup_1000_mt_x" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -762,7 +763,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="800NK Adv" />
+                        android:text="@string/setup_800nk_adv" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/profile_clc450"
@@ -771,14 +772,14 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="CL‑C450" />
+                        android:text="@string/setup_cl_c450" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Use Legacy for CFDL16 / 450SR-style non-touch dashes if Auto picks the wrong bike. 800NK Adv = CFDL26 touch 720×712. Applies next Connect (Stop first if projecting)."
+                    android:text="@string/setup_use_legacy_for_cfdl16_450sr_style_non_touch_dash"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:lineSpacingExtra="2dp" />
@@ -800,7 +801,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Handlebar"
+                    android:text="@string/setup_handlebar"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -810,7 +811,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Double-tap delay"
+                    android:text="@string/setup_double_tap_delay"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -821,7 +822,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="300 ms — balanced (recommended)"
+                    android:text="@string/setup_300_ms_balanced_recommended"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -838,7 +839,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="200 ms" />
+                        android:text="@string/setup_200_ms" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/dbltap_normal"
@@ -847,7 +848,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:layout_weight="1"
-                        android:text="300 ms" />
+                        android:text="@string/setup_300_ms" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/dbltap_slow"
@@ -856,7 +857,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:layout_weight="1"
-                        android:text="450 ms" />
+                        android:text="@string/setup_450_ms" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/dbltap_very_slow"
@@ -865,14 +866,14 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="1000 ms" />
+                        android:text="@string/setup_1000_ms" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Hold detection"
+                    android:text="@string/setup_hold_detection"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -883,7 +884,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="On — press-and-hold can fire hold gestures"
+                    android:text="@string/setup_on_press_and_hold_can_fire_hold_gestures"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -900,7 +901,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="On" />
+                        android:text="@string/gpx_on" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/holds_off"
@@ -909,14 +910,14 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Off" />
+                        android:text="@string/res_off" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Hold delay"
+                    android:text="@string/setup_hold_delay"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -927,7 +928,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="600 ms — balanced (recommended)"
+                    android:text="@string/setup_600_ms_balanced_recommended"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -944,7 +945,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="500 ms" />
+                        android:text="@string/setup_500_ms" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/hold_normal"
@@ -953,7 +954,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:layout_weight="1"
-                        android:text="600 ms" />
+                        android:text="@string/setup_600_ms" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/hold_long"
@@ -962,7 +963,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="800 ms" />
+                        android:text="@string/setup_800_ms" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -982,7 +983,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Bluetooth"
+                    android:text="@string/setup_bluetooth"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -992,7 +993,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Handlebar media/call buttons"
+                    android:text="@string/setup_handlebar_media_call_buttons"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -1001,7 +1002,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="The dash sends the handlebar volume/track/call buttons over Bluetooth — not the mirroring link. Pair your phone to the bike (as a phone/audio device) and they control Android Auto media and calls."
+                    android:text="@string/setup_the_dash_sends_the_handlebar_volume_track_call_b"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp"
                     android:lineSpacingExtra="2dp" />
@@ -1011,7 +1012,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:text="Checking Bluetooth…"
+                    android:text="@string/setup_checking_bluetooth"
                     android:textColor="@color/text_primary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -1022,7 +1023,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Open Bluetooth settings" />
+                    android:text="@string/setup_open_bluetooth_settings" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -1041,7 +1042,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Startup &amp; recovery"
+                    android:text="@string/setup_startup_recovery"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -1052,7 +1053,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Auto-connect on launch"
+                    android:text="@string/setup_auto_connect_on_launch"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -1063,7 +1064,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="When a paired bike's Wi-Fi is in range, start projecting automatically."
+                    android:text="@string/setup_when_a_paired_bike_s_wi_fi_is_in_range_start_pro"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -1080,7 +1081,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="On" />
+                        android:text="@string/gpx_on" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/autoconnect_off"
@@ -1089,7 +1090,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Off" />
+                        android:text="@string/res_off" />
                 </LinearLayout>
 
                 <!-- Auto-recovery -->
@@ -1097,7 +1098,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Auto-recovery watchdog"
+                    android:text="@string/setup_auto_recovery_watchdog"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -1108,7 +1109,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="If the dash drops or projection stalls, reconnect automatically — no Stop/Start."
+                    android:text="@string/setup_if_the_dash_drops_or_projection_stalls_reconnect"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -1125,7 +1126,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="On" />
+                        android:text="@string/gpx_on" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/recovery_off"
@@ -1134,7 +1135,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Off" />
+                        android:text="@string/res_off" />
                 </LinearLayout>
 
                 <!-- Log trips -->
@@ -1142,7 +1143,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Log trips automatically"
+                    android:text="@string/setup_log_trips_automatically"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -1152,7 +1153,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Record each ride's route and stats from GPS while projecting. View them under Trip ▸ Saved trips."
+                    android:text="@string/setup_record_each_ride_s_route_and_stats_from_gps_whil"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -1169,7 +1170,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="On" />
+                        android:text="@string/gpx_on" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/logtrips_off"
@@ -1178,7 +1179,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Off" />
+                        android:text="@string/res_off" />
                 </LinearLayout>
 
                 <!-- Seamless auto-resume (overlay permission → background AA relaunch) -->
@@ -1186,7 +1187,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Seamless auto-resume"
+                    android:text="@string/setup_seamless_auto_resume"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -1197,7 +1198,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="8dp"
-                    android:text="Let the app re-project on its own when the bike comes back, even with the screen off or the phone in a bag. Needs the “Display over other apps” permission; otherwise you'll get a tap-to-resume notification instead."
+                    android:text="@string/setup_let_the_app_re_project_on_its_own_when_the_bike_"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp"
                     android:lineSpacingExtra="2dp" />
@@ -1207,7 +1208,7 @@
                     style="@style/Widget.OpenCfMoto.Segment"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Enable seamless resume" />
+                    android:text="@string/setup_enable_seamless_resume" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -1226,7 +1227,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Wi‑Fi &amp; logs"
+                    android:text="@string/setup_wi_fi_logs"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -1236,7 +1237,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Wi‑Fi transport"
+                    android:text="@string/setup_wi_fi_transport"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -1247,7 +1248,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Auto — AP when the QR advertises it, else Wi‑Fi Direct"
+                    android:text="@string/setup_auto_ap_when_the_qr_advertises_it_else_wi_fi_dir"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -1264,7 +1265,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="Auto" />
+                        android:text="@string/controls_auto" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/transport_ap"
@@ -1273,7 +1274,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:layout_weight="1"
-                        android:text="AP" />
+                        android:text="@string/setup_ap" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/transport_p2p"
@@ -1282,14 +1283,78 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="P2P" />
+                        android:text="@string/setup_p2p" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:letterSpacing="0.08"
+                    android:text="@string/setup_privacy"
+                    android:textAllCaps="true"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/setup_anonymous_telemetry"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/telemetry_desc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="6dp"
+                    android:text="@string/setup_anonymous_telemetry_desc"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/telemetry_on"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:text="@string/gpx_on" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/telemetry_off"
+                        style="@style/Widget.OpenCfMoto.Segment"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:text="@string/res_off" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/telemetry_id"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:fontFamily="monospace"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    tools:text="Anonymous id: …" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Include secrets in shared logs"
+                    android:text="@string/setup_include_secrets_in_shared_logs"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -1300,7 +1365,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Off — passwords and serials are redacted (recommended)"
+                    android:text="@string/setup_off_passwords_and_serials_are_redacted_recommend"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -1317,7 +1382,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="On" />
+                        android:text="@string/gpx_on" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/secrets_off"
@@ -1326,14 +1391,14 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Off" />
+                        android:text="@string/res_off" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Share settings"
+                    android:text="@string/setup_share_settings"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -1343,7 +1408,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Export bike tuning only — profile, resolution, fit, margins, buttons, Wi‑Fi transport (no passwords, no personal prefs). Share on Discord so others can Import."
+                    android:text="@string/setup_export_bike_tuning_only_profile_resolution_fit_m"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -1360,7 +1425,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="4dp"
                         android:layout_weight="1"
-                        android:text="Share JSON" />
+                        android:text="@string/setup_share_json" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/settings_import"
@@ -1369,7 +1434,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:layout_weight="1"
-                        android:text="Import…" />
+                        android:text="@string/setup_import" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -1389,7 +1454,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Supported bikes"
+                    android:text="@string/setup_supported_bikes"
                     android:textColor="@color/text_secondary"
                     android:textAllCaps="true"
                     android:textSize="12sp"
@@ -1493,14 +1558,14 @@
             android:layout_width="match_parent"
             android:layout_height="58dp"
             android:layout_marginTop="16dp"
-            android:text="Done" />
+            android:text="@string/about_done" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:gravity="center"
-            android:text="© 2026 Alexandru · OpenCfMoto · AGPL‑3.0"
+            android:text="@string/setup_2026_alexandru_opencfmoto_agpl_3_0"
             android:textColor="@color/text_secondary"
             android:textSize="12sp" />
     </LinearLayout>

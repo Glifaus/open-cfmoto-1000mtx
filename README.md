@@ -79,6 +79,7 @@ CFMoto · Voge · Morini · Morbidelli and more — community photos of Android 
 | 📶 **Wi‑Fi-off alert** | If phone Wi‑Fi is off when connecting, a dialog offers **Wi‑Fi settings** (one tap). |
 | 🗺️ **Map / GPX** | Free ride, GPX tracks, OSM search/POI, Home/favorites/markers, parked pin, road routing, voice cues — on the bike dash or phone. |
 | 📱 **Mirror phone** | Cast the phone screen when you really need it (screen on; awkward for nav apps). |
+| 🌐 **Languages** | Follows the phone language, or set **per-app** on Android 13+: Settings → Apps → OpenCfMoto → **Language**. Draft DE / IT / FR / ES / PT / PL / CS / RO / NL ([docs/TRANSLATIONS.md](docs/TRANSLATIONS.md)). |
 
 ---
 
@@ -709,11 +710,17 @@ agree that your contribution is licensed under the AGPL-3.0, and grant the proje
 to also offer your contribution under a separate commercial license. This keeps dual-licensing possible
 without every contributor holding a veto.
 
+**Translations** — the UI follows the phone language (de / it / fr / es / pt / pl / cs / ro / nl drafts
+ship today). On **Android 13+** you can also set a language just for this app:
+**Settings → Apps → OpenCfMoto → Language** (no in-app picker yet). Improve any locale by editing
+`app/src/main/res/values-<lang>/strings.xml` and opening a PR. See
+**[docs/TRANSLATIONS.md](docs/TRANSLATIONS.md)**.
+
 ## 🔒 Privacy
 
-OpenCfMoto is **local-first**: no account, no analytics, no project-run servers. Bike profiles, trip
-logs, and diagnostics stay on your phone. The full permissions-and-privacy breakdown — including the
-opt-in GPS trip logging and the OpenStreetMap map tiles — is in **[PRIVACY.md](PRIVACY.md)**.
+OpenCfMoto is **local-first**: no account, no ads. Bike profiles, trip logs, and full diagnostics
+stay on your phone. Optional **anonymous** install pings + crash reports (random UUID only) can be
+turned off under Setup → Privacy — details in **[PRIVACY.md](PRIVACY.md)**.
 
 <div align="center">
 

@@ -19,7 +19,7 @@
         <ImageView
             android:layout_width="26dp"
             android:layout_height="26dp"
-            android:contentDescription="Trips"
+            android:contentDescription="@string/trips_trips"
             android:src="@drawable/ic_speed"
             android:tint="@color/brand_orange" />
 
@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="10dp"
-            android:text="Saved trips"
+            android:text="@string/trip_saved_trips"
             android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -50,8 +50,8 @@
             style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:contentDescription="Previous day"
-            android:text="‹"
+            android:contentDescription="@string/trips_previous_day"
+            android:text="@string/trips_str"
             android:textColor="@color/text_primary"
             android:textSize="28sp" />
 
@@ -86,8 +86,8 @@
             style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:contentDescription="Next day"
-            android:text="›"
+            android:contentDescription="@string/trips_next_day"
+            android:text="@string/trips_str_2"
             android:textColor="@color/text_primary"
             android:textSize="28sp" />
     </LinearLayout>
@@ -98,7 +98,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="Today"
+        android:text="@string/trips_today"
         android:textColor="@color/brand_orange"
         android:visibility="gone"
         app:rippleColor="@color/brand_orange" />
@@ -110,7 +110,7 @@
         android:layout_marginTop="32dp"
         android:gravity="center"
         android:paddingHorizontal="32dp"
-        android:text="No rides this day."
+        android:text="@string/trips_no_rides_this_day"
         android:textColor="@color/text_secondary"
         android:textSize="15sp"
         android:lineSpacingExtra="4dp"

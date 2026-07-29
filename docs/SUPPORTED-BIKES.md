@@ -69,7 +69,7 @@ promote models to “confirmed.”
 | --- | --- |
 | **Voge** | **DS800 Rally confirmed**; other EasyConnect TFT models welcome |
 | **Zontes** | Same Carbit framework on many TFT dashes |
-| **Moto Morini** | **X-Cape 649 / 700** and **Seiemmezzo** confirmed; often **MotoFun** companion branding |
+| **Moto Morini** | **X-Cape 649 / 700** and **Seiemmezzo** confirmed; often **MotoFun** companion branding. Pairing QR may be `admin.motomorini.com/…?Wifi=SSID#password#mac&MachineID=…&ProductID=…` (not Carbit `ssid=`/`pwd=`) — supported in OpenCfMoto. Do **not** scan the vehicle info QR (`code:…color:…`). |
 | **Benelli** | e.g. TRK 702 / 702X class — SoftAP SSID/password or QR when shown |
 | **QJ Motor** | **600SX / 550SX (2026) testing**; Fort 4.0 and other EasyConnect TFTs |
 | **Morbidelli** (formerly MBP) | **T1002VX confirmed**; other T1002V-class with Carbit dash welcome |
