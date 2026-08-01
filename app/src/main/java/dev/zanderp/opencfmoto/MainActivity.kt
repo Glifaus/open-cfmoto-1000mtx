@@ -96,7 +96,7 @@ class MainActivity : AppCompatActivity() {
             moveTaskToBack(true)
             Toast.makeText(
                 this,
-                "Leave the shared app on screen (OpenCfMoto stays in the notification)",
+                getString(R.string.main_mirror_leave_shared_app),
                 Toast.LENGTH_LONG,
             ).show()
         }
@@ -1289,17 +1289,17 @@ class MainActivity : AppCompatActivity() {
     private fun reportProblem() {
         val pad = (16 * resources.displayMetrics.density).toInt()
         val problem = android.widget.EditText(this).apply {
-            hint = "What went wrong?"
+            hint = context.getString(R.string.main_report_hint_problem)
             minLines = 3
             setPadding(pad, pad, pad, pad)
         }
         val model = android.widget.EditText(this).apply {
-            hint = "Bike model (e.g. 800NK Advanced)"
+            hint = context.getString(R.string.main_report_hint_bike_model)
             setText(BikeMemory.lastBikeName(this@MainActivity).orEmpty())
             setPadding(pad, pad / 2, pad, pad / 2)
         }
         val year = android.widget.EditText(this).apply {
-            hint = "Year (optional)"
+            hint = context.getString(R.string.main_report_hint_year)
             setPadding(pad, pad / 2, pad, pad / 2)
         }
         val box = android.widget.LinearLayout(this).apply {
@@ -1310,17 +1310,17 @@ class MainActivity : AppCompatActivity() {
             addView(year)
         }
         androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Report a problem")
-            .setMessage("Builds a shareable report with diagnostics + recent log (secrets redacted unless enabled in Setup).")
+            .setTitle(R.string.main_report_a_problem)
+            .setMessage(R.string.main_report_problem_message)
             .setView(box)
-            .setPositiveButton("Share") { _, _ ->
+            .setPositiveButton(R.string.main_share) { _, _ ->
                 shareProblemReport(
                     problem.text.toString(),
                     model.text.toString(),
                     year.text.toString(),
                 )
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.dash_cancel, null)
             .show()
     }
 
@@ -1355,7 +1355,7 @@ class MainActivity : AppCompatActivity() {
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            startActivity(Intent.createChooser(send, "Share problem report"))
+            startActivity(Intent.createChooser(send, getString(R.string.main_share_problem_report)))
         } catch (e: Exception) {
             Toast.makeText(this, getString(R.string.main_share_report_failed, e.toString()), Toast.LENGTH_LONG).show()
         }
@@ -1378,7 +1378,7 @@ class MainActivity : AppCompatActivity() {
             moveTaskToBack(true)
             Toast.makeText(
                 this,
-                "Leave the shared app on screen (OpenCfMoto stays in the notification)",
+                getString(R.string.main_mirror_leave_shared_app),
                 Toast.LENGTH_LONG,
             ).show()
         } else {

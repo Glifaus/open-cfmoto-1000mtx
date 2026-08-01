@@ -26,11 +26,14 @@ object BluetoothHelper {
         val deviceName: String?,
     ) {
         /** One-line summary for the Setup card. */
-        fun describe(): String = when {
-            !supported -> "This phone has no Bluetooth."
-            !enabled -> "Bluetooth is off — turn it on, then pair your bike."
-            connected -> "Connected to ${deviceName ?: "an audio device"} — handlebar buttons & calls should work."
-            else -> "Bluetooth on, but not connected to the bike yet. Pair it to use the handlebar buttons."
+        fun describe(context: Context): String = when {
+            !supported -> context.getString(R.string.setup_bt_no_bluetooth)
+            !enabled -> context.getString(R.string.setup_bt_off)
+            connected -> context.getString(
+                R.string.setup_bt_connected,
+                deviceName ?: context.getString(R.string.setup_bt_audio_device),
+            )
+            else -> context.getString(R.string.setup_bt_not_connected)
         }
     }
 

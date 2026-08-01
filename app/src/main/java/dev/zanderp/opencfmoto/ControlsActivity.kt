@@ -237,7 +237,7 @@ class ControlsActivity : AppCompatActivity() {
         NightPrefs.setTheme(this, theme)
         AaVideoBridge.nightSink?.invoke(NightPrefs.isNightNow(this))
         highlightTheme(theme)
-        Toast.makeText(this, "Map theme: ${theme.label}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.setup_toast_map_theme, getString(theme.labelRes)), Toast.LENGTH_SHORT).show()
     }
 
     /** Paint the selected segment in brand color; the rest stay neutral tonal. */
