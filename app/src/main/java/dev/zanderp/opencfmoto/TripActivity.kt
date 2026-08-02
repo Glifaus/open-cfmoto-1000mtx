@@ -113,7 +113,7 @@ class TripActivity : AppCompatActivity() {
         maxView.text = "${(s.maxSpeedMs * 3.6f).toInt()} km/h"
         val avgKmh = if (s.movingTimeMs > 0) (s.distanceMeters / (s.movingTimeMs / 1000.0)) * 3.6 else 0.0
         avgView.text = "${avgKmh.toInt()} km/h"
-        startBtn.text = if (s.recording) "Pause" else "Start"
+        startBtn.text = if (s.recording) getString(R.string.trip_pause) else getString(R.string.trip_start)
     }
 
     private fun formatDuration(ms: Long): String {

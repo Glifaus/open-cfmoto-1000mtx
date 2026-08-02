@@ -265,7 +265,7 @@ class HudViewActivity : AppCompatActivity() {
         AaVideoBridge.nightSink?.invoke(on)
         gpxUi?.applyTheme()
         val extra = if (theme == MapTheme.AUTO) " (${if (on) "night" else "day"} now)" else ""
-        Toast.makeText(this, "Map theme: ${theme.label}$extra", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.setup_toast_map_theme, getString(theme.labelRes)) + extra, Toast.LENGTH_SHORT).show()
     }
 
     private fun toggleControls() {

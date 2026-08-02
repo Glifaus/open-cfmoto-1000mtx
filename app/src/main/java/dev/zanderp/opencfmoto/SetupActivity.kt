@@ -242,20 +242,20 @@ class SetupActivity : AppCompatActivity() {
         NightPrefs.setTheme(this, theme)
         AaVideoBridge.nightSink?.invoke(NightPrefs.isNightNow(this))
         refreshOptions()
-        Toast.makeText(this, getString(R.string.setup_toast_map_theme, theme.label), Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.setup_toast_map_theme, getString(theme.labelRes)), Toast.LENGTH_SHORT).show()
     }
 
     /** Button timing applies live — the next press uses the new window. */
     private fun setDoubleTap(delay: DoubleTapDelay) {
         ButtonTimingPrefs.setDoubleTap(this, delay)
         refreshOptions()
-        Toast.makeText(this, getString(R.string.setup_toast_dbl_tap, delay.label), Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.setup_toast_dbl_tap, getString(delay.labelRes)), Toast.LENGTH_SHORT).show()
     }
 
     private fun setLongPress(delay: LongPressDelay) {
         ButtonTimingPrefs.setLongPress(this, delay)
         refreshOptions()
-        Toast.makeText(this, getString(R.string.setup_toast_hold, delay.label), Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.setup_toast_hold, getString(delay.labelRes)), Toast.LENGTH_SHORT).show()
     }
 
     private fun setHoldsEnabled(on: Boolean) {
@@ -351,24 +351,24 @@ class SetupActivity : AppCompatActivity() {
         fitDesc.text = getString(fit.labelRes)
         powerDesc.text = getString(power.labelRes)
         resDesc.text = getString(res.labelRes)
-        themeDesc.text = theme.label
-        dblTapDesc.text = dbl.label
+        themeDesc.text = getString(theme.labelRes)
+        dblTapDesc.text = getString(dbl.labelRes)
         holdsDesc.text = if (holdsOn) {
             getString(R.string.setup_on_press_and_hold_can_fire_hold_gestures)
         } else {
-            "Off — every release is a tap / ×2 (use with a long double-tap delay)"
+            getString(R.string.setup_holds_off_desc)
         }
-        holdDesc.text = if (holdsOn) hold.label else getString(R.string.pref_hold_ignored)
+        holdDesc.text = if (holdsOn) getString(hold.labelRes) else getString(R.string.pref_hold_ignored)
         nonTouchDesc.text = if (AppSettings.forceNonTouch(this))
-            "On — focus/knob UI so handlebar buttons work"
+            getString(R.string.setup_nontouch_on_desc)
         else
-            "Off — use the bike profile (touch dashes stay touch)"
+            getString(R.string.setup_off_use_the_bike_profile_touch_dashes_stay_touch)
         forceTouchDesc.text = if (AppSettings.forceTouch(this))
-            "On — Android Auto touch UI (tap the dash)"
+            getString(R.string.setup_forcetouch_on_desc)
         else
-            "Off — use the bike profile (1000 MT‑X stays focus/knob)"
+            getString(R.string.setup_off_use_the_bike_profile_1000_mt_x_stays_focus_k)
         val pov = ProfilePrefs.get(this)
-        profileDesc.text = "${pov.shortLabel} — ${pov.detail}"
+        profileDesc.text = "${pov.shortLabel} — ${getString(pov.detailRes)}"
 
         highlight(quality,
             R.id.quality_smooth to VideoQuality.SMOOTH,
@@ -437,8 +437,8 @@ class SetupActivity : AppCompatActivity() {
             R.id.transport_p2p to WifiTransport.P2P)
         val secrets = AppSettings.includeSecretsInLogs(this)
         findViewById<android.widget.TextView>(R.id.secrets_desc).text =
-            if (secrets) "On — passwords/serials stay in shared logs"
-            else "Off — passwords and serials are redacted (recommended)"
+            if (secrets) getString(R.string.setup_secrets_on_desc)
+            else getString(R.string.setup_off_passwords_and_serials_are_redacted_recommend)
         highlight(secrets, R.id.secrets_on to true, R.id.secrets_off to false)
         val telemetry = AppSettings.anonymousTelemetry(this)
         findViewById<android.widget.TextView>(R.id.telemetry_desc).text =
@@ -450,7 +450,7 @@ class SetupActivity : AppCompatActivity() {
 
     /** Refresh the Bluetooth pairing status line shown in the helper card. */
     private fun refreshBluetooth() {
-        btStatus.text = BluetoothHelper.status(this).describe()
+        btStatus.text = BluetoothHelper.status(this).describe(this)
     }
 
     /** Paint the segment matching [selected] in brand color; the rest stay neutral tonal. */
@@ -476,16 +476,17 @@ class SetupActivity : AppCompatActivity() {
 
     private fun refresh() {
         val aaOk = SetupHelper.isAndroidAutoInstalled(this)
-        step1Title.text = tick(aaOk) + " 1. Android Auto"
-        step1Btn.text = if (aaOk) "Open Android Auto" else "Install Android Auto"
+        step1Title.text = tick(aaOk) + " " + getString(R.string.setup_1_android_auto)
+        step1Btn.text = if (aaOk) getString(R.string.setup_open_android_auto) else getString(R.string.setup_install_android_auto)
 
         val permsOk = SetupHelper.permissionsGranted(this)
-        step2Title.text = tick(permsOk) + " 2. Permissions"
-        step2Btn.text = if (permsOk) "All granted" else "Grant permissions"
+        step2Title.text = tick(permsOk) + " " + getString(R.string.setup_2_permissions)
+        step2Btn.text = if (permsOk) getString(R.string.setup_all_granted) else getString(R.string.setup_grant_permissions)
         step2Btn.isEnabled = !permsOk
 
         val resumeOk = SetupHelper.canAutoResume(this)
-        resumeBtn.text = if (resumeOk) "\u2713 Seamless resume enabled" else "Enable seamless resume"
+        resumeBtn.text = if (resumeOk) getString(R.string.setup_seamless_resume_enabled)
+            else getString(R.string.setup_enable_seamless_resume)
         resumeBtn.isEnabled = !resumeOk
     }
 
@@ -495,13 +496,13 @@ class SetupActivity : AppCompatActivity() {
         try {
             startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.fromParts("package", packageName, null)))
-            Toast.makeText(this, "Turn on \u201cDisplay over other apps\u201d for seamless resume",
+            Toast.makeText(this, getString(R.string.setup_overlay_for_seamless_resume),
                 Toast.LENGTH_LONG).show()
         } catch (_: Exception) {
             try {
                 startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
             } catch (_: Exception) {
-                Toast.makeText(this, "Couldn't open the overlay permission screen", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.setup_overlay_permission_failed), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -523,7 +524,7 @@ class SetupActivity : AppCompatActivity() {
         // them at the system settings where it can still be granted.
         if (!SetupHelper.permissionsGranted(this)) {
             Toast.makeText(this,
-                "Some permissions are still off — use \u201cApp settings\u201d to enable them.",
+                getString(R.string.setup_some_permissions_still_off),
                 Toast.LENGTH_LONG).show()
         }
     }
@@ -533,7 +534,7 @@ class SetupActivity : AppCompatActivity() {
             startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                 Uri.fromParts("package", packageName, null)))
         } catch (_: Exception) {
-            Toast.makeText(this, "Couldn't open app settings", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.main_settings_failed), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -551,7 +552,7 @@ class SetupActivity : AppCompatActivity() {
                 startActivity(Intent(Intent.ACTION_VIEW,
                     Uri.parse("https://play.google.com/store/apps/details?id=${SetupHelper.GEARHEAD_PACKAGE}")))
             } catch (_: Exception) {
-                Toast.makeText(this, "Couldn't open the Play Store", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.setup_play_store_failed), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -566,7 +567,7 @@ class SetupActivity : AppCompatActivity() {
                     SetupHelper.GEARHEAD_PACKAGE,
                     "com.google.android.projection.gearhead.companion.settings.DefaultSettingsActivity"))
             } catch (_: Exception) {
-                Toast.makeText(this, "Couldn't open Android Auto settings", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.setup_android_auto_settings_failed), Toast.LENGTH_SHORT).show()
             }
         }
     }
