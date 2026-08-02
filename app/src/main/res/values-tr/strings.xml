@@ -19,7 +19,7 @@
     <string name="about_about">Hakkında</string>
     <string name="about_wireless_android_auto_for_carbit_easyconnect_das">Carbit / EasyConnect ekranları için kablosuz Android Auto (CFMoto MotoPlay ve benzerleri).</string>
     <string name="about_community_support">Topluluk &amp; destek</string>
-    <string name="about_questions_logs_or_a_new_bike_join_discord_tips_k">Soruların mı var, log mu göndereceksin veya yeni motor mu denedin? Discord'a katıl. Bağışlar projeyi ayakta tutar.</string>
+    <string name="about_questions_logs_or_a_new_bike_join_discord_tips_k">Soruların mı var, log mu göndereceksin veya yeni motor mu denedin? Discord\'a katıl. Bağışlar projeyi ayakta tutar.</string>
     <string name="about_discord">Discord</string>
     <string name="about_donate">Bağış</string>
     <string name="about_copyright_2">Telif Hakkı</string>
@@ -78,7 +78,7 @@
     <string name="controls_requires_the_phone_paired_to_the_bike_over_bluet">Telefonun Bluetooth üzerinden motora bağlı olmasını gerektirir.\n\nAçıkken, tuşlar Android Auto arayüzünü yönetir (şarkı atlamaz). Müzik çalmaya devam edebilir — tuşlarla veya ekrandaki yön tuşlarıyla o arayüzde gezinerek başlat/durdur/atla yapabilirsin. Sadece fiziksel tuşların tekrar medyayı kontrol etmesini istiyorsan KAPAT.</string>
     <string name="controls_customize_buttons">Tuşları özelleştir</string>
     <string name="res_match_panel_aspect">Panel en boy oranını eşle</string>
-    <string name="res_makes_android_auto_render_at_your_dash_s_real_as">>Android Auto'nun motor ekranının gerçek en boy oranında (Kenar boşlukları + kırpma) oluşturulmasını sağlar, böylece harita kırpılmadan veya uzatılmadan ekranı doldurabilir. Otomatik, motorun bildirdiği (veya profildeki) boyutu kullanır. Kareye yakın veya dikey panellerde çok işe yarar; normal yatay ekranlar sıfır kenar boşluğu alır ve aynı kalır.</string>
+    <string name="res_makes_android_auto_render_at_your_dash_s_real_as">Android Auto\'nun motor ekranının gerçek en boy oranında (Kenar boşlukları + kırpma) oluşturulmasını sağlar, böylece harita kırpılmadan veya uzatılmadan ekranı doldurabilir. Otomatik, motorun bildirdiği (veya profildeki) boyutu kullanır. Kareye yakın veya dikey panellerde çok işe yarar; normal yatay ekranlar sıfır kenar boşluğu alır ve aynı kalır.</string>
     <string name="res_off">Kapalı</string>
     <string name="res_manual">Manuel</string>
     <string name="res_panel_width">Panel genişliği</string>
@@ -95,7 +95,7 @@
     <string name="gpx_start_ride">Sürüşü başlat</string>
     <string name="gpx_map_on_phone">Harita telefonda</string>
     <string name="gpx_search_poi">Arama / POI</string>
-    <string name="gpx_search_openstreetmap">OpenStreetMap'te ara……</string>
+    <string name="gpx_search_openstreetmap">OpenStreetMap\'te ara……</string>
     <string name="gpx_search">Ara</string>
     <string name="gpx_favorites_markers">Favoriler &amp; işaretçiler</string>
     <string name="gpx_history">Geçmiş</string>
@@ -131,7 +131,7 @@
     <string name="gpx_60_km">60 km</string>
     <string name="gpx_100_km">100 km</string>
     <string name="gpx_offline_maps">Çevrimdışı haritalar</string>
-    <string name="gpx_download_an_area_to_ride_without_a_connection_li">Bağlantı olmadan sürmek için bir bölge indir — Google Haritalar çevrimdışı alanları gibi. Bunu evdeki Wi‑Fi ile yap; motorun Wi‑Fi'sinde internet yoktur.</string>
+    <string name="gpx_download_an_area_to_ride_without_a_connection_li">Bağlantı olmadan sürmek için bir bölge indir — Google Haritalar çevrimdışı alanları gibi. Bunu evdeki Wi‑Fi ile yap; motorun Wi‑Fi\'sinde internet yoktur.</string>
     <string name="gpx_detail">Detay</string>
     <string name="gpx_standard">Standart</string>
     <string name="gpx_high">Yüksek</string>
@@ -291,7 +291,7 @@
     <string name="setup_include_secrets_in_shared_logs">laşılan loglara sırları dahil et</string>
     <string name="setup_off_passwords_and_serials_are_redacted_recommend">Kapalı — şifreler ve seri numaraları gizlenir (önerilir)</string>
     <string name="setup_share_settings">Ayarları paylaş</string>
-    <string name="setup_export_bike_tuning_only_profile_resolution_fit_m">Sadece motosiklet ayarlarını dışa aktar — profil, çözünürlük, uyum, kenar boşlukları, tuşlar, Wi‑Fi aktarımı (şifreler yok, kişisel tercihler yok). Başkalarının İçe Aktarabilmesi için Discord'da paylaş.</string>
+    <string name="setup_export_bike_tuning_only_profile_resolution_fit_m">Sadece motosiklet ayarlarını dışa aktar — profil, çözünürlük, uyum, kenar boşlukları, tuşlar, Wi‑Fi aktarımı (şifreler yok, kişisel tercihler yok). Başkalarının İçe Aktarabilmesi için Discord\'da paylaş.</string>
     <string name="setup_share_json">JSON paylaş</string>
     <string name="setup_import">İçe aktar…</string>
     <string name="setup_supported_bikes">Desteklenen motosikletler</string>
@@ -411,7 +411,7 @@
     <string name="notif_mirror_text">Ekran motora yansıtılıyor</string>
     <string name="notif_media_channel">Motor tuşu kontrolü</string>
     <string name="notif_media_title">Android Auto kontrolü</string>
-    <string name="notif_media_text">Motor tuşları Android Auto'yu yönetir</string>
+    <string name="notif_media_text">Motor tuşları Android Auto\'yu yönetir</string>
 
     <!-- Setup preference descriptions (enums) -->
     <string name="pref_vq_smooth">Daha Akıcı — daha az veri/gecikme</string>
