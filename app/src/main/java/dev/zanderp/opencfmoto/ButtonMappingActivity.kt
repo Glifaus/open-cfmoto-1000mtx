@@ -44,6 +44,10 @@ class ButtonMappingActivity : AppCompatActivity() {
 
         findViewById<MaterialButton>(R.id.btn_cluster_preset).setOnClickListener { pickClusterPreset() }
         findViewById<MaterialButton>(R.id.btn_cluster_clear).setOnClickListener { confirmClearPreset() }
+        findViewById<TextView>(R.id.tv_bt_status).setOnClickListener {
+            BluetoothHelper.openBluetoothSettings(this)
+        }
+        findViewById<MaterialButton>(R.id.btn_teach_handlebar).setOnClickListener { teachHandlebar() }
 
         findViewById<MaterialButton>(R.id.btn_overlay).setOnClickListener {
             try {
@@ -161,6 +165,38 @@ class ButtonMappingActivity : AppCompatActivity() {
             if (active != null) "Active: ${active.title}"
             else "No preset — shipped defaults / your custom map"
         findViewById<MaterialButton>(R.id.btn_cluster_clear).isEnabled = active != null
+        findViewById<TextView>(R.id.tv_bt_status).text = BluetoothHelper.status(this).shortLine()
+        findViewById<TextView>(R.id.tv_presence).text =
+            "Handlebar sources: ${ButtonPresencePrefs.summarize(this)}"
+    }
+
+    private fun teachHandlebar() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.buttons_teach_title)
+            .setMessage(R.string.buttons_teach_message)
+            .setPositiveButton(R.string.buttons_teach_volume_present) { _, _ ->
+                ButtonPresencePrefs.setVolumeRocker(this, ButtonPresence.PRESENT)
+                LogBus.log("→ teach handlebar: volume rocker PRESENT")
+                MediaButtonBridge.instance?.refreshVolumePresencePolicy()
+                refresh()
+                Toast.makeText(this, "▲/▼ marked present — volume pin stays on", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(R.string.buttons_teach_volume_absent) { _, _ ->
+                ButtonPresencePrefs.setVolumeRocker(this, ButtonPresence.ABSENT)
+                LogBus.log("→ teach handlebar: volume rocker ABSENT")
+                MediaButtonBridge.instance?.refreshVolumePresencePolicy()
+                refresh()
+                Toast.makeText(this, "▲/▼ absent — phone volume no longer pinned", Toast.LENGTH_SHORT).show()
+            }
+            .setNeutralButton(R.string.buttons_teach_reset) { _, _ ->
+                ButtonPresencePrefs.setVolumeRocker(this, ButtonPresence.UNKNOWN)
+                ButtonPresencePrefs.setTrackKeys(this, ButtonPresence.UNKNOWN)
+                LogBus.log("→ teach handlebar: presence reset to UNKNOWN")
+                MediaButtonBridge.instance?.refreshVolumePresencePolicy()
+                refresh()
+                Toast.makeText(this, "Presence reset — will auto-probe again", Toast.LENGTH_SHORT).show()
+            }
+            .show()
     }
 
     private fun pickClusterPreset() {

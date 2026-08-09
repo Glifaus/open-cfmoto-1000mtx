@@ -30,6 +30,9 @@ class PxcHandshake(
      *  socket exists. */
     @Volatile var profile: BikeProfile = BikeProfiles.legacy
         private set
+    /** Rate-limit HU_TIME_SYNC log lines (bike sends ~every 2s). */
+    @Volatile private var lastHuTimeSyncLogAt: Long = 0L
+    @Volatile private var huTimeSyncCount: Int = 0
 
     /**
      * Called when the bike selects a PXC channel on a :10922 socket (CAR_CTRL or CAR_DATA).
@@ -65,12 +68,27 @@ class PxcHandshake(
             PxcFrame.CMD_CHECK_SN_RESULT + 1 -> {
                 // acks from the bike — nothing to do
             }
+            // First-class: never empty-ack 0x10600 (→ 1970 / 00:00 on Morini/Voge/QJ).
+            // Handled here so it cannot regress via profile / uncommitted-only paths.
+            PxcFrame.CMD_HU_TIME_SYNC -> onHuTimeSync(tag, frame, out)
             else -> {
                 if (!profile.handleUnknownControl(tag, frame, out, log)) {
                     log("[$tag] cmd=0x${frame.cmd.toUInt().toString(16)} (${PxcFrame.nameOf(frame.cmd)}) " +
                         "len=${frame.payload.size} ${frame.payload.asText()}")
                 }
             }
+        }
+    }
+
+    private fun onHuTimeSync(tag: String, frame: PxcFrame, out: java.io.OutputStream) {
+        val reply = HuTimeSync.ackPayload(frame.payload)
+        val stamp = String(reply, 16, 29, Charsets.US_ASCII)
+        PxcFrame(PxcFrame.CMD_HU_TIME_SYNC_ACK, reply).write(out)
+        val n = ++huTimeSyncCount
+        val now = System.currentTimeMillis()
+        if (n <= 3 || now - lastHuTimeSyncLogAt >= 30_000L) {
+            lastHuTimeSyncLogAt = now
+            log("[$tag] HU_TIME_SYNC #$n len=${frame.payload.size} → ack 0x10601 phoneTime=$stamp")
         }
     }
 

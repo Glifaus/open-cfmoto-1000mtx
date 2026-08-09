@@ -39,7 +39,7 @@ dash touchscreen.
 
 ### 📸 See it on more bikes — [Dash showcase](docs/SHOWCASE.md)
 
-CFMoto · Voge · Morini · Morbidelli and more — community photos of Android Auto on the dash.
+CFMoto · Voge · Morini · Morbidelli · QJ Motor · GOES and more — community photos of Android Auto on the dash.
 
 </div>
 
@@ -61,7 +61,7 @@ CFMoto · Voge · Morini · Morbidelli and more — community photos of Android 
 | 👆 **Multi-touch** | Two-finger pinch-to-zoom and full tap/scroll straight from the dash touchscreen (ghost-touch filter for noisy digitizers). |
 | 📺 **Dash view** | Big home-screen button — watch and drive the live dash from the phone (touch, pad, fullscreen). |
 | 🎛️ **Controls** | Big home-screen button — on-screen D-pad/knob, media volume, and handlebar-button mapping. |
-| 🕹️ **Handlebar buttons → AA** | On touchless / focus-mode dashes, ◀/▶/★ (or ▲/▼) navigate Android Auto over Bluetooth — tap / hold / ×2 on each, every gesture remappable. |
+| 🕹️ **Handlebar buttons → AA** | On touchless / focus-mode dashes, ◀/▶/★ (or ▲/▼) navigate Android Auto over Bluetooth — snappy singles, tap / hold / ×2, Teach-my-handlebar, every gesture remappable. |
 | 🧭 **Navigate-to + saved places** | Type a destination or map a handlebar button to a saved place for one-press turn-by-turn. |
 | 🎙️ **Voice / Assistant** | Streams your (helmet) mic to Android Auto so "Hey Google" sets a destination hands-free. |
 | ⚡ **One-tap Connect & Auto-connect** | Remembers your bike; reconnects on launch when in range; Wi‑Fi join timeout + auto re-join after ignition cycles. |
@@ -79,7 +79,7 @@ CFMoto · Voge · Morini · Morbidelli and more — community photos of Android 
 | 📶 **Wi‑Fi-off alert** | If phone Wi‑Fi is off when connecting, a dialog offers **Wi‑Fi settings** (one tap). |
 | 🗺️ **Map / GPX** | Free ride, GPX tracks, OSM search/POI, Home/favorites/markers, parked pin, road routing, voice cues — on the bike dash or phone. |
 | 📱 **Mirror phone** | Cast the phone screen when you really need it (screen on; awkward for nav apps). |
-| 🌐 **Languages** | Follows the phone language, or set **per-app** on Android 13+: Settings → Apps → OpenCfMoto → **Language**. Draft DE / IT / FR / ES / PT / PL / CS / RO / NL ([docs/TRANSLATIONS.md](docs/TRANSLATIONS.md)). |
+| 🌐 **Languages** | Follows the phone language, or set **per-app** on Android 13+: Settings → Apps → OpenCfMoto → **Language**. Draft DE / IT / FR / ES / CA / PT / PL / CS / RO / NL / HU / TR ([docs/TRANSLATIONS.md](docs/TRANSLATIONS.md)). |
 
 ---
 
@@ -116,19 +116,23 @@ required. US CRCP and international dashes both work. OpenCfMoto projects **wire
 
 ### Confirmed with OpenCfMoto
 
-**CFMoto:** 800MT (MT‑X / Explore / Explore GT) · 1000 MT‑X · 800NK (US CRCP) · 800NK Advanced ·
-450SR (+ SR‑S / TC) · 450CL‑C / CL‑C450 · **150SC** scooter
+**CFMoto:** 800MT (MT‑X / Explore / Explore GT / **Ibex 800**) · 1000 MT‑X · 800NK (US CRCP) · 800NK Advanced ·
+**675NK** · **675SR‑R** · **700MT Adventure** · **450MT** · 450SR (+ SR‑S / TC) · 450CL‑C / CL‑C450 · **450NK** ·
+**150SC** scooter · **CFORCE 850 / 1000** · **GOES Terrox 1000** / **Gladiator G3 1000** (CFORCE rebadges)
 
-**Other brands:** **Voge DS800 Rally** · **Moto Morini X-Cape 649** · **Moto Morini X-Cape 700** ·
-**Moto Morini Seiemmezzo** · **Morbidelli T1002VX**
+**Other brands:** **Voge DS800 Rally / DS900X** · **Moto Morini X-Cape 649 / 700 / Seiemmezzo** ·
+**Benelli TRK 702 / 702X** · **Rieju 307** · **Zontes 125X** · **Morbidelli T1002VX / T352X** ·
+**QJ Motor SRK800RR / SRK450RR / SRK250RD / SRT 600 / SRV600**
 
 ### Other brands (Carbit / EasyConnect)
 
 Try Connect when the dash shows a pairing QR; report results in Discord:
 
-**Voge** (DS800 Rally confirmed) · **Moto Morini** (X-Cape 649 / 700 / Seiemmezzo confirmed; MotoFun) · **Zontes** ·
-**Benelli** (e.g. TRK 702 / 702X) · **QJ Motor** (e.g. Fort 4.0) · **Morbidelli** / MBP (**T1002VX**
-confirmed) · **Longjia** (e.g. V-Bob 650; MotoFUN / Carbit Ride — unconfirmed, try if QR present)
+**Voge** (DS800 Rally / DS900X confirmed) · **Moto Morini** (X-Cape 649 / 700 / Seiemmezzo confirmed; 1200 SoftAP
+experimental; MotoFun) · **Zontes** (**125X** confirmed) · **Benelli** (e.g. TRK 702 / 702X) · **Rieju** (**307** confirmed) ·
+**QJ Motor** (**SRK800RR / SRK450RR / SRK250RD / SRT 600 / SRV600** confirmed; 550/600SX + Fort 4.0 testing) ·
+**Morbidelli** / MBP (**T1002VX / T352X** confirmed) · **Longjia** (e.g. V-Bob 650; MotoFUN / Carbit Ride —
+unconfirmed, try if QR present) · **Kove** (Thinkerride SoftAP experimental — no dash video yet)
 
 ### Full CFMoto list (summary)
 
@@ -340,6 +344,17 @@ the mirroring link — so you must **pair the phone to the bike over Bluetooth**
 then auto-routes whatever your bike sends — ▲/▼ *volume* on many non-touch dashes, or ◀/▶ *track*
 keys on the 800MT 5-way — into those gestures.
 
+**Quick setup (intuitive path)**
+
+1. Pair **Bluetooth** phone ↔ bike (audio / hands-free).
+2. Open **Controls → Customize buttons** — the top line shows the **live connected BT device**
+   (tap it to open system Bluetooth settings if nothing is connected).
+3. **Apply cluster preset…** for your left pod (photos below), or leave defaults.
+4. Tap **Teach my handlebar…** if ▲/▼ never move focus (or the phone volume feels “stuck”):
+   mark **▲/▼ absent** so we stop pinning music volume waiting for rockers the bike never sends.
+   Leave *untested* and we’ll auto-mark absent after ~90 s of streaming with no ▲/▼ events.
+5. Ride — **singles fire immediately** (snappy); a second tap in the double-tap window still runs ×2.
+
 #### Which left switch do you have?
 
 CFMOTO ships more than one left pod. **Doubles and long-press are not equal across them** — pick the
@@ -448,18 +463,29 @@ Preset **MODE / ENT cluster** — all nine rows:
 ##### Shared tips (every cluster)
 
 - Every gesture stays **remappable** after a preset (knob, D-pad, select, back, home, Assistant, do-nothing, or *navigate to a saved place*).
+- **Snappy singles** — a single press runs its action **immediately**; a second press in the
+  double-tap window still fires ×2. (No lag waiting to guess tap vs double.)
+- **Teach my handlebar** — on the mapping screen: mark which sources this bike actually sends
+  (▲/▼ volume rocker vs ◀/▶ track keys). Marking ▲/▼ **absent** stops the “volume hostage”
+  (phone music volume pinned forever when firmware never emits rocker events — common on some
+  NK Adventure units). Per-bike; reset anytime.
+- **Live Bluetooth line** — mapping screen shows the *currently connected* audio device, not an
+  old paired headset. Tap the line → system Bluetooth settings.
 - **On-screen pad + Navigate to…** — Controls also has a D-pad, rotary knob, and a **"Navigate to…"** box. Save up to three places and map them to a handlebar button for **one-press** navigation with the phone in your pocket (*Display over other apps* required for background launch — the app prompts you when a nav button is mapped).
 - **Voice** — map any gesture (or tap **Voice**) to the Assistant; OpenCfMoto streams the mic to Android Auto (grant microphone when asked).
+- **Link drops** — auto-recovery re-probes the bike with a larger reconnect budget and faster early
+  retries; after the budget is spent, the watchdog re-arms so a bike back in range can link again
+  without a full Stop → Connect (Setup → auto-recovery must stay on).
 
 ##### Tune timing & verify in Logs
 
 Changes apply on the **next press** (no reconnect).
 
 1. **Setup → Handlebar**
-   - **Double-tap delay** — `200 ms` · `300 ms` (default) · `450 ms` · `1000 ms` (slow doubles). Longer = easier ×2 when each physical click is slow; singles wait that long unless the cluster fires them instantly.
+   - **Double-tap delay** — `200 ms` · `300 ms` (default) · `450 ms` · `1000 ms` (slow doubles). Longer = easier ×2 when each physical click is slow. With snappy singles (default), the single action still fires immediately; this window only decides when a second press upgrades to ×2.
    - **Hold detection** — On (default) or **Off**. Turn **Off** when a long physical press must still count as a tap / ×2 (otherwise Hold delay eats it). Pair with `1000 ms` double-tap if needed.
    - **Hold delay** — `500 ms` · `600 ms` (default) · `800 ms`. Ignored when Hold detection is Off.
-2. **Controls → Customize buttons** — remap any of the 9 gestures; use **Apply cluster preset…** first if you changed bikes.
+2. **Controls → Customize buttons** — remap any of the 9 gestures; use **Apply cluster preset…** first if you changed bikes; run **Teach my handlebar…** if rockers never arrive.
 3. **Diagnostics (home → Logs)** while projecting with *Handlebar buttons drive Android Auto* **ON** — press the bars and watch for `[BTN]` lines:
 
 | Log line | Meaning |
@@ -472,6 +498,8 @@ Changes apply on the **next press** (no reconnect).
 | `Backward ×2 → …` / `Forward ×2 → …` / `Select ×2 → …` | Double-tap fired and ran its mapped action |
 | `Backward (hold) → …` / `Forward (hold) → …` / `Select (hold) → …` | Hold fired and ran its mapped action |
 | `Backward → Knob back` (etc.) | Single tap committed |
+| `volume rocker marked PRESENT` / `ABSENT` | Teach / auto-probe decided whether to pin phone volume |
+| `skip pin … volume rocker ABSENT` | Volume hostage off — phone volume behaves normally |
 
 **How to tune from the log**
 
@@ -479,6 +507,7 @@ Changes apply on the **next press** (no reconnect).
 - Hold always shows `held 80ms → tap`: the bike isn’t keeping the key down — set that hold row to *Do nothing* (typical BACK/SET).
 - Hold shows `held 550ms → tap` with delay at 600: drop **Hold delay** to **500 ms**, or hold a bit longer.
 - No `[BTN]` lines at all: Bluetooth not paired / capture switch off / music app stole focus (see below — look for `reclaiming media buttons`).
+- Phone volume stuck / no ▲▼ nav: **Teach my handlebar → ▲/▼ absent**, or wait for auto-absent after ~90 s streaming.
 
 ##### Handlebar buttons vs music apps
 

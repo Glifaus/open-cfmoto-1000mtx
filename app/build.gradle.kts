@@ -1,4 +1,4 @@
-plugins {
+﻿plugins {
     alias(libs.plugins.android.application)
 }
 
@@ -10,12 +10,15 @@ android {
         }
     }
 
+    // Slim is the default ship shape: arm64-only + R8. Opt out with -PslimApk=false (fat debug/CI).
+    val slimApk = (project.findProperty("slimApk") as String?)?.equals("false", ignoreCase = true) != true
+
     defaultConfig {
         applicationId = "dev.zanderp.opencfmoto"
         minSdk = 29
         targetSdk = 36
-        versionCode = 36
-        versionName = "2.0.6"
+        versionCode = 62
+        versionName = "2.0.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -33,11 +36,29 @@ android {
             ?: System.getenv("TELEMETRY_URL")
             ?: "https://opencfmoto-telemetry.hello-3d9.workers.dev"
         buildConfigField("String", "TELEMETRY_URL", "\"$telemetryUrl\"")
+
+        // Short git hash for Share Logs triage (configuration-cache safe).
+        val gitHash = providers.exec {
+            commandLine("git", "rev-parse", "--short", "HEAD")
+            workingDir(rootProject.projectDir)
+            isIgnoreExitValue = true
+        }.standardOutput.asText.map { text ->
+            val t = text.trim()
+            if (t.matches(Regex("[0-9a-f]{4,40}"))) t else "unknown"
+        }.orElse("unknown")
+        buildConfigField("String", "GIT_HASH", "\"${gitHash.get()}\"")
+
+        if (slimApk) {
+            ndk {
+                abiFilters += listOf("arm64-v8a")
+            }
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = slimApk
+            isShrinkResources = slimApk
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }

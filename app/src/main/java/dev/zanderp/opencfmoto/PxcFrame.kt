@@ -80,6 +80,11 @@ data class PxcFrame(val cmd: Int, val payload: ByteArray) {
         // advertised ports is not required for a stable link (see Nk800 dual-heartbeat fix).
         const val CMD_SOCK_SERVER_INFO     = 0x104a0
         const val CMD_SOCK_SERVER_INFO_ACK = 0x104a1
+        // Bike→phone wall-clock / keepalive (~2s). Payload: 16-byte header +
+        // "yyyy-MM-dd HH:mm:ss.SSS000000" (29 ASCII). Bikes with supportSyncCorrectTime
+        // apply the 0x10601 ack body — empty ack → epoch/1970 on Morini/Voge. Reply with phone time.
+        const val CMD_HU_TIME_SYNC         = 0x10600
+        const val CMD_HU_TIME_SYNC_ACK     = 0x10601
 
         // PXC application-level commands (sent AFTER channel selection completes).
         const val CMD_CLIENT_INFO         = 65552      // 0x10010   C2P (both directions)
@@ -99,6 +104,8 @@ data class PxcFrame(val cmd: Int, val payload: ByteArray) {
             CMD_MEDIA_FEATURE_CFG      -> "MEDIA_FEATURE_CFG (CFDL26)"
             CMD_SOCK_SERVER_INFO       -> "SOCK_SERVER_INFO"
             CMD_SOCK_SERVER_INFO_ACK   -> "SOCK_SERVER_INFO_ACK"
+            CMD_HU_TIME_SYNC           -> "HU_TIME_SYNC"
+            CMD_HU_TIME_SYNC_ACK       -> "HU_TIME_SYNC_ACK"
             CMD_CLIENT_INFO            -> "CLIENT_INFO (PXC)"
             CMD_REMOTE_AUTH_RESULT     -> "REMOTE_AUTH_RESULT"
             CMD_AUTH_HUID              -> "AUTH_HUID"

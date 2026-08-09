@@ -36,9 +36,21 @@ object ButtonTimingPrefs {
     private const val KEY_DOUBLE = "double_tap_ms"
     private const val KEY_LONG = "long_press_ms"
     private const val KEY_HOLDS = "holds_enabled"
+    private const val KEY_SNAPPY = "snappy_singles"
 
     private fun prefs(ctx: Context) =
         ctx.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+
+    /**
+     * Fire the single action immediately; a second tap in the double window still runs ×2.
+     * Default on (same as every cluster preset). Off = wait the full double window before
+     * committing a single — only useful when ×2 must never race a single.
+     */
+    fun snappySingles(ctx: Context): Boolean = prefs(ctx).getBoolean(KEY_SNAPPY, true)
+
+    fun setSnappySingles(ctx: Context, enabled: Boolean) {
+        prefs(ctx).edit().putBoolean(KEY_SNAPPY, enabled).apply()
+    }
 
     fun doubleTap(ctx: Context): DoubleTapDelay {
         val ms = prefs(ctx).getLong(KEY_DOUBLE, DoubleTapDelay.NORMAL.ms)

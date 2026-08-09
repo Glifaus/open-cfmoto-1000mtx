@@ -78,7 +78,8 @@ class MainActivity : AppCompatActivity() {
         }
         log(
             "QR parsed: ssid=${qr.ssid} mac=${qr.mac} action=${qr.action} " +
-                "(ap=${qr.supportsAp}, p2p=${qr.supportsP2p}) modelId=${qr.modelId} sn=${qr.sn}"
+                "(ap=${qr.supportsAp}, p2p=${qr.supportsP2p}, hotspot=${qr.supportsPhoneHotspot}) " +
+                "modelId=${qr.modelId} sn=${qr.sn}"
         )
         // Remember this bike so the next ride is a one-tap reconnect (skips the scan entirely).
         BikeMemory.save(this, raw, qr)
@@ -175,6 +176,9 @@ class MainActivity : AppCompatActivity() {
     private fun startAaFlow(qr: QrData) {
         try {
             if (!WifiGate.ensureEnabledOrPrompt(this)) return
+            // AA Connect needs Nearby + Bluetooth so HUR (START_WIRELESS_PROJECTION) can run when
+            // WirelessStartupActivity is a no-op (common on AA 16.4+/17.4+). Mirror/Map unchanged.
+            if (!ensureNearbyBtForAaConnect()) return
             // Map / Mirror / stale PXC must die first — half-switches leave framesSent=0.
             tearDownForModeSwitch(clearMap = true, clearMirror = true)
             applyProfile(qr)
@@ -192,6 +196,7 @@ class MainActivity : AppCompatActivity() {
                 AaVideoBridge.onSteadyVideo = null
                 ConnectionState.set(Phase.AA_VIDEO_LIVE)
                 LogBus.log("→ Android Auto video is live")
+                AndroidAutoService.upgradeForegroundForMicrophone()
                 BikeLink.markAaVideoSteady()
             }
             AndroidAutoService.start(this)
@@ -209,12 +214,7 @@ class MainActivity : AppCompatActivity() {
             // Additive retry for AA 16.4+/17.4+ that ignore the first broadcast — skipped if
             // a session is already live (re-firing START_WIRELESS_PROJECTION kills AAP).
             logView.postDelayed({
-                val p = ConnectionState.phase
-                if (AaVideoBridge.aaSessionLive || AaVideoBridge.aaDecoding ||
-                    p == Phase.AA_VIDEO_LIVE || p == Phase.PXC_CONNECTING || p == Phase.STREAMING ||
-                    p == Phase.IDLE || p == Phase.STOPPED || p == Phase.ERROR ||
-                    p == Phase.MIRRORING
-                ) {
+                if (aaAlreadyLiveOrTerminal()) {
                     if (AaVideoBridge.aaSessionLive || AaVideoBridge.aaDecoding) {
                         log("[AA] skip re-trigger — AA already connected/decoding")
                     }
@@ -227,12 +227,93 @@ class MainActivity : AppCompatActivity() {
                     log("AA self-mode re-trigger failed: $e")
                 }
             }, 4_500)
+            // Give up the silent black/QR reconnect loop — surface a clear error after several tries.
+            logView.postDelayed({
+                val p = ConnectionState.phase
+                if (p == Phase.IDLE || p == Phase.STOPPED || p == Phase.ERROR ||
+                    p == Phase.STREAMING || p == Phase.MIRRORING
+                ) return@postDelayed
+                if (AaVideoBridge.aaSessionLive || AaVideoBridge.aaDecoding) return@postDelayed
+                // Still no AA after retries — stop thrashing (bike SoftAP may already be up).
+                log("[AA] Android Auto never attached — stopping silent retry")
+                ConnectionState.set(Phase.ERROR, getString(R.string.conn_detail_aa_not_started))
+            }, 18_000)
             // Kick off the Wi-Fi join right away, in parallel with AA boot.
             joinWifi(qr, gateOnAaSteady = true)
         } catch (e: Exception) {
             log("Connect failed (app stays open): $e")
             CrashGuard.persistSession(this)
             ConnectionState.set(Phase.ERROR, getString(R.string.conn_detail_connect_failed))
+        }
+    }
+
+    private fun aaAlreadyLiveOrTerminal(): Boolean {
+        val p = ConnectionState.phase
+        return AaVideoBridge.aaSessionLive || AaVideoBridge.aaDecoding ||
+            p == Phase.AA_VIDEO_LIVE || p == Phase.PXC_CONNECTING || p == Phase.STREAMING ||
+            p == Phase.IDLE || p == Phase.STOPPED || p == Phase.ERROR ||
+            p == Phase.MIRRORING
+    }
+
+    /**
+     * Block AA Connect until Nearby (API 31+) is granted and Bluetooth is on — otherwise HUR
+     * never runs and Activity/Receiver alone often leave SoftAP up with no AA on the phone.
+     */
+    private fun ensureNearbyBtForAaConnect(): Boolean {
+        if (dev.zanderp.opencfmoto.aa.AaSelfMode.canAttemptHur(this)) return true
+        val needNearby = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) !=
+            PackageManager.PERMISSION_GRANTED
+        if (needNearby) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.BLUETOOTH_CONNECT,
+                    Manifest.permission.BLUETOOTH_SCAN,
+                ),
+                REQ_BT_FOR_AA,
+            )
+            log("→ Nearby/Bluetooth required for AA Connect — waiting for grant + BT on")
+        } else {
+            log("→ Bluetooth is off — turn it on, then tap Connect again")
+        }
+        ConnectionState.set(Phase.ERROR, getString(R.string.conn_detail_need_bluetooth))
+        showNearbyBtForAaDialog(needNearby)
+        return false
+    }
+
+    private fun showNearbyBtForAaDialog(needNearby: Boolean) {
+        if (isFinishing || isDestroyed) return
+        try {
+            val msg = if (needNearby) {
+                getString(R.string.main_aa_need_nearby_message)
+            } else {
+                getString(R.string.main_aa_need_bt_on_message)
+            }
+            com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.main_aa_need_nearby_title)
+                .setMessage(msg)
+                .setPositiveButton(R.string.main_aa_need_nearby_settings) { _, _ ->
+                    try {
+                        if (needNearby) {
+                            startActivity(
+                                Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                                    .setData(Uri.fromParts("package", packageName, null)),
+                            )
+                        } else {
+                            startActivity(Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS))
+                        }
+                    } catch (_: Exception) {
+                        try {
+                            startActivity(Intent(android.provider.Settings.ACTION_SETTINGS))
+                        } catch (_: Exception) {
+                        }
+                    }
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+        } catch (e: Exception) {
+            log("Nearby/BT dialog failed: $e")
         }
     }
 
@@ -552,7 +633,9 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btn_clear).setOnClickListener {
             LogBus.clear()
+            CrashGuard.clearSession(this)
             logView.text = ""
+            LogBus.logSessionBanner()
         }
 
         log("Ready. Tap Connect to project Android Auto to your dash.")
@@ -904,26 +987,48 @@ class MainActivity : AppCompatActivity() {
         if (!WifiGate.ensureEnabledOrPrompt(this)) return
         ConnectionState.set(Phase.JOINING_WIFI)
         val transport = AppSettings.transport(this)
-        // AUTO: only use Wi‑Fi Direct when the QR SSID is a real P2P group name (DIRECT-…).
-        // Some bikes (e.g. QJ Motor) set action=P2P-only but advertise a normal SoftAP name
-        // like "qj-5G-…"; P2P credential-join rejects those and we waste 25s before AP fallback.
-        val useP2p = when (transport) {
-            WifiTransport.P2P -> true
-            WifiTransport.AP -> false
-            WifiTransport.AUTO -> qr.ssid.startsWith("DIRECT-", ignoreCase = true) &&
-                (qr.supportsP2p || !qr.supportsAp)
-        }
-        if (useP2p) {
-            joinWifiP2p(qr, gateOnAaSteady)
+        // Phone-hosts-hotspot (Zontes action=128 / no SoftAP pwd): dash joins the phone.
+        if (qr.supportsPhoneHotspot && qr.pwd.isEmpty()) {
+            joinPhoneHotspot(qr, gateOnAaSteady)
             return
         }
-        if (transport == WifiTransport.AUTO && qr.supportsP2p && !qr.supportsAp &&
-            !qr.ssid.startsWith("DIRECT-", ignoreCase = true)
-        ) {
+        // AUTO: P2P when the QR is P2P-only (incl. non-DIRECT SSIDs — join by MAC), or DIRECT-*.
+        // SoftAP fallback remains in joinWifiP2p.onFailed for SoftAP-capable units.
+        // Never force P2P when the QR is SoftAP-only (action bit3 clear) — Setup→P2P on those
+        // bikes only burns 25s then falls back (Benelli TRK / bj* SSIDs in the field).
+        val useP2p = when (transport) {
+            WifiTransport.P2P -> qr.supportsP2p || !qr.supportsAp
+            WifiTransport.AP -> false
+            WifiTransport.AUTO ->
+                (qr.supportsP2p && !qr.supportsAp) ||
+                    (qr.ssid.startsWith("DIRECT-", ignoreCase = true) &&
+                        (qr.supportsP2p || !qr.supportsAp))
+        }
+        if (transport == WifiTransport.P2P && !useP2p) {
             log(
-                "→ QR says P2P-only but SSID '${qr.ssid}' is not DIRECT-* — " +
-                    "joining as SoftAP (Setup → P2P if this bike is truly Wi‑Fi Direct)",
+                "→ Setup Wi‑Fi transport is P2P but QR is SoftAP-only " +
+                    "(action=${qr.action} ssid=${qr.ssid}) — joining SoftAP instead",
             )
+        }
+        if (useP2p) {
+            val isDirect = qr.ssid.startsWith("DIRECT-", ignoreCase = true)
+            // P2P-only QRs with a SoftAP-style SSID but no MAC burn ~40s on MAC ERROR
+            // (Voge-5G / ZT5G / etc.). Prefer SoftAP immediately when we have a password.
+            if (!isDirect && qr.mac.isNullOrBlank() && qr.pwd.isNotEmpty()) {
+                log(
+                    "→ QR says P2P-only; SSID '${qr.ssid}' has no MAC — " +
+                        "joining SoftAP first (skip Wi‑Fi Direct by MAC)",
+                )
+            } else {
+                if (!isDirect) {
+                    log(
+                        "→ QR says P2P-only; SSID '${qr.ssid}' is not DIRECT-* — " +
+                            "trying Wi‑Fi Direct by MAC (then SoftAP fallback)",
+                    )
+                }
+                joinWifiP2p(qr, gateOnAaSteady)
+                return
+            }
         }
         BikeWifi.reuseOrJoin(
             context = applicationContext,
@@ -950,7 +1055,131 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    /** Wi‑Fi Direct Group Owner path (CL‑C450 / some DIRECT- SSIDs). */
+    /**
+     * Dash is the Wi‑Fi client (Carbit `action=128`). Android cannot create a hotspot with the
+     * dash SSID/password for us — show assist dialog, open tether settings, then poll for EasyConn.
+     */
+    private fun joinPhoneHotspot(qr: QrData, gateOnAaSteady: Boolean) {
+        LogBus.log(
+            "→ phone-hotspot mode (action=${qr.action} mac=${qr.mac}) — " +
+                "assist dialog (app cannot create AP; set dash SSID/pwd in system hotspot)",
+        )
+        ConnectionState.set(Phase.JOINING_WIFI, getString(R.string.main_phone_hotspot_status))
+        PhoneHotspotAssist.showSetupDialog(
+            activity = this,
+            qr = qr,
+            onContinue = { startPhoneHotspotScan(gateOnAaSteady) },
+            onCancel = {
+                ConnectionState.set(Phase.ERROR, getString(R.string.main_phone_hotspot_cancelled))
+            },
+        )
+    }
+
+    /** Poll for tether iface (~45s) then NSD / subnet EasyConn scan. */
+    private fun startPhoneHotspotScan(gateOnAaSteady: Boolean) {
+        val creds = PhoneHotspotAssist.loadCreds(this)
+        if (creds.ssid.isNotEmpty()) {
+            Toast.makeText(
+                this,
+                getString(R.string.main_phone_hotspot_waiting_named, creds.ssid),
+                Toast.LENGTH_LONG,
+            ).show()
+        } else {
+            Toast.makeText(this, R.string.main_phone_hotspot_hint, Toast.LENGTH_LONG).show()
+        }
+        ConnectionState.set(Phase.JOINING_WIFI, getString(R.string.main_phone_hotspot_status))
+        Thread({
+            try {
+                var subnets = emptyList<PhoneHotspotScan.Subnet>()
+                val pollRounds = 30 // ~45s at 1.5s
+                for (i in 0 until pollRounds) {
+                    if (ConnectionState.phase == Phase.STOPPED) return@Thread
+                    subnets = PhoneHotspotScan.tetheringSubnets()
+                    if (subnets.isNotEmpty()) break
+                    if (i == 0 || i % 5 == 0) {
+                        LogBus.log(
+                            "[HOTSPOT] waiting for tether interface… " +
+                                "(${i + 1}/$pollRounds) set Android hotspot" +
+                                creds.ssid.takeIf { it.isNotEmpty() }?.let { " SSID='$it'" }.orEmpty(),
+                        )
+                    }
+                    try {
+                        Thread.sleep(1_500)
+                    } catch (_: InterruptedException) {
+                        return@Thread
+                    }
+                }
+                if (subnets.isEmpty()) {
+                    LogBus.log(
+                        "[HOTSPOT] no tether interface after wait — open hotspot settings " +
+                            "and set the dash SSID/password, then Connect again",
+                    )
+                    runOnUiThread {
+                        ConnectionState.set(Phase.ERROR, getString(R.string.main_phone_hotspot_no_iface))
+                        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                            .setTitle(R.string.main_phone_hotspot_dialog_title)
+                            .setMessage(R.string.main_phone_hotspot_no_iface)
+                            .setPositiveButton(R.string.main_phone_hotspot_open_settings) { _, _ ->
+                                PhoneHotspotAssist.openHotspotSettings(this)
+                            }
+                            .setNegativeButton(android.R.string.ok, null)
+                            .show()
+                    }
+                    return@Thread
+                }
+                val subnet = subnets.first()
+                LogBus.log(
+                    "[HOTSPOT] using ${subnet.interfaceName} " +
+                        "${subnet.localAddress.hostAddress}/${subnet.prefixLength}",
+                )
+                // Prefer NSD first (works when multicast reaches the tether iface).
+                val nsd = EasyConnDiscovery.discoverNsd(applicationContext, LogBus::log)
+                val peer = nsd?.host
+                    ?: PhoneHotspotScan.findEasyConnPeer(subnet, LogBus::log)
+                if (peer == null) {
+                    runOnUiThread {
+                        ConnectionState.set(Phase.ERROR, getString(R.string.main_phone_hotspot_no_peer))
+                        Toast.makeText(
+                            this,
+                            getString(R.string.main_phone_hotspot_no_peer),
+                            Toast.LENGTH_LONG,
+                        ).show()
+                    }
+                    return@Thread
+                }
+                val bindIp = subnet.localAddress
+                runOnUiThread {
+                    WifiGate.cancelNotification(applicationContext)
+                    if (gateOnAaSteady) {
+                        LogBus.log(
+                            "→ hotspot peer ${peer.hostAddress} (waiting for AA); " +
+                                "bind=${bindIp.hostAddress}",
+                        )
+                        BikeLink.markP2pReady(bindIp, peer)
+                    } else {
+                        ConnectionState.set(Phase.PXC_CONNECTING)
+                        LogBus.log("→ hotspot peer ${peer.hostAddress}; starting EasyConn PXC …")
+                        try {
+                            (BikeLink.prober ?: prober).start(
+                                network = null,
+                                gatewayOverride = peer,
+                                bindIpOverride = bindIp,
+                            )
+                        } catch (e: Exception) {
+                            LogBus.log("prober start failed: $e")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                LogBus.log("[HOTSPOT] failed: $e")
+                runOnUiThread {
+                    ConnectionState.set(Phase.ERROR, "hotspot scan failed")
+                }
+            }
+        }, "phone-hotspot-scan").apply { isDaemon = true }.start()
+    }
+
+    /** Wi‑Fi Direct Group Owner path (CL‑C450 / some DIRECT- SSIDs / Zontes MAC join). */
     private fun joinWifiP2p(qr: QrData, gateOnAaSteady: Boolean) {
         if (!WifiGate.ensureEnabledOrPrompt(this)) return
         LogBus.log("→ joining via Wi‑Fi Direct (P2P)")
@@ -977,6 +1206,11 @@ class MainActivity : AppCompatActivity() {
                 }
             },
             onFailed = { reason ->
+                if (qr.pwd.isEmpty() || qr.ssid.startsWith("PHONE-HOTSPOT", ignoreCase = true)) {
+                    LogBus.log("P2P join failed: $reason — no SoftAP credentials to fall back to")
+                    ConnectionState.set(Phase.ERROR, "Wi‑Fi Direct failed")
+                    return@connect
+                }
                 LogBus.log("P2P join failed: $reason — falling back to AP join")
                 if (!WifiGate.ensureEnabledOrNotify(applicationContext)) return@connect
                 BikeWifi.join(
@@ -1183,6 +1417,21 @@ class MainActivity : AppCompatActivity() {
      * otherwise start mirror flow (consent then connect).
      */
     private fun onMirrorPressed() {
+        // parsec82 TRK 702 X (2026-07-30): tapping Mirror again while frames were still flowing
+        // tore down a live PXC session (freeze → second tap recovery). Ignore duplicate taps
+        // when mirroring and we sent a frame recently; allow retry when stalled/frozen.
+        val mirroring =
+            ConnectionState.phase == Phase.MIRRORING || ConnectionState.phase == Phase.RECONNECTING
+        val ms = BikeLink.prober?.msSinceLastFrame() ?: Long.MAX_VALUE
+        if (mirroring && ms < 15_000L) {
+            log("→ Mirror: already mirroring (last frame ${ms}ms ago) — ignore duplicate tap")
+            Toast.makeText(
+                this,
+                "Already mirroring — wait for the dash, or tap Stop first",
+                Toast.LENGTH_SHORT,
+            ).show()
+            return
+        }
         log("→ Mirror: cast phone screen to dash")
         pendingAaStart = false
         ensureLocationPermission()
@@ -1327,7 +1576,10 @@ class MainActivity : AppCompatActivity() {
     private fun shareProblemReport(problem: String, model: String, year: String) {
         try {
             val diagnostics = buildString {
-                appendLine("app=${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+                appendLine(
+                    "app=${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) " +
+                        "git=${BuildConfig.GIT_HASH}",
+                )
                 appendLine("profile=${BikeProfileHolder.active.name}")
                 appendLine("override=${BikeProfileHolder.profileOverride}")
                 appendLine("transport=${AppSettings.transport(this@MainActivity).label}")
@@ -1430,6 +1682,7 @@ class MainActivity : AppCompatActivity() {
         const val EXTRA_START_GPX = "start_gpx"
         /** When set with [EXTRA_START_GPX], join the bike even if not already live. */
         const val EXTRA_GPX_TO_BIKE = "gpx_to_bike"
+        private const val REQ_BT_FOR_AA = 4
         /** Latched once an auto-connect attempt actually starts, so it fires only once per process. */
         @Volatile private var autoConnectStarted = false
         /** So the "idle/not-in-range" reason is logged once, not on every onResume retry. */

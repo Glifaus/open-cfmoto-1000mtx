@@ -223,7 +223,7 @@ control frame with `cmd+1`.** Frames observed on the CAR_DATA (:10922) connectio
 | `0x103a0` | OTA_FTP_INFO | `{port:11021,userName:"carbit_ec_ftp_ota",pwd:"$Siwei2018@"}` | the bike's own Carbit FTP server (§7.4) |
 | `0x10020` | MEDIA_FEATURE_CFG | `{music,talkie,tts,vr,autoChangeToBT}` | audio/feature flags |
 | `0x10040` | — | `{maxNaviIcon:161,supportFunction:0}` | |
-| `0x10600` | — | binary + timestamp | **repeats ~every 2s** — a clock/keepalive; keep acking |
+| `0x10600` | HU_TIME_SYNC | 16-byte LE header + `yyyy-MM-dd HH:mm:ss.SSS000000` | **~every 2s** when `supportSyncCorrectTime`; reply `0x10601` with **phone** wall-clock in the same layout (empty ack → epoch/1970 on Morini/Voge) |
 | `0x10750` | — | empty | repeats periodically |
 | `0x10430`,`0x10450` | — | empty | |
 | `0x10460` | — | `{bluetooth:4129}` | |

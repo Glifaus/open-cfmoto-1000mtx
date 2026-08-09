@@ -26,10 +26,36 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:layout_marginBottom="12dp"
             android:text="@string/buttons_choose_what_each_handlebar_gesture_does_in_andro"
             android:textColor="@color/text_secondary"
             android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tv_bt_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="?attr/selectableItemBackground"
+            android:paddingVertical="6dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:text="@string/buttons_bt_status_placeholder" />
+
+        <TextView
+            android:id="@+id/tv_presence"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_teach_handlebar"
+            style="@style/Widget.OpenCfMoto.Segment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:text="@string/buttons_teach_handlebar" />
 
         <!-- ===== Cluster preset ===== -->
         <com.google.android.material.card.MaterialCardView

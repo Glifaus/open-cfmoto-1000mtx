@@ -2,6 +2,7 @@ package dev.zanderp.opencfmoto
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
@@ -35,6 +36,14 @@ object BluetoothHelper {
             )
             else -> context.getString(R.string.setup_bt_not_connected)
         }
+
+        /** Short line for the mapping screen header. */
+        fun shortLine(): String = when {
+            !supported -> "Bluetooth: not available"
+            !enabled -> "Bluetooth: off — tap to open settings"
+            connected -> "BT connected: ${deviceName ?: "audio device"}"
+            else -> "BT: on, no audio device connected — tap to pair"
+        }
     }
 
     fun status(context: Context): Status {
@@ -51,13 +60,41 @@ object BluetoothHelper {
         val headset = adapter.getProfileConnectionState(BluetoothProfile.HEADSET)
         val connected = a2dp == BluetoothProfile.STATE_CONNECTED || headset == BluetoothProfile.STATE_CONNECTED
 
-        val name = if (connected) {
-            try {
-                adapter.bondedDevices?.firstOrNull { it.name != null }?.name
-            } catch (_: SecurityException) { null }
-        } else null
+        val name = if (connected) liveConnectedName(adapter) else null
 
         return Status(supported = true, enabled = adapter.isEnabled, connected = connected, deviceName = name)
+    }
+
+    /**
+     * Name of a *currently connected* bonded device (not “first paired ever”). Uses the hidden
+     * [BluetoothDevice.isConnected] when present; prefers bike-looking names if several are up.
+     */
+    private fun liveConnectedName(adapter: BluetoothAdapter): String? {
+        return try {
+            val bonded = adapter.bondedDevices ?: return null
+            val live = bonded.filter { it.isConnectedCompat() && !it.name.isNullOrBlank() }
+            val pool = if (live.isNotEmpty()) live else bonded.filter { !it.name.isNullOrBlank() }
+            val bikeish = pool.firstOrNull { d ->
+                val n = d.name ?: return@firstOrNull false
+                n.contains("CFMOTO", ignoreCase = true) ||
+                    n.contains("CFDL", ignoreCase = true) ||
+                    n.contains("Bike", ignoreCase = true) ||
+                    n.contains("Moto", ignoreCase = true) ||
+                    n.contains("VOGE", ignoreCase = true) ||
+                    n.contains("QJ", ignoreCase = true)
+            }
+            (bikeish ?: pool.firstOrNull())?.name
+        } catch (_: SecurityException) {
+            null
+        }
+    }
+
+    /** Hidden BluetoothDevice.isConnected() — public on some OEMs / via reflection elsewhere. */
+    private fun BluetoothDevice.isConnectedCompat(): Boolean = try {
+        val m = javaClass.getMethod("isConnected")
+        m.invoke(this) as? Boolean == true
+    } catch (_: Exception) {
+        false
     }
 
     /** True if we hold BLUETOOTH_CONNECT (Android 12+) — needed to read state/names. */

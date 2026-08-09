@@ -76,7 +76,9 @@ class AndroidAutoService : Service() {
                 // Map Presentation only — do NOT start the AA receiver here. Starting AA would
                 // publish AaVideoBridge.pipeline and steal the bike's next REQ_RV_DATA_START away
                 // from the owned GPX VideoPipeline (blank / stuck "connected" dash).
-                startAsForeground()
+                if (!tryStartAsForeground(allowMicrophone = false)) {
+                    return START_NOT_STICKY
+                }
                 ensureMediaButtons()
                 startWatchdog()
                 isRunning = true
@@ -86,7 +88,13 @@ class AndroidAutoService : Service() {
                 return START_STICKY
             }
         }
-        startAsForeground()
+        // Sticky/null-action restarts (Intent FLAG_FROM_BACKGROUND) must not claim the microphone
+        // FGS type — targetSdk 36 throws and AMS crash-loops the service.
+        val stickyRestart = intent == null || (flags and START_FLAG_REDELIVERY) != 0 ||
+            (intent.flags and Intent.FLAG_FROM_BACKGROUND) != 0
+        if (!tryStartAsForeground(allowMicrophone = !stickyRestart)) {
+            return START_NOT_STICKY
+        }
         startReceiver()
         startWatchdog()
         isRunning = true
@@ -405,7 +413,15 @@ class AndroidAutoService : Service() {
         updateNotification(getString(R.string.notif_bike_reconnected), hint, resume = true)
     }
 
-    fun updateForegroundType() {
+    /**
+     * Promote to a typed FGS. Prefer the richest type the process is allowed to claim; never call
+     * bare [startForeground] on API 29+ (that inherits all manifest types, including microphone,
+     * and crashes sticky restarts when mic isn't eligible).
+     *
+     * @param allowMicrophone include mic type when RECORD_AUDIO is granted (skip on sticky/bg restart)
+     * @return false if every typed attempt failed — caller should [stopSelf] + START_NOT_STICKY
+     */
+    fun updateForegroundType(allowMicrophone: Boolean = true): Boolean {
         val notification = buildNotification(
             getString(R.string.notif_aa_title),
             getString(R.string.notif_aa_receiving),
@@ -413,40 +429,67 @@ class AndroidAutoService : Service() {
         )
         val hasLocation = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
-        val hasMicrophone = checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
-            PackageManager.PERMISSION_GRANTED
+        val hasMicrophone = allowMicrophone &&
+            checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            var fgType = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-            if (hasLocation) fgType = fgType or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-            if (hasMicrophone && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                fgType = fgType or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-            }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            startForeground(NOTIF_ID, notification)
+            return true
+        }
+
+        // Ladder: richest → safest. Each step is try/caught so a mic/location denial can't kill the process.
+        val candidates = ArrayList<Int>(3)
+        var rich = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+        if (hasLocation) rich = rich or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+        if (hasMicrophone && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            rich = rich or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+        }
+        candidates.add(rich)
+        if (hasMicrophone && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            var noMic = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+            if (hasLocation) noMic = noMic or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+            if (noMic != rich) candidates.add(noMic)
+        }
+        if (hasLocation) {
+            candidates.add(ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
+        }
+        // Always end with connectedDevice-only.
+        if (candidates.last() != ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE) {
+            candidates.add(ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
+        }
+
+        var lastError: Exception? = null
+        for (fgType in candidates.distinct()) {
             try {
                 startForeground(NOTIF_ID, notification, fgType)
                 LogBus.log("[AA] foreground service type updated (fgType=$fgType, mic=$hasMicrophone)")
+                return true
             } catch (e: Exception) {
-                // Mic type can fail on some OEMs — retry without it so AA still comes up.
-                LogBus.log("[AA] startForeground($fgType) failed: $e — retrying without microphone")
-                try {
-                    var fallback = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-                    if (hasLocation) fallback = fallback or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-                    startForeground(NOTIF_ID, notification, fallback)
-                } catch (e2: Exception) {
-                    LogBus.log("[AA] startForeground fallback failed: $e2")
-                    startForeground(NOTIF_ID, notification)
-                }
+                lastError = e
+                LogBus.log("[AA] startForeground($fgType) failed: $e")
             }
-        } else {
-            startForeground(NOTIF_ID, notification)
         }
+        LogBus.log("[AA] startForeground exhausted typed ladder — last: $lastError")
+        return false
     }
 
-    private fun startAsForeground() {
+    /** @return false if FGS promote failed (service should stop, not stick). */
+    private fun tryStartAsForeground(allowMicrophone: Boolean): Boolean {
         ensureChannel()
-        updateForegroundType()
+        if (!updateForegroundType(allowMicrophone)) {
+            LogBus.log("[AA] cannot start foreground service — stopping (won't sticky-loop)")
+            try { stopSelf() } catch (_: Exception) {}
+            return false
+        }
         reacquireLocks()
         LogBus.log("[AA] foreground service up (wake + Wi-Fi locks held)")
+        return true
+    }
+
+    /** Re-promote with mic when the rider/session is clearly foreground-eligible (AA live). */
+    fun upgradeForegroundForMicrophone() {
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) return
+        updateForegroundType(allowMicrophone = true)
     }
 
     private fun startReceiver() {
@@ -484,7 +527,22 @@ class AndroidAutoService : Service() {
     /** Keep AVRCP capture alive for AA and for Map (same ButtonMap presets). */
     private fun ensureMediaButtons() {
         if (mediaButtons != null) return
+        if (!canCaptureHandlebarButtons()) {
+            LogBus.log("[BTN] skipped — Bluetooth off or no Nearby/BLUETOOTH_CONNECT (no focus/volume hijack)")
+            return
+        }
         mediaButtons = MediaButtonBridge(applicationContext, LogBus::log).also { it.start() }
+    }
+
+    /** Handlebar bridge needs BT on + CONNECT (API 31+); otherwise it fights phone media for nothing. */
+    private fun canCaptureHandlebarButtons(): Boolean {
+        if (!BluetoothHelper.hasConnectPermission(applicationContext)) return false
+        return try {
+            val mgr = getSystemService(BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager
+            mgr?.adapter?.isEnabled == true
+        } catch (_: Exception) {
+            false
+        }
     }
 
     /** Stop AA decode/encode only — keep FGS, Wi‑Fi locks, and [MediaButtonBridge]. */
@@ -617,7 +675,7 @@ class AndroidAutoService : Service() {
         private const val WATCHDOG_TICK_MS = 5_000L
         private const val STALL_MS = 8_000L            // no frames this long while STREAMING = stalled
         private const val ACTION_COOLDOWN_MS = 20_000L // min gap between forced reconnects
-        private const val ERROR_COOLDOWN_MS = 30_000L  // min gap between re-arm attempts after ERROR
+        private const val ERROR_COOLDOWN_MS = 20_000L  // min gap between re-arm attempts after ERROR
         private const val GRACE_MS = 60_000L           // keep AA alive this long after Wi-Fi drops
         private const val RESUME_STEADY_TIMEOUT_MS = 12_000L // wait for AA video before falling back
 
@@ -649,7 +707,11 @@ class AndroidAutoService : Service() {
         }
 
         fun updateForegroundType() {
-            active?.updateForegroundType()
+            active?.updateForegroundType(allowMicrophone = true)
+        }
+
+        fun upgradeForegroundForMicrophone() {
+            active?.upgradeForegroundForMicrophone()
         }
 
         /**

@@ -37,6 +37,7 @@ object BikeWifi {
     private var callback: ConnectivityManager.NetworkCallback? = null
     private var request: NetworkRequest? = null
     private val handler = Handler(Looper.getMainLooper())
+    private var appContext: Context? = null
 
     var currentNetwork: Network? = null
         private set
@@ -88,6 +89,7 @@ object BikeWifi {
         handler.removeCallbacksAndMessages(null)
         callback?.let { try { cm.unregisterNetworkCallback(it) } catch (_: Exception) {} }
 
+        this.appContext = context.applicationContext
         this.cm = cm
         this.ssid = ssid
         this.onAvailableCb = onAvailable
@@ -181,6 +183,19 @@ object BikeWifi {
                     "Wi-Fi join unavailable after ${timeoutSec}s " +
                         "(bike off, out of range, declined, or system picker timed out) — will retry",
                 )
+                // First join often means the system Wi‑Fi / Nearby picker was ignored — surface it.
+                if (!firstDelivered) {
+                    logCb?.invoke(
+                        "→ TAP the phone's Wi‑Fi / device picker NOW (SSID of the bike), " +
+                            "or join that network in Settings → Wi‑Fi, then Connect again",
+                    )
+                    try {
+                        val detail = appContext?.getString(R.string.conn_detail_wifi_picker)
+                            ?: "approve the Wi‑Fi / device picker, then Connect again"
+                        ConnectionState.set(Phase.ERROR, detail)
+                    } catch (_: Exception) {
+                    }
+                }
                 // Join timed out with no live Network — make sure we aren't still pinned to a
                 // previous dead bike AP (resume / auto-connect path).
                 if (currentNetwork == null) unbindProcess()
