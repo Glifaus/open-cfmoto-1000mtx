@@ -290,8 +290,10 @@ private fun basePhoneClientInfo(huid: String?, phoneUuid: String, supportFunctio
         put("bluetoothName", "OpenCfMoto")
         put("supportH264IFrame", true)
         put("supportFunction", supportFunction)
-        // Bikes that advertise this expect 0x10601 replies with a wall-clock body (see HuTimeSync).
-        put("supportSyncCorrectTime", true)
+        // Do NOT advertise supportSyncCorrectTime. Claiming it made some firmwares apply our
+        // 0x10601 aggressively (Zontes/Voge → 00:00) even when the cluster clock was already fine.
+        // We still body-ack every inbound 0x10600 (see HuTimeSync) so Morini/QJ never see empty→1970.
+        put("supportSyncCorrectTime", false)
         put("appVersionFingerPrint", "opencfmoto-poc")
     }
 
@@ -300,32 +302,69 @@ private fun basePhoneClientInfo(huid: String?, phoneUuid: String, supportFunctio
  *
  * Live bike payload (45 bytes): little-endian header
  *   i32@0 flags (−2), i32@4 channel/modelId, i32@8 seq, i32@12 0
- * followed by 29 ASCII chars `yyyy-MM-dd HH:mm:ss.SSS000000` (phone local time).
- * Empty 0x10601 made Morini X-Cape / Voge DS800 clocks jump to 1970 / nonsense.
+ * followed by 29 ASCII chars `yyyy-MM-dd HH:mm:ss.SSS000000`.
+ *
+ * Empty 0x10601 → epoch/1970 on Morini/Voge. Blindly rewriting with phone time still left some
+ * Zontes/Voge units at 00:00 (2.0.7/2.0.8). Strategy:
+ *  - if the bike's stamp looks sane (year 2020–2099) → **echo** it (ack without "correcting")
+ *  - otherwise → write phone local wall-clock
+ * Never empty.
  */
 internal object HuTimeSync {
     private const val PAYLOAD_LEN = 45
     private const val TIME_OFF = 16
     private const val TIME_LEN = 29
+    private val stampRe = Regex("""^(\d{4})-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{9}$""")
     private val timeFmt = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).apply {
-        // Phone wall-clock in the rider's timezone (not UTC). Empty 0x10601 → epoch/00:00.
         timeZone = java.util.TimeZone.getDefault()
     }
 
-    fun ackPayload(request: ByteArray): ByteArray {
-        val out = ByteArray(PAYLOAD_LEN)
-        if (request.size >= TIME_OFF) {
-            System.arraycopy(request, 0, out, 0, TIME_OFF)
-        } else {
+    data class Ack(val payload: ByteArray, val mode: String, val stamp: String)
+
+    fun ackPayload(request: ByteArray): ByteArray = ack(request).payload
+
+    fun ack(request: ByteArray): Ack {
+        val len = maxOf(PAYLOAD_LEN, request.size)
+        val out = ByteArray(len)
+        if (request.isNotEmpty()) {
+            System.arraycopy(request, 0, out, 0, minOf(request.size, len))
+        }
+        if (request.size < TIME_OFF) {
             val bb = java.nio.ByteBuffer.wrap(out).order(java.nio.ByteOrder.LITTLE_ENDIAN)
             bb.putInt(-2)
             bb.putInt(0)
             bb.putInt(1)
             bb.putInt(0)
         }
+        val bikeStamp = if (request.size >= TIME_OFF + TIME_LEN) {
+            String(request, TIME_OFF, TIME_LEN, Charsets.US_ASCII)
+        } else {
+            ""
+        }
+        val stamp: String
+        val mode: String
+        if (isSaneStamp(bikeStamp)) {
+            // Keep the bike's own wall-clock bytes (already copied). Avoid phone-format mismatches.
+            stamp = bikeStamp
+            mode = "echo"
+        } else {
+            stamp = phoneStamp()
+            mode = "phone"
+            val ascii = stamp.toByteArray(Charsets.US_ASCII)
+            System.arraycopy(ascii, 0, out, TIME_OFF, minOf(TIME_LEN, ascii.size))
+        }
+        return Ack(out, mode, stamp)
+    }
+
+    internal fun isSaneStamp(stamp: String): Boolean {
+        val m = stampRe.matchEntire(stamp) ?: return false
+        val year = m.groupValues[1].toIntOrNull() ?: return false
+        return year in 2020..2099
+    }
+
+    private fun phoneStamp(): String {
         val ms = System.currentTimeMillis()
-        val stamp = synchronized(timeFmt) {
-            // Refresh TZ in case the rider changed it while connected.
+        return synchronized(timeFmt) {
             timeFmt.timeZone = java.util.TimeZone.getDefault()
             String.format(
                 java.util.Locale.US,
@@ -334,9 +373,6 @@ internal object HuTimeSync {
                 (ms % 1000L).toInt(),
             )
         }
-        val ascii = stamp.toByteArray(Charsets.US_ASCII)
-        System.arraycopy(ascii, 0, out, TIME_OFF, minOf(TIME_LEN, ascii.size))
-        return out
     }
 }
 
@@ -500,10 +536,9 @@ object Cfdl26PortraitProfile : BikeProfile {
         // Bike wall-clock sync (supportSyncCorrectTime). Must carry phone time in the ack body —
         // empty 0x10601 → epoch/1970 on Morini / Voge and unsynced clocks elsewhere.
         if (frame.cmd == PxcFrame.CMD_HU_TIME_SYNC) {
-            val reply = HuTimeSync.ackPayload(frame.payload)
-            val stamp = String(reply, 16, 29, Charsets.US_ASCII)
-            log("[$tag] HU_TIME_SYNC len=${frame.payload.size} → ack 0x10601 phoneTime=$stamp")
-            PxcFrame(PxcFrame.CMD_HU_TIME_SYNC_ACK, reply).write(out)
+            val ack = HuTimeSync.ack(frame.payload)
+            log("[$tag] HU_TIME_SYNC len=${frame.payload.size} → ack 0x10601 mode=${ack.mode} time=${ack.stamp}")
+            PxcFrame(PxcFrame.CMD_HU_TIME_SYNC_ACK, ack.payload).write(out)
             return true
         }
         // After CHECK_SN the CFDL26 unit sends a burst of JSON notify frames the older CFDL16 never

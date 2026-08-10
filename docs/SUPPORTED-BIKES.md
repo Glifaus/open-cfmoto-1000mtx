@@ -87,7 +87,7 @@ promote models to “confirmed.”
 | --- | --- |
 | **Voge** | **DS800 Rally** + **DS900X** confirmed; other EasyConnect TFT models welcome |
 | **Zontes** | **125X confirmed**; other TFT dashes with pairing QR welcome |
-| **Moto Morini** | **X-Cape 649 / 700** and **Seiemmezzo** (incl. 2026) confirmed; **1200** SoftAP joins (keep MotoFun/pairing QR open — EasyConn may not sit on `:10930`). Pairing QR may be `admin.motomorini.com/…?Wifi=SSID#password#mac&MachineID=…&ProductID=…` — supported. Do **not** scan the vehicle info QR (`code:…color:…`). Dash clock jumping to **1970** / unsync after connect: fixed in **2.0.7 vc51+** (`0x10601` phone wall-clock; log `HU_TIME_SYNC … phoneTime=`). |
+| **Moto Morini** | **X-Cape 649 / 700** and **Seiemmezzo** (incl. 2026) confirmed; **1200** SoftAP joins (keep MotoFun/pairing QR open — EasyConn may not sit on `:10930`). Pairing QR may be `admin.motomorini.com/…?Wifi=SSID#password#mac&MachineID=…&ProductID=…` — supported. Do **not** scan the vehicle info QR (`code:…color:…`). Dash clock jumping to **1970** / unsync after connect: hardened in **2.0.9** (`0x10601` echo/phone; log `HU_TIME_SYNC … mode=`). |
 | **Benelli** | TRK 702 / 702X class — SoftAP SSID/password or QR when shown; grant **Nearby devices / Bluetooth** |
 | **Rieju** | **307 confirmed**; other EasyConnect TFTs welcome (`#rieju-307`) |
 | **QJ Motor** | **SRK800RR 2025**, **SRK250RD / SRK450RR 2026**, **SRT/SRV 600** confirmed; **600SX / 550SX (2026) testing**; Fort 4.0 and other EasyConnect TFTs |

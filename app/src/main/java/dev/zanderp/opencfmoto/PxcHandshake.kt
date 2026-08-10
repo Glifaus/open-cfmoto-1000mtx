@@ -81,14 +81,13 @@ class PxcHandshake(
     }
 
     private fun onHuTimeSync(tag: String, frame: PxcFrame, out: java.io.OutputStream) {
-        val reply = HuTimeSync.ackPayload(frame.payload)
-        val stamp = String(reply, 16, 29, Charsets.US_ASCII)
-        PxcFrame(PxcFrame.CMD_HU_TIME_SYNC_ACK, reply).write(out)
+        val ack = HuTimeSync.ack(frame.payload)
+        PxcFrame(PxcFrame.CMD_HU_TIME_SYNC_ACK, ack.payload).write(out)
         val n = ++huTimeSyncCount
         val now = System.currentTimeMillis()
         if (n <= 3 || now - lastHuTimeSyncLogAt >= 30_000L) {
             lastHuTimeSyncLogAt = now
-            log("[$tag] HU_TIME_SYNC #$n len=${frame.payload.size} → ack 0x10601 phoneTime=$stamp")
+            log("[$tag] HU_TIME_SYNC #$n len=${frame.payload.size} → ack 0x10601 mode=${ack.mode} time=${ack.stamp}")
         }
     }
 

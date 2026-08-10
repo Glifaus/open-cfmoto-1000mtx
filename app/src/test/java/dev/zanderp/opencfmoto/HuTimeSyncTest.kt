@@ -1,31 +1,56 @@
 package dev.zanderp.opencfmoto
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 class HuTimeSyncTest {
-    @Test
-    fun ackPayload_preservesHeaderAndWrites29CharStamp() {
+    private fun req(stamp: String, modelId: Int = 37426, seq: Int = 7): ByteArray {
         val req = ByteArray(45)
         ByteBuffer.wrap(req).order(ByteOrder.LITTLE_ENDIAN)
             .putInt(-2)
-            .putInt(37426)
-            .putInt(7)
+            .putInt(modelId)
+            .putInt(seq)
             .putInt(0)
-        "2026-01-01 00:00:00.000000000".toByteArray(Charsets.US_ASCII).copyInto(req, 16)
+        stamp.toByteArray(Charsets.US_ASCII).copyInto(req, 16)
+        return req
+    }
 
-        val ack = HuTimeSync.ackPayload(req)
-        assertEquals(45, ack.size)
-        val hdr = ByteBuffer.wrap(ack).order(ByteOrder.LITTLE_ENDIAN)
-        assertEquals(-2, hdr.int)
-        assertEquals(37426, hdr.int)
-        assertEquals(7, hdr.int)
-        assertEquals(0, hdr.int)
-        val stamp = String(ack, 16, 29, Charsets.US_ASCII)
-        assertEquals(29, stamp.length)
-        assertTrue(stamp.matches(Regex("""\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{9}""")))
+    @Test
+    fun saneStamp_echoesBikeTime() {
+        val bike = "2026-07-24 17:09:20.190000000"
+        val ack = HuTimeSync.ack(req(bike))
+        assertEquals("echo", ack.mode)
+        assertEquals(bike, ack.stamp)
+        assertEquals(45, ack.payload.size)
+        assertEquals(-2, ByteBuffer.wrap(ack.payload).order(ByteOrder.LITTLE_ENDIAN).int)
+        assertEquals(bike, String(ack.payload, 16, 29, Charsets.US_ASCII))
+    }
+
+    @Test
+    fun epochStamp_writesPhoneTime() {
+        val ack = HuTimeSync.ack(req("1970-01-01 00:00:00.000000000"))
+        assertEquals("phone", ack.mode)
+        assertTrue(HuTimeSync.isSaneStamp(ack.stamp))
+        assertEquals(45, ack.payload.size)
+    }
+
+    @Test
+    fun shortRequest_writesPhoneTime() {
+        val ack = HuTimeSync.ack(ByteArray(0))
+        assertEquals("phone", ack.mode)
+        assertEquals(45, ack.payload.size)
+        assertTrue(ack.stamp.matches(Regex("""\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{9}""")))
+    }
+
+    @Test
+    fun isSaneStamp_rejectsJunk() {
+        assertFalse(HuTimeSync.isSaneStamp(""))
+        assertFalse(HuTimeSync.isSaneStamp("1970-01-01 00:00:00.000000000"))
+        assertFalse(HuTimeSync.isSaneStamp("2026-01-01 00:00:00"))
+        assertTrue(HuTimeSync.isSaneStamp("2026-01-01 00:00:00.000000000"))
     }
 }

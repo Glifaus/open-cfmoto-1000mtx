@@ -115,13 +115,17 @@ EasyConn **NSD-first** discovery + port-scan when `:10930` is refused (Morini So
 
 Broader AA/decoder heap pressure may still need a follow-up if OOM persists without restore nesting.
 
-### A9 — Dash clock → 1970 / unsync on connect (Morini / Voge / QJ) — fix in 2.0.7 vc51
+### A9 — Dash clock → 1970 / unsync on connect (Morini / Voge / QJ) — partial fix (vc51 / 2.0.8)
 
 Bikes with `supportSyncCorrectTime:true` send `0x10600` (~2s) with a wall-clock string. We empty-acked
 `0x10601`, and some firmwares applied that as epoch (X-Cape 1970), 00:00 (QJ), or left the cluster
 wrong (Voge DS800). Early 2.0.7 prereleases sometimes still empty-acked (fix only in dirty tree).
-**Fix (vc51):** `PxcHandshake` replies with phone local time in the same 45-byte layout (`HuTimeSync`);
+**Fix (vc51 / shipped in 2.0.8):** `PxcHandshake` replies with phone local time in the same 45-byte layout (`HuTimeSync`);
 CLIENT_INFO advertises `supportSyncCorrectTime`. Retest: log must show `phoneTime=`, not `ack 0x10601 (empty)`.
+
+**2.0.9 (`versionCode` 63):** stop advertising `supportSyncCorrectTime`; on `0x10600` **echo** a sane
+bike stamp (year 2020–2099) else write phone time; never empty. Log `mode=echo|phone`. Retest
+Zontes/Voge/Morini/QJ — Share Logs if still jumps.
 
 ---
 
