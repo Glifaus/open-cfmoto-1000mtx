@@ -31,6 +31,17 @@ class HuTimeSyncTest {
     }
 
     @Test
+    fun shortFractionalStamp_stillEchoes() {
+        val bike = "2026-08-13 14:05:20.190"
+        val raw = ByteArray(16 + bike.length)
+        ByteBuffer.wrap(raw).order(ByteOrder.LITTLE_ENDIAN).putInt(-2).putInt(1).putInt(1).putInt(0)
+        bike.toByteArray(Charsets.US_ASCII).copyInto(raw, 16)
+        val ack = HuTimeSync.ack(raw)
+        assertEquals("echo", ack.mode)
+        assertTrue(ack.stamp.startsWith("2026-08-13 14:05:20"))
+    }
+
+    @Test
     fun epochStamp_writesPhoneTime() {
         val ack = HuTimeSync.ack(req("1970-01-01 00:00:00.000000000"))
         assertEquals("phone", ack.mode)
@@ -50,7 +61,7 @@ class HuTimeSyncTest {
     fun isSaneStamp_rejectsJunk() {
         assertFalse(HuTimeSync.isSaneStamp(""))
         assertFalse(HuTimeSync.isSaneStamp("1970-01-01 00:00:00.000000000"))
-        assertFalse(HuTimeSync.isSaneStamp("2026-01-01 00:00:00"))
+        assertTrue(HuTimeSync.isSaneStamp("2026-01-01 00:00:00"))
         assertTrue(HuTimeSync.isSaneStamp("2026-01-01 00:00:00.000000000"))
     }
 }

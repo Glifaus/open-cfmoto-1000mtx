@@ -19,7 +19,7 @@ Community reports welcome in [Discord](https://discord.gg/xRt5yZy2U) so we can k
 
 | | |
 | --- | --- |
-| **Confirmed** | **CFMoto** · **Voge** · **Zontes** · **Moto Morini** · **Morbidelli** · **QJ Motor** · **Benelli** · **Rieju** · **GOES** / **Gladiator** (CFORCE rebadges) |
+| **Confirmed** | **CFMoto** · **Voge** · **Zontes** · **Moto Morini** · **Morbidelli** · **QJ Motor** · **Benelli** · **Rieju** · **GOES** / **Gladiator** (CFORCE rebadges) · **UM** (DSR 250 Rally) |
 | **Same Carbit / EasyConnect path — try Connect** | **Longjia** · other TFT dashes with a pairing QR |
 | **Experimental (SoftAP join only)** | **Kove** (Thinkerride SoftAP — phone AA may start; dash video not yet) |
 
@@ -68,11 +68,12 @@ Riders have projected Android Auto with these (US + international as noted):
 | **Zontes** (other TFT + pairing QR) | Same Carbit / EasyConnect path — try Connect; report logs in Discord |
 | **Morbidelli T1002VX** | Community-confirmed (Argentina) — Carbit / EasyConnect QR |
 | **Morbidelli T352X** | Community-confirmed (2026-08) — AA split on Carbit dash — Discord `#t352x` |
+| **UM DSR 250 Rally** (2026) | Community-confirmed (Nicaragua, 2026-08) — Carbit / EasyConnect QR |
 | **QJ Motor SRK800RR** (2025) | Community-confirmed — iOS QR; AA + media OK; handlebar→AA needs bike Bluetooth + Controls ON |
 | **QJ Motor SRK250RD** (2026) | Community-confirmed — AA works; dash uses half-screen layout (unlike 800RR); buttons untested |
 | **QJ Motor SRK450RR** (2026) | Community-confirmed — AA works; dash uses half-screen layout (unlike 800RR); buttons untested |
 | **QJ Motor SRT 600** / **SRV600** | Community-confirmed (2026-08) — AA on dash (HW `SS655-L7` class); tune margins/fit for rounded panels |
-| **QJ Motor 600SX / 550SX** (2026) | In progress — QR works (`qj-5G-*`, modelId 37501); use Setup → Wi‑Fi **AP** if Auto mis-picks P2P; clock reset → retest **2.0.7 vc51+** |
+| **QJ Motor 600SX / 550SX** (2026) | In progress — QR works (`qj-5G-*`, modelId 37501); use Setup → Wi‑Fi **AP** if Auto mis-picks P2P; clock reset → retest **2.0.10** (echo bike stamp) |
 
 ---
 
@@ -87,12 +88,13 @@ promote models to “confirmed.”
 | --- | --- |
 | **Voge** | **DS800 Rally** + **DS900X** confirmed; other EasyConnect TFT models welcome |
 | **Zontes** | **125X confirmed**; other TFT dashes with pairing QR welcome |
-| **Moto Morini** | **X-Cape 649 / 700** and **Seiemmezzo** (incl. 2026) confirmed; **1200** SoftAP joins (keep MotoFun/pairing QR open — EasyConn may not sit on `:10930`). Pairing QR may be `admin.motomorini.com/…?Wifi=SSID#password#mac&MachineID=…&ProductID=…` — supported. Do **not** scan the vehicle info QR (`code:…color:…`). Dash clock jumping to **1970** / unsync after connect: hardened in **2.0.9** (`0x10601` echo/phone; log `HU_TIME_SYNC … mode=`). |
+| **Moto Morini** | **X-Cape 649 / 700** and **Seiemmezzo** (incl. 2026) confirmed; **1200** SoftAP joins (keep MotoFun/pairing QR open — EasyConn may not sit on `:10930`). Pairing QR may be `admin.motomorini.com/…?Wifi=SSID#password#mac&MachineID=…&ProductID=…` — supported. Do **not** scan the vehicle info QR (`code:…color:…`). Dash clock jumping hours / **1970** after connect: **2.0.10** echoes the bike stamp unless it is epoch (log `HU_TIME_SYNC … mode=echo|phone`). |
 | **Benelli** | TRK 702 / 702X class — SoftAP SSID/password or QR when shown; grant **Nearby devices / Bluetooth** |
 | **Rieju** | **307 confirmed**; other EasyConnect TFTs welcome (`#rieju-307`) |
 | **QJ Motor** | **SRK800RR 2025**, **SRK250RD / SRK450RR 2026**, **SRT/SRV 600** confirmed; **600SX / 550SX (2026) testing**; Fort 4.0 and other EasyConnect TFTs |
 | **Morbidelli** (formerly MBP) | **T1002VX** + **T352X** confirmed; other Carbit dashes welcome |
 | **Longjia** | e.g. **V-Bob 650** — Europe often uses **MotoFUN** / **Carbit Ride**. Unconfirmed; try Connect (or Mirror) if the dash shows a pairing QR. Close the official companion app first so it does not hold the link ports. |
+| **UM** | **DSR 250 Rally 2026** confirmed (Nicaragua) — same Carbit / EasyConnect QR path |
 
 ### Experimental — not Carbit (Thinkerride)
 

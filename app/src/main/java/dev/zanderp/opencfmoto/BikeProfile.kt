@@ -304,17 +304,18 @@ private fun basePhoneClientInfo(huid: String?, phoneUuid: String, supportFunctio
  *   i32@0 flags (−2), i32@4 channel/modelId, i32@8 seq, i32@12 0
  * followed by 29 ASCII chars `yyyy-MM-dd HH:mm:ss.SSS000000`.
  *
- * Empty 0x10601 → epoch/1970 on Morini/Voge. Blindly rewriting with phone time still left some
- * Zontes/Voge units at 00:00 (2.0.7/2.0.8). Strategy:
- *  - if the bike's stamp looks sane (year 2020–2099) → **echo** it (ack without "correcting")
- *  - otherwise → write phone local wall-clock
+ * Empty 0x10601 → epoch/1970 on Morini/Voge. Rewriting with phone time (2.0.7–2.0.9) still
+ * jumped **hours** on Voge/QJ/X-Cape (minutes often stayed — TZ / format apply).
+ * Strategy (2.0.10):
+ *  - if the request already carries any non-epoch stamp bytes → **echo the whole payload**
+ *  - only synthesize phone local time when the request is empty / 1970 / all-zero
  * Never empty.
  */
 internal object HuTimeSync {
     private const val PAYLOAD_LEN = 45
     private const val TIME_OFF = 16
     private const val TIME_LEN = 29
-    private val stampRe = Regex("""^(\d{4})-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{9}$""")
+    private val stampRe = Regex("""^(\d{4})-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}""")
     private val timeFmt = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).apply {
         timeZone = java.util.TimeZone.getDefault()
     }
@@ -336,16 +337,11 @@ internal object HuTimeSync {
             bb.putInt(1)
             bb.putInt(0)
         }
-        val bikeStamp = if (request.size >= TIME_OFF + TIME_LEN) {
-            String(request, TIME_OFF, TIME_LEN, Charsets.US_ASCII)
-        } else {
-            ""
-        }
+        val bikeStamp = extractStamp(request)
         val stamp: String
         val mode: String
-        if (isSaneStamp(bikeStamp)) {
-            // Keep the bike's own wall-clock bytes (already copied). Avoid phone-format mismatches.
-            stamp = bikeStamp
+        if (shouldEcho(bikeStamp, request)) {
+            stamp = bikeStamp.ifBlank { extractStamp(out) }
             mode = "echo"
         } else {
             stamp = phoneStamp()
@@ -356,8 +352,23 @@ internal object HuTimeSync {
         return Ack(out, mode, stamp)
     }
 
+    internal fun extractStamp(buf: ByteArray): String {
+        if (buf.size < TIME_OFF) return ""
+        val n = minOf(TIME_LEN, buf.size - TIME_OFF)
+        return String(buf, TIME_OFF, n, Charsets.US_ASCII).trimEnd('\u0000', ' ')
+    }
+
+    /** Echo unless the bike sent epoch / blank (those still need a phone wall-clock). */
+    internal fun shouldEcho(stamp: String, request: ByteArray): Boolean {
+        if (request.size < TIME_OFF) return false
+        if (stamp.isBlank() || stamp.all { it == '\u0000' || it == ' ' }) return false
+        val year = stampRe.find(stamp)?.groupValues?.getOrNull(1)?.toIntOrNull()
+        if (year != null && year in 1969..1971) return false
+        return true
+    }
+
     internal fun isSaneStamp(stamp: String): Boolean {
-        val m = stampRe.matchEntire(stamp) ?: return false
+        val m = stampRe.find(stamp) ?: return false
         val year = m.groupValues[1].toIntOrNull() ?: return false
         return year in 2020..2099
     }
