@@ -213,9 +213,17 @@ object VideoPrefs {
                 detected
             }
         }
-        val margins = AaMargins.forAspect(spec, panel.first, panel.second)
+        // CONFIG_CAPTURE is rounded to codec-safe multiples of 16. Match the canvas we actually
+        // encode, not the raw panel request (1000 MT-X: 800x951 -> 800x944), or FILL crops again.
+        val target = if (mode == MatchAspectMode.AUTO) {
+            BikeProfileHolder.active.roundCaptureDimensions(panel.first, panel.second)
+        } else {
+            panel
+        }
+        val margins = AaMargins.forAspect(spec, target.first, target.second)
         LogBus.log(
-            "[match-aspect] $mode panel ${panel.first}x${panel.second} → " +
+            "[match-aspect] $mode panel ${panel.first}x${panel.second} " +
+                "canvas ${target.first}x${target.second} → " +
                 "AA ${spec.width}x${spec.height} margins ${margins.marginW}x${margins.marginH}",
         )
         return margins
