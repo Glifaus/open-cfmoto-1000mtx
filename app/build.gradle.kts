@@ -34,7 +34,7 @@ android {
         // Override: -PtelemetryUrl=https://….workers.dev  or TELEMETRY_URL env / gradle.properties
         val telemetryUrl = (project.findProperty("telemetryUrl") as String?)
             ?: System.getenv("TELEMETRY_URL")
-            ?: "https://opencfmoto-telemetry.hello-3d9.workers.dev"
+            ?: ""
         buildConfigField("String", "TELEMETRY_URL", "\"$telemetryUrl\"")
 
         // Short git hash for Share Logs triage (configuration-cache safe).
