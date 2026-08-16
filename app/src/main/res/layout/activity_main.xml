@@ -201,7 +201,8 @@
                     app:autoSizeMinTextSize="@dimen/btn_tile_text_min"
                     app:autoSizeMaxTextSize="@dimen/btn_tile_text"
                     app:autoSizeStepGranularity="1sp"
-                    android:text="@string/gpx_map" />
+                    android:text="@string/gpx_map"
+                    android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_mirror_start"
@@ -215,7 +216,8 @@
                     app:autoSizeMinTextSize="@dimen/btn_tile_text_min"
                     app:autoSizeMaxTextSize="@dimen/btn_tile_text"
                     app:autoSizeStepGranularity="1sp"
-                    android:text="@string/main_mirror" />
+                    android:text="@string/main_mirror"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <!-- Hidden: Stop is merged into Connect; keep id for any legacy refs. -->
@@ -287,7 +289,8 @@
                         app:iconTint="@color/text_secondary"
                         app:iconGravity="textStart"
                         app:iconPadding="6dp"
-                        app:iconSize="18dp" />
+                        app:iconSize="18dp"
+                        android:visibility="gone" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_toggle_log"
@@ -307,11 +310,13 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/navigation_panel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:visibility="gone">
 
                 <EditText
                     android:id="@+id/et_destination"
@@ -370,7 +375,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:text="@string/main_about_credits" />
+                        android:text="@string/main_about_credits"
+                        android:visibility="gone" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_check_update"
@@ -378,7 +384,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:text="@string/main_check_for_update" />
+                        android:text="@string/main_check_for_update"
+                        android:visibility="gone" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_problem_report"
@@ -395,7 +402,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="@string/about_donate"
-                        android:textSize="13sp" />
+                        android:textSize="13sp"
+                        android:visibility="gone" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

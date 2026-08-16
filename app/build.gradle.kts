@@ -14,11 +14,11 @@ android {
     val slimApk = (project.findProperty("slimApk") as String?)?.equals("false", ignoreCase = true) != true
 
     defaultConfig {
-        applicationId = "dev.zanderp.opencfmoto"
+        applicationId = "dev.glifaus.opencfmoto.mtx1000"
         minSdk = 29
         targetSdk = 36
-        versionCode = 64
-        versionName = "2.0.10"
+        versionCode = 1
+        versionName = "0.1.0-1000mtx"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

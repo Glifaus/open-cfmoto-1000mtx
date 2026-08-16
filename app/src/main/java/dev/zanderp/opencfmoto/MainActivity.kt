@@ -13,7 +13,6 @@ import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.text.method.LinkMovementMethod
 import android.text.method.ScrollingMovementMethod
 import android.view.View
 import android.widget.Button
@@ -621,7 +620,6 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_setup).setOnClickListener { SetupActivity.start(this) }
         findViewById<View>(R.id.brand_title).setOnClickListener { AboutActivity.start(this) }
         findViewById<View>(R.id.btn_about_page).setOnClickListener { AboutActivity.start(this) }
-        findViewById<View>(R.id.btn_check_update).setOnClickListener { checkUpdateManual() }
         findViewById<View>(R.id.btn_problem_report).setOnClickListener { reportProblem() }
         findViewById<View>(R.id.btn_donate).setOnClickListener {
             try {
@@ -676,7 +674,6 @@ class MainActivity : AppCompatActivity() {
         // Retry auto-connect on resume: after finishing first-run setup, or once the bike's Wi-Fi
         // comes into range shortly after launch. Guarded so it only ever starts one attempt.
         if (SetupActivity.hasSeen(this)) maybeAutoConnect()
-        maybeCheckUpdate()
         maybeResumeFromParked(intent)
     }
 
@@ -819,12 +816,6 @@ class MainActivity : AppCompatActivity() {
     private fun renderStatus(phase: Phase, detail: String) {
         statusView.text = getString(phase.labelRes)
         bikeView.text = if (detail.isNotBlank()) detail else bikeLabelText()
-        if (phase == Phase.ERROR && detail.isNotBlank()) {
-            try {
-                AnonymousTelemetry.reportError(this, detail)
-            } catch (_: Exception) {
-            }
-        }
         val color = when (phase) {
             Phase.STREAMING, Phase.MIRRORING -> ContextCompat.getColor(this, R.color.status_live)
             Phase.ERROR -> ContextCompat.getColor(this, R.color.status_error)
@@ -1489,50 +1480,6 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             log("share failed: $e")
         }
-    }
-
-    private fun maybeCheckUpdate() {
-        Thread {
-            val release = try {
-                UpdateChecker.check(this, manual = false)
-            } catch (_: Exception) {
-                null
-            } ?: return@Thread
-            runOnUiThread { showUpdateDialog(release) }
-        }.start()
-    }
-
-    private fun checkUpdateManual() {
-        Toast.makeText(this, R.string.main_checking_update, Toast.LENGTH_SHORT).show()
-        Thread {
-            val release = UpdateChecker.check(this, manual = true)
-            runOnUiThread {
-                if (release == null) {
-                    Toast.makeText(this, R.string.main_up_to_date, Toast.LENGTH_SHORT).show()
-                } else {
-                    showUpdateDialog(release)
-                }
-            }
-        }.start()
-    }
-
-    private fun showUpdateDialog(release: UpdateChecker.Release) {
-        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Update ${release.version}")
-            .setMessage(ReleaseNotes.toSpanned(release.notes))
-            .setPositiveButton("Download") { _, _ ->
-                try {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(release.downloadUrl)))
-                } catch (_: Exception) {
-                    Toast.makeText(this, R.string.main_download_failed, Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Skip") { _, _ -> UpdateChecker.skip(this, release.version) }
-            .setNeutralButton("Later", null)
-            .show()
-        // Headings/bullets/bold come from [ReleaseNotes]; make markdown links tappable too.
-        dialog.findViewById<TextView>(android.R.id.message)?.movementMethod =
-            LinkMovementMethod.getInstance()
     }
 
     private fun reportProblem() {

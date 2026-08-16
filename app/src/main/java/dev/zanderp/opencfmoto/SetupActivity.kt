@@ -142,8 +142,6 @@ class SetupActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.transport_p2p).setOnClickListener { setTransport(WifiTransport.P2P) }
         findViewById<MaterialButton>(R.id.secrets_on).setOnClickListener { setSecrets(true) }
         findViewById<MaterialButton>(R.id.secrets_off).setOnClickListener { setSecrets(false) }
-        findViewById<MaterialButton>(R.id.telemetry_on).setOnClickListener { setTelemetry(true) }
-        findViewById<MaterialButton>(R.id.telemetry_off).setOnClickListener { setTelemetry(false) }
         findViewById<MaterialButton>(R.id.settings_share).setOnClickListener { shareSettingsJson() }
         findViewById<MaterialButton>(R.id.settings_import).setOnClickListener {
             importSettingsLauncher.launch(arrayOf("application/json", "text/*", "*/*"))
@@ -322,18 +320,6 @@ class SetupActivity : AppCompatActivity() {
         ).show()
     }
 
-    private fun setTelemetry(on: Boolean) {
-        AppSettings.setAnonymousTelemetry(this, on)
-        refreshOptions()
-        if (on) AnonymousTelemetry.onAppStart(this)
-        Toast.makeText(
-            this,
-            if (on) getString(R.string.setup_anonymous_telemetry_on)
-            else getString(R.string.setup_anonymous_telemetry_off),
-            Toast.LENGTH_SHORT,
-        ).show()
-    }
-
     private fun toast(msg: String) =
         Toast.makeText(this, "$msg (applies next connect)", Toast.LENGTH_SHORT).show()
 
@@ -440,12 +426,6 @@ class SetupActivity : AppCompatActivity() {
             if (secrets) getString(R.string.setup_secrets_on_desc)
             else getString(R.string.setup_off_passwords_and_serials_are_redacted_recommend)
         highlight(secrets, R.id.secrets_on to true, R.id.secrets_off to false)
-        val telemetry = AppSettings.anonymousTelemetry(this)
-        findViewById<android.widget.TextView>(R.id.telemetry_desc).text =
-            getString(R.string.setup_anonymous_telemetry_desc)
-        findViewById<android.widget.TextView>(R.id.telemetry_id).text =
-            getString(R.string.setup_anonymous_id, AnonymousTelemetry.anonUuidForDisplay(this))
-        highlight(telemetry, R.id.telemetry_on to true, R.id.telemetry_off to false)
     }
 
     /** Refresh the Bluetooth pairing status line shown in the helper card. */

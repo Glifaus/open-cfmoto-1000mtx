@@ -10,6 +10,7 @@ import org.maplibre.android.MapLibre
 class OpenCfMotoApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        Mtx1000Config.apply(this)
         try {
             LogBus.includeSecrets = AppSettings.includeSecretsInLogs(this)
         } catch (_: Exception) {
@@ -19,10 +20,6 @@ class OpenCfMotoApp : Application() {
         // After hydrate so Share Logs still show prior crash, then stamp this process build.
         LogBus.logSessionBanner()
         AppHttp.init(this)
-        try {
-            AnonymousTelemetry.onAppStart(this)
-        } catch (_: Exception) {
-        }
         try {
             MapLibre.getInstance(this)
             // Pin MapLibre style/tile HTTP to cellular while the process is bound to bike Wi‑Fi.

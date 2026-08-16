@@ -27,7 +27,6 @@ object AppSettings {
     private const val KEY_FORCE_TOUCH = "force_touch"
     private const val KEY_INCLUDE_SECRETS = "include_secrets_in_logs"
     private const val KEY_TRANSPORT = "wifi_transport"
-    private const val KEY_ANON_TELEMETRY = "anonymous_telemetry"
 
     private fun prefs(ctx: Context) =
         ctx.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -40,26 +39,23 @@ object AppSettings {
     fun setAutoRecovery(ctx: Context, on: Boolean) =
         prefs(ctx).edit().putBoolean(KEY_AUTO_RECOVERY, on).apply()
 
-    fun logTrips(ctx: Context): Boolean = prefs(ctx).getBoolean(KEY_LOG_TRIPS, true)
-    fun setLogTrips(ctx: Context, on: Boolean) =
-        prefs(ctx).edit().putBoolean(KEY_LOG_TRIPS, on).apply()
+    fun logTrips(ctx: Context): Boolean = Mtx1000Config.logTrips
+    fun setLogTrips(ctx: Context, @Suppress("UNUSED_PARAMETER") on: Boolean) =
+        prefs(ctx).edit().putBoolean(KEY_LOG_TRIPS, Mtx1000Config.logTrips).apply()
 
-    fun forceNonTouch(ctx: Context): Boolean = prefs(ctx).getBoolean(KEY_FORCE_NON_TOUCH, false)
-    fun setForceNonTouch(ctx: Context, on: Boolean) {
-        val e = prefs(ctx).edit().putBoolean(KEY_FORCE_NON_TOUCH, on)
-        if (on) e.putBoolean(KEY_FORCE_TOUCH, false)
+    fun forceNonTouch(ctx: Context): Boolean = Mtx1000Config.forceNonTouch
+    fun setForceNonTouch(ctx: Context, @Suppress("UNUSED_PARAMETER") on: Boolean) {
+        val e = prefs(ctx).edit()
+            .putBoolean(KEY_FORCE_NON_TOUCH, Mtx1000Config.forceNonTouch)
+            .putBoolean(KEY_FORCE_TOUCH, false)
         e.apply()
-        BikeProfileHolder.forceNonTouch = on
-        if (on) BikeProfileHolder.forceTouch = false
+        BikeProfileHolder.forceNonTouch = Mtx1000Config.forceNonTouch
+        BikeProfileHolder.forceTouch = false
     }
 
-    fun forceTouch(ctx: Context): Boolean = prefs(ctx).getBoolean(KEY_FORCE_TOUCH, false)
-    fun setForceTouch(ctx: Context, on: Boolean) {
-        val e = prefs(ctx).edit().putBoolean(KEY_FORCE_TOUCH, on)
-        if (on) e.putBoolean(KEY_FORCE_NON_TOUCH, false)
-        e.apply()
-        BikeProfileHolder.forceTouch = on
-        if (on) BikeProfileHolder.forceNonTouch = false
+    fun forceTouch(ctx: Context): Boolean = false
+    fun setForceTouch(ctx: Context, @Suppress("UNUSED_PARAMETER") on: Boolean) {
+        setForceNonTouch(ctx, true)
     }
 
     /** When true, Share Logs / LogBus keep Wi‑Fi passwords and serials. Default off. */
@@ -69,27 +65,16 @@ object AppSettings {
         LogBus.includeSecrets = on
     }
 
-    fun transport(ctx: Context): WifiTransport =
-        WifiTransport.byId(prefs(ctx).getString(KEY_TRANSPORT, null))
-    fun setTransport(ctx: Context, t: WifiTransport) =
-        prefs(ctx).edit().putString(KEY_TRANSPORT, t.id).apply()
-
-    /**
-     * Anonymous install ping + crash/error upload (random UUID only). Default **on**;
-     * rider can turn off in Setup → Privacy. See PRIVACY.md.
-     */
-    fun anonymousTelemetry(ctx: Context): Boolean = prefs(ctx).getBoolean(KEY_ANON_TELEMETRY, true)
-    fun setAnonymousTelemetry(ctx: Context, on: Boolean) {
-        prefs(ctx).edit().putBoolean(KEY_ANON_TELEMETRY, on).apply()
-        if (!on) AnonymousTelemetry.onDisabled(ctx)
-    }
+    fun transport(ctx: Context): WifiTransport = Mtx1000Config.transport
+    fun setTransport(ctx: Context, @Suppress("UNUSED_PARAMETER") t: WifiTransport) =
+        prefs(ctx).edit().putString(KEY_TRANSPORT, Mtx1000Config.transport.id).apply()
 
     /** Sync holder flags from prefs (call on process start / before connect). */
     fun applyToHolder(ctx: Context) {
         BikeProfileHolder.forceNonTouch = forceNonTouch(ctx)
         BikeProfileHolder.forceTouch = forceTouch(ctx)
         LogBus.includeSecrets = includeSecretsInLogs(ctx)
-        ProfilePrefs.applyToHolder(ctx)
+        BikeProfileHolder.profileOverride = Mtx1000Config.profile
         ButtonMap.ensureDefaultsMigrated(ctx)
         ScreenMargins.load(ctx)
     }

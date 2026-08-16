@@ -21,10 +21,4 @@ class LogRedactorTest {
         assertFalse(out.contains("CRCP230501740"))
     }
 
-    @Test
-    fun updateCheckerVersionCompare() {
-        assertTrue(UpdateChecker.isNewer("v1.0.16", "1.0.15"))
-        assertFalse(UpdateChecker.isNewer("1.0.15", "1.0.16"))
-        assertTrue(UpdateChecker.isNewer("0.1.2.1", "0.1.2"))
-    }
 }
